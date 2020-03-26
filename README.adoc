@@ -1,0 +1,8 @@
+image:https://semaphoreci.com/api/v1/smallrye/smallrye-opentelemetry/branches/master/badge.svg["Semaphore CI", link="https://semaphoreci.com/smallrye/smallrye-opentelemetry"]
+image:https://img.shields.io/github/license/smallrye/smallrye-opentracing.svg["License", link="http://www.apache.org/licenses/LICENSE-2.0"]
+
+= SmallRye-OpenTelemetry
+
+This is a POC project that integrates OpenTelemetry in MicroProfile.
+
+The plan is to provide similar set of capabilities as defined in link:https://github.com/eclipse/microprofile-opentracing[MicroProfile-OpenTracing].
