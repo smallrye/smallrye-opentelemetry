@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>smallrye-opentelemetry</artifactId>
+      <artifactId>smallrye-opentelemetry-jaxrs2</artifactId>
     </dependency>
 
     <dependency>

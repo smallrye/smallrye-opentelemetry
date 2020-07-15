@@ -47,7 +47,7 @@
     <dependencies>
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>smallrye-opentelemetry</artifactId>
+        <artifactId>smallrye-opentelemetry-jaxrs2</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -85,7 +85,7 @@
   </dependencyManagement>
 
   <modules>
-    <module>implementation</module>
+    <module>implementation-jaxrs2</module>
     <module>api</module>
     <module>examples/resteasy</module>
   </modules>

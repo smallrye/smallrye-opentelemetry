@@ -9,7 +9,7 @@
     <version>0.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>smallrye-opentelemetry</artifactId>
+  <artifactId>smallrye-opentelemetry-jaxrs2</artifactId>
 
   <dependencies>
     <dependency>
