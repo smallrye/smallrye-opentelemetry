@@ -21,7 +21,6 @@ public class ExampleApplication extends Application {
 
     public ExampleApplication() {
         TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
-        TracerSdkProvider.builder().build();
 
         // add logging exporter
         tracerProvider.addSpanProcessor(SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build());
