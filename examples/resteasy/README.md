@@ -18,6 +18,6 @@ OTEL_RESOURCE_ATTRIBUTES=service.name=resteasy OTEL_OTLP_ENDPOINT=localhost:5568
 
 Execute requests
 ```bash
-curl localhost/hello
-curl localhost/error
+curl localhost:9095/
+curl localhost:9095/error
 ```
