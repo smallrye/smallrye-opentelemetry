@@ -13,9 +13,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.enterprise</groupId>
-      <artifactId>cdi-api</artifactId>
-      <version>${version.javax.cdi}</version>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
+      <version>${version.jakarta.cdi}</version>
     </dependency>
   </dependencies>
 </project>
