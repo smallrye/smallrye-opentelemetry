@@ -17,7 +17,7 @@
     <version.jakarta.annotation-jakarta.annotation-api>1.3.5</version.jakarta.annotation-jakarta.annotation-api>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
     <version.jakarta.cdi>2.0.2</version.jakarta.cdi>
-    <version.resteasy>3.12.1.Final</version.resteasy>
+    <version.resteasy>3.13.0.Final</version.resteasy>
     <version.grpc>1.30.2</version.grpc>
     <version.jetty>9.4.30.v20200611</version.jetty>
 
