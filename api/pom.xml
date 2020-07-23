@@ -15,7 +15,6 @@
     <dependency>
       <groupId>jakarta.enterprise</groupId>
       <artifactId>jakarta.enterprise.cdi-api</artifactId>
-      <version>${version.jakarta.cdi}</version>
     </dependency>
   </dependencies>
 </project>

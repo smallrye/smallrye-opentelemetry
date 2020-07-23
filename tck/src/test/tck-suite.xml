@@ -1,0 +1,8 @@
+<suite name="MicroProfile OpenTelemetry TCKs" verbose="1" preserve-order="true" configfailurepolicy="continue" >
+
+  <test name="microprofile-opentelemetry TCK">
+    <packages>
+      <package name="io.smallrye.opentelemetry.tck.*" />
+    </packages>
+  </test>
+</suite>
