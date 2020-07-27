@@ -13,13 +13,11 @@
 
   <properties>
     <version.opentelemetry>0.6.0</version.opentelemetry>
-    <version.jakarta.ws.rs-api>2.1.6</version.jakarta.ws.rs-api>
-    <version.jakarta.annotation-jakarta.annotation-api>1.3.5</version.jakarta.annotation-jakarta.annotation-api>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
-    <version.jakarta.cdi>2.0.2</version.jakarta.cdi>
     <version.resteasy>3.13.0.Final</version.resteasy>
     <version.grpc>1.30.2</version.grpc>
     <version.jetty>9.4.30.v20200611</version.jetty>
+    <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
 
     <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
   </properties>
@@ -73,6 +71,11 @@
       </dependency>
       <dependency>
         <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-proto</artifactId>
+        <version>${version.opentelemetry}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-exporters-logging</artifactId>
         <version>${version.opentelemetry}</version>
       </dependency>
@@ -81,12 +84,27 @@
         <artifactId>opentelemetry-exporters-otlp</artifactId>
         <version>${version.opentelemetry}</version>
       </dependency>
+
+      <dependency>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>${version.jakarta.servlet-api}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>${version.org.jboss.arquillian}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <modules>
-    <module>implementation-jaxrs2</module>
     <module>api</module>
+    <module>implementation-jaxrs2</module>
+    <module>tck</module>
     <module>examples/resteasy</module>
   </modules>
 </project>
