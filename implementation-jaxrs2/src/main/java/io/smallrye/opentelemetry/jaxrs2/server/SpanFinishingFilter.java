@@ -12,6 +12,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -42,7 +43,8 @@ public class SpanFinishingFilter implements Filter {
         } catch (Exception ex) {
             SpanWrapper spanWrapper = getSpanWrapper(httpRequest);
             if (spanWrapper != null) {
-                SemanticAttributes.HTTP_STATUS_CODE.set(spanWrapper.get(), httpResponse.getStatus());
+                SemanticAttributes.HTTP_STATUS_CODE.set(spanWrapper.get(),
+                        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                 annotateException(spanWrapper.get(), ex);
             }
             throw ex;

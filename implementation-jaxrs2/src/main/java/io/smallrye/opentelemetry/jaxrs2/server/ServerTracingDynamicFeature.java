@@ -117,7 +117,7 @@ public class ServerTracingDynamicFeature implements DynamicFeature {
             this.serializationPriority = Priorities.ENTITY_CODER;
             this.allTraced = true;
             this.operationNameBuilder = WildcardOperationName.newBuilder();
-            this.traceSerialization = true;
+            this.traceSerialization = false;
             this.joinExistingActiveSpan = false;
         }
 

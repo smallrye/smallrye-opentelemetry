@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -28,17 +29,26 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import io.grpc.Context;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Span.SpanKind;
-// import io.opentelemetry.proto.trace.v1.Status.StatusCode;
+import io.opentelemetry.proto.trace.v1.Status.StatusCode;
+import io.opentelemetry.trace.SpanId;
+import io.opentelemetry.trace.TraceId;
+import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import io.smallrye.opentelemetry.tck.app.TestApplication;
 import io.smallrye.opentelemetry.tck.app.TestResource;
 
 /**
+ * Test class for server side JAX-RS tests.
+ *
  * @author Pavol Loffay
  */
 public class BaseTests extends Arquillian {
@@ -46,6 +56,8 @@ public class BaseTests extends Arquillian {
      * OpenTelemetry service port used by tests.
      */
     public static final int OTLP_SERVICE_PORT = 55670;
+
+    private static final int DEFAULT_SLEEP_MS = 1000;
 
     /**
      * Server app URL for the client tests.
@@ -99,9 +111,6 @@ public class BaseTests extends Arquillian {
         }
     }
 
-    /**
-     * Test server-side JAX-RS endpoint.
-     */
     @Test
     @RunAsClient
     private void testStandardTags() throws URISyntaxException, MalformedURLException {
@@ -118,24 +127,23 @@ public class BaseTests extends Arquillian {
 
         Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
         List<Span> spans = otlpService.getSpans();
-        Assert.assertEquals(1, spans.size());
+        Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
         Assert.assertEquals(span.getKind(), SpanKind.SERVER);
-        //        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
-        //        Assert.assertEquals(span.getLinksCount(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_SIMPLE));
+
         Assert.assertEquals(span.getAttributesCount(), 3);
-        Map<String, KeyValue> keyValueAttributeMat = attributeMap(span.getAttributesList());
-        Assert.assertEquals(keyValueAttributeMat.get(SemanticAttributes.HTTP_METHOD.key()).getValue().getStringValue(), "GET");
-        Assert.assertEquals(keyValueAttributeMat.get(SemanticAttributes.HTTP_STATUS_CODE.key()).getValue().getIntValue(), 200);
-        Assert.assertEquals(keyValueAttributeMat.get(SemanticAttributes.HTTP_URL.key()).getValue().getStringValue(),
-                uri.toURL().toString());
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 200);
     }
 
     @Test
-    public void testExceptionInHandler() throws URISyntaxException {
+    @RunAsClient
+    public void testExceptionInHandler() throws URISyntaxException, MalformedURLException {
         Client client = ClientBuilder.newClient();
         URI uri = getURI(deploymentURL,
                 TestApplication.PATH_ROOT,
@@ -149,27 +157,194 @@ public class BaseTests extends Arquillian {
 
         Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
         List<Span> spans = otlpService.getSpans();
-        Assert.assertEquals(1, spans.size());
+        Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
         Assert.assertEquals(span.getKind(), SpanKind.SERVER);
-        Assert.assertEquals(span.getLinksCount(), 0);
-        //        Assert.assertEquals(span.getStatus().getCode(), StatusCode.UnknownError);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.UnknownError);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_EXCEPTION));
 
-        //        List<MockSpan> mockSpans = mockTracer.finishedSpans();
-        //        Assert.assertEquals(1, mockSpans.size());
-        //        MockSpan mockSpan = mockSpans.get(0);
-        //        Assert.assertEquals(6, mockSpan.tags().size());
-        //        Assert.assertEquals(true, mockSpan.tags().get(Tags.ERROR.getKey()));
-        //        Assert.assertEquals(1, mockSpan.logEntries().size());
-        //        Assert.assertEquals(2, mockSpan.logEntries().get(0).fields().size());
-        //        Assert.assertNotNull(mockSpan.logEntries().get(0).fields().get("error.object"));
-        //        Assert.assertEquals("error", mockSpan.logEntries().get(0).fields().get("event"));
-        // TODO resteasy and CXF returns 200
-        // Resteasy filter https://issues.jboss.org/browse/RESTEASY-1758
-        //        Assert.assertEquals(500, mockSpan.tags().get(Tags.HTTP_STATUS.getKey()));
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 500);
+    }
+
+    @Test
+    @RunAsClient
+    public void testAsync() throws URISyntaxException, MalformedURLException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_ASYNC);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 1);
+
+        Span span = spans.get(0);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getName(),
+                String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_ASYNC));
+
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 200);
+    }
+
+    @Test
+    @RunAsClient
+    public void testAsyncError() throws URISyntaxException, MalformedURLException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_ASYNC_ERROR);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 1);
+
+        Span span = spans.get(0);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.UnknownError);
+        Assert.assertEquals(span.getName(),
+                String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_ASYNC_ERROR));
+
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 500);
+    }
+
+    @Test
+    @RunAsClient
+    private void testTracedFalse()
+            throws URISyntaxException, InterruptedException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_TRACED_FALSE);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Thread.sleep(DEFAULT_SLEEP_MS);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 0);
+    }
+
+    @Test
+    @RunAsClient
+    private void testTracedOverriddenName()
+            throws URISyntaxException, MalformedURLException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_TRACED_OVERRIDE_NAME);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 1);
+
+        Span span = spans.get(0);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getName(), TestResource.TRACED_OVERRIDDEN_NAME);
+
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 204);
+    }
+
+    @Test
+    @RunAsClient
+    public void testContextPropagation() throws URISyntaxException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_SIMPLE);
+        Builder requestBuilder = client.target(uri)
+                .request();
+
+        // Create parent span and inject context into the request headers.
+        Tracer tracer = OpenTelemetry.getTracer("io.smallrye.opentelemetry.tck");
+        io.opentelemetry.trace.Span parentSpan = tracer.spanBuilder("parent")
+                .startSpan();
+        try (Scope scope = tracer.withSpan(parentSpan)) {
+            OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), requestBuilder,
+                    new ClientRequestBuilderTextMapSetter());
+        }
+
+        Response response = requestBuilder.get();
+        response.close();
+        client.close();
+
+        List<Span> spans = otlpService.getSpans();
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        Assert.assertEquals(spans.size(), 1);
+
+        Span span = spans.get(0);
+        Assert.assertTrue(span.getParentSpanId().size() > 0);
+
+        SpanId parentSpanId = SpanId.fromBytes(span.getParentSpanId().toByteArray(), 0);
+        Assert.assertEquals(parentSpanId, parentSpan.getContext().getSpanId());
+        TraceId traceId = TraceId.fromBytes(span.getTraceId().toByteArray(), 0);
+        Assert.assertEquals(traceId, parentSpan.getContext().getTraceId());
+    }
+
+    @Test
+    @RunAsClient
+    public void testUrlDoesNotExists()
+            throws URISyntaxException, InterruptedException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                "does_not_exist");
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Thread.sleep(DEFAULT_SLEEP_MS);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 0);
+    }
+
+    private void assertHttpAttributes(Map<String, KeyValue> keyValueAttributeMap, URI uri, String method, int statusCode)
+            throws MalformedURLException {
+        Assert.assertEquals(keyValueAttributeMap.get(SemanticAttributes.HTTP_METHOD.key()).getValue().getStringValue(), method);
+        Assert.assertEquals(keyValueAttributeMap.get(SemanticAttributes.HTTP_STATUS_CODE.key()).getValue().getIntValue(),
+                statusCode);
+        Assert.assertEquals(keyValueAttributeMap.get(SemanticAttributes.HTTP_URL.key()).getValue().getStringValue(),
+                uri.toURL().toString());
     }
 
     private Map<String, KeyValue> attributeMap(List<KeyValue> attributes) {
@@ -186,5 +361,12 @@ public class BaseTests extends Arquillian {
             uriBuilder.path(path);
         }
         return uriBuilder.build();
+    }
+
+    private class ClientRequestBuilderTextMapSetter implements HttpTextFormat.Setter<Builder> {
+        @Override
+        public void set(Builder carrier, String key, String value) {
+            carrier.header(key, value);
+        }
     }
 }
