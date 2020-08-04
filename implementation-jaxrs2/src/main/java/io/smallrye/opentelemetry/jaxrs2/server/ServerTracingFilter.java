@@ -70,7 +70,7 @@ public class ServerTracingFilter implements ContainerRequestFilter, ContainerRes
         SpanContext parentSpanContext = parentSpanContext(requestContext);
         Span span = tracer.spanBuilder(operationNameProvider.operationName(requestContext))
                 .setSpanKind(Kind.SERVER)
-                .addLink(parentSpanContext)
+                .setParent(parentSpanContext)
                 .startSpan();
 
         if (spanDecorators != null) {
