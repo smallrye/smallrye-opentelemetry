@@ -81,7 +81,7 @@ public class TestResource {
     @Traced(value = false)
     @Path(PATH_TRACED_FALSE)
     public void tracedFalse() {
-        assertCurrentSpan();
+        assertNoCurrentSpan();
     }
 
     @GET
@@ -91,9 +91,15 @@ public class TestResource {
         assertCurrentSpan();
     }
 
-    private void assertCurrentSpan() {
+    public static void assertCurrentSpan() {
         if (!TRACER.getCurrentSpan().isRecording()) {
-            throw new AssertionError("Mussing current span");
+            throw new AssertionError("Missing current span or is not recording events");
+        }
+    }
+
+    public static void assertNoCurrentSpan() {
+        if (TRACER.getCurrentSpan().isRecording()) {
+            throw new AssertionError("Current span should not be preset or recording events");
         }
     }
 }

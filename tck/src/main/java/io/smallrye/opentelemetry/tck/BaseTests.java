@@ -45,6 +45,7 @@ import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import io.smallrye.opentelemetry.tck.app.TestApplication;
 import io.smallrye.opentelemetry.tck.app.TestResource;
+import io.smallrye.opentelemetry.tck.app.TracingDisabledResource;
 
 /**
  * Test class for server side JAX-RS tests.
@@ -233,7 +234,7 @@ public class BaseTests extends Arquillian {
 
     @Test
     @RunAsClient
-    private void testTracedFalse()
+    private void testTracedFalseMethod()
             throws URISyntaxException, InterruptedException {
         Client client = ClientBuilder.newClient();
         URI uri = getURI(deploymentURL,
@@ -249,6 +250,57 @@ public class BaseTests extends Arquillian {
         Thread.sleep(DEFAULT_SLEEP_MS);
         List<Span> spans = otlpService.getSpans();
         Assert.assertEquals(spans.size(), 0);
+    }
+
+    @Test
+    @RunAsClient
+    private void testTracedFalseClass()
+            throws URISyntaxException, InterruptedException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TracingDisabledResource.PATH_ROOT,
+                TracingDisabledResource.PATH_SIMPLE);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Thread.sleep(DEFAULT_SLEEP_MS);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 0);
+    }
+
+    @Test
+    @RunAsClient
+    private void testTracedFeClassMethodOverrides()
+            throws URISyntaxException, MalformedURLException {
+        Client client = ClientBuilder.newClient();
+        URI uri = getURI(deploymentURL,
+                TestApplication.PATH_ROOT,
+                TracingDisabledResource.PATH_ROOT,
+                TracingDisabledResource.PATH_TRACING_ENABLED);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        List<Span> spans = otlpService.getSpans();
+        Assert.assertEquals(spans.size(), 1);
+
+        Span span = spans.get(0);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getName(),
+                String.format("GET:/%s/%s", TracingDisabledResource.PATH_ROOT, TracingDisabledResource.PATH_TRACING_ENABLED));
+
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        Map<String, KeyValue> keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 200);
     }
 
     @Test
