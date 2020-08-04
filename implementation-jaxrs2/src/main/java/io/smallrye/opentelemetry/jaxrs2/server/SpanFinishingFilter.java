@@ -43,7 +43,7 @@ public class SpanFinishingFilter implements Filter {
             SpanWrapper spanWrapper = getSpanWrapper(httpRequest);
             if (spanWrapper != null) {
                 SemanticAttributes.HTTP_STATUS_CODE.set(spanWrapper.get(), httpResponse.getStatus());
-                addExceptionLogs(spanWrapper.get(), ex);
+                annotateException(spanWrapper.get(), ex);
             }
             throw ex;
         } finally {
@@ -78,7 +78,7 @@ public class SpanFinishingFilter implements Filter {
         public void onComplete(AsyncEvent event) throws IOException {
             HttpServletResponse httpResponse = (HttpServletResponse) event.getSuppliedResponse();
             if (httpResponse.getStatus() >= 500) {
-                addExceptionLogs(spanWrapper.get(), event.getThrowable());
+                annotateException(spanWrapper.get(), event.getThrowable());
             }
             SemanticAttributes.HTTP_STATUS_CODE.set(spanWrapper.get(), httpResponse.getStatus());
             spanWrapper.finish();
@@ -99,7 +99,7 @@ public class SpanFinishingFilter implements Filter {
         }
     }
 
-    private static void addExceptionLogs(Span span, Throwable throwable) {
+    private static void annotateException(Span span, Throwable throwable) {
         Status unknownStatus = Status.UNKNOWN;
         if (throwable != null) {
             unknownStatus.withDescription(throwable.getMessage());
