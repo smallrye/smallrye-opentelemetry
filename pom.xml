@@ -15,7 +15,7 @@
     <version.opentelemetry>0.6.0</version.opentelemetry>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
     <version.resteasy>3.13.0.Final</version.resteasy>
-    <version.grpc>1.30.2</version.grpc>
+    <version.grpc>1.31.1</version.grpc>
     <version.jetty>9.4.31.v20200723</version.jetty>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
 
