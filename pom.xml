@@ -12,7 +12,7 @@
   <url>http://smallrye.io</url>
 
   <properties>
-    <version.opentelemetry>0.6.0</version.opentelemetry>
+    <version.opentelemetry>0.7.1</version.opentelemetry>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
     <version.resteasy>3.13.0.Final</version.resteasy>
     <version.grpc>1.30.2</version.grpc>
