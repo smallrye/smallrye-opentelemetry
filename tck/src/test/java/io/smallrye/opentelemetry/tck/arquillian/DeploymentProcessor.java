@@ -41,7 +41,7 @@ public class DeploymentProcessor implements ApplicationArchiveProcessor {
                     "io.smallrye:smallrye-opentelemetry-jaxrs2",
                     // TODO add once MP-RestClient instrumentation is supported
                     //  "org.jboss.resteasy:resteasy-client-microprofile",
-                    //  "org.jboss.resteasy:resteasy-client",
+                    "org.jboss.resteasy:resteasy-client",
                     "org.jboss.resteasy:resteasy-json-binding-provider",
                     "org.jboss.resteasy:resteasy-cdi",
                     "org.jboss.weld.servlet:weld-servlet-core",

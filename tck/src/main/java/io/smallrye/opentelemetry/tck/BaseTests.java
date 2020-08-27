@@ -5,6 +5,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -390,6 +393,59 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 0);
     }
 
+    @Test
+    @RunAsClient
+    private void testClient() throws URISyntaxException, MalformedURLException {
+        Client client = ClientBuilder.newClient();
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(TestResource.PARAM_NEST_DEPTH, "1");
+        URI uri = getURI(deploymentURL,
+                params,
+                TestApplication.PATH_ROOT,
+                TestResource.PATH_ROOT,
+                TestResource.PATH_NESTED);
+        Response response = client.target(uri)
+                .request()
+                .get();
+        response.close();
+        client.close();
+
+        Awaitility.await().until(() -> otlpService.getSpanCount() == 3);
+        List<Span> spans = otlpService.getSpans();
+
+        Assert.assertEquals(spans.size(), 3);
+
+        Span span;
+        String parentId;
+        Map<String, KeyValue> keyValueAttributeMap;
+
+        span = spans.get(2);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getParentSpanId().size(), 0);
+        Assert.assertEquals(span.getName(),
+                String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_NESTED));
+        Assert.assertEquals(span.getAttributesCount(), 3);
+        keyValueAttributeMap = attributeMap(span.getAttributesList());
+        assertHttpAttributes(keyValueAttributeMap, uri, "GET", 200);
+
+        parentId = span.getSpanId().toString(Charset.defaultCharset());
+        span = spans.get(1);
+        Assert.assertEquals(span.getKind(), SpanKind.CLIENT);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getParentSpanId().toString(Charset.defaultCharset()), parentId);
+        Assert.assertEquals(span.getName(), "GET");
+
+        parentId = span.getSpanId().toString(Charset.defaultCharset());
+        span = spans.get(0);
+        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getParentSpanId().toString(Charset.defaultCharset()), parentId);
+        Assert.assertEquals(span.getName(),
+                String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_NESTED));
+
+    }
+
     private void assertHttpAttributes(Map<String, KeyValue> keyValueAttributeMap, URI uri, String method, int statusCode)
             throws MalformedURLException {
         Assert.assertEquals(keyValueAttributeMap.get(SemanticAttributes.HTTP_METHOD.key()).getValue().getStringValue(), method);
@@ -407,12 +463,19 @@ public class BaseTests extends Arquillian {
         return keyValueAttributeMap;
     }
 
-    private URI getURI(URL deploymentURL, String... paths) throws URISyntaxException {
+    private URI getURI(URL deploymentURL, Map<String, String> params, String... paths) throws URISyntaxException {
         UriBuilder uriBuilder = UriBuilder.fromUri(deploymentURL.toURI());
         for (String path : paths) {
             uriBuilder.path(path);
         }
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            uriBuilder.queryParam(entry.getKey(), entry.getValue());
+        }
         return uriBuilder.build();
+    }
+
+    private URI getURI(URL deploymentURL, String... paths) throws URISyntaxException {
+        return getURI(deploymentURL, Collections.emptyMap(), paths);
     }
 
     private class ClientRequestBuilderTextMapSetter implements HttpTextFormat.Setter<Builder> {
