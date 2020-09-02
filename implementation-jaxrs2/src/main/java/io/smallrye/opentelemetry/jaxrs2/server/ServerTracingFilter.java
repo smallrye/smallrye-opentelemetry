@@ -104,7 +104,7 @@ public class ServerTracingFilter implements ContainerRequestFilter, ContainerRes
             return currentSpan.getContext();
         }
         Context context = OpenTelemetry.getPropagators()
-                .getHttpTextFormat()
+                .getTextMapPropagator()
                 .extract(Context.current(), requestContext.getHeaders(), HTTP_GETTER);
         Span span = TracingContextUtils.getSpan(context);
         return span != null ? span.getContext() : null;
