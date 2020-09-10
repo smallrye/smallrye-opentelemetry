@@ -84,8 +84,8 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
         }
 
         Context context = TracingContextUtils.withSpan(span, Context.current());
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, requestContext.getHeaders(),
-                new ServerHeadersInjectTextMap());
+        OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, requestContext.getHeaders(),
+                new ClientHeadersInjectTextMap());
 
         requestContext.setProperty(PROPERTY_NAME, new SpanWrapper(span, null));
     }

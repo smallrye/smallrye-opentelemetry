@@ -37,7 +37,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Span.SpanKind;
@@ -134,8 +134,8 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_SIMPLE));
@@ -164,9 +164,9 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.UnknownError);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_UNKNOWN_ERROR);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_EXCEPTION));
 
@@ -194,9 +194,9 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_ASYNC));
 
@@ -224,9 +224,9 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.UnknownError);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_UNKNOWN_ERROR);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_ASYNC_ERROR));
 
@@ -295,9 +295,9 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TracingDisabledResource.PATH_ROOT, TracingDisabledResource.PATH_TRACING_ENABLED));
 
@@ -326,9 +326,9 @@ public class BaseTests extends Arquillian {
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getName(), TestResource.TRACED_OVERRIDDEN_NAME);
 
         Assert.assertEquals(span.getAttributesCount(), 3);
@@ -352,7 +352,7 @@ public class BaseTests extends Arquillian {
         io.opentelemetry.trace.Span parentSpan = tracer.spanBuilder("parent")
                 .startSpan();
         try (Scope scope = tracer.withSpan(parentSpan)) {
-            OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), requestBuilder,
+            OpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), requestBuilder,
                     new ClientRequestBuilderTextMapSetter());
         }
 
@@ -360,8 +360,8 @@ public class BaseTests extends Arquillian {
         response.close();
         client.close();
 
-        List<Span> spans = otlpService.getSpans();
         Awaitility.await().until(() -> otlpService.getSpanCount() == 1);
+        List<Span> spans = otlpService.getSpans();
         Assert.assertEquals(spans.size(), 1);
 
         Span span = spans.get(0);
@@ -420,8 +420,8 @@ public class BaseTests extends Arquillian {
         Map<String, KeyValue> keyValueAttributeMap;
 
         span = spans.get(2);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getParentSpanId().size(), 0);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_NESTED));
@@ -431,15 +431,15 @@ public class BaseTests extends Arquillian {
 
         parentId = span.getSpanId().toString(Charset.defaultCharset());
         span = spans.get(1);
-        Assert.assertEquals(span.getKind(), SpanKind.CLIENT);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_CLIENT);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getParentSpanId().toString(Charset.defaultCharset()), parentId);
         Assert.assertEquals(span.getName(), "GET");
 
         parentId = span.getSpanId().toString(Charset.defaultCharset());
         span = spans.get(0);
-        Assert.assertEquals(span.getKind(), SpanKind.SERVER);
-        Assert.assertEquals(span.getStatus().getCode(), StatusCode.Ok);
+        Assert.assertEquals(span.getKind(), SpanKind.SPAN_KIND_SERVER);
+        Assert.assertEquals(span.getStatus().getCode(), StatusCode.STATUS_CODE_OK);
         Assert.assertEquals(span.getParentSpanId().toString(Charset.defaultCharset()), parentId);
         Assert.assertEquals(span.getName(),
                 String.format("GET:/%s/%s", TestResource.PATH_ROOT, TestResource.PATH_NESTED));
@@ -478,7 +478,7 @@ public class BaseTests extends Arquillian {
         return getURI(deploymentURL, Collections.emptyMap(), paths);
     }
 
-    private class ClientRequestBuilderTextMapSetter implements HttpTextFormat.Setter<Builder> {
+    private class ClientRequestBuilderTextMapSetter implements TextMapPropagator.Setter<Builder> {
         @Override
         public void set(Builder carrier, String key, String value) {
             carrier.header(key, value);
