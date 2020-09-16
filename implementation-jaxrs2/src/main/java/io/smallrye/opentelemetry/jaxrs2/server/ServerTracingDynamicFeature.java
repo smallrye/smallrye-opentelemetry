@@ -26,7 +26,7 @@ import io.smallrye.opentelemetry.jaxrs2.server.OperationNameProvider.WildcardOpe
  */
 public class ServerTracingDynamicFeature implements DynamicFeature {
     private static final Logger log = Logger.getLogger(ServerTracingDynamicFeature.class.getName());
-    public static final String INSTRUMENTATION_NAME = "javax.ws.rs";
+    public static final String INSTRUMENTATION_NAME = "javax.ws.rs.server";
 
     private final Builder builder;
 
