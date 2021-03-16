@@ -9,11 +9,12 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
+import io.smallrye.opentelemetry.jaxrs2.client.ClientTracingFeature;
 import io.smallrye.opentelemetry.jaxrs2.server.ServerTracingDynamicFeature;
 import io.smallrye.opentelemetry.jaxrs2.server.SpanFinishingFilter;
 
 /**
- * @author Pavol Loffay
+ * @author Pavol Loffay, Felix Wong
  */
 @WebListener
 public class ServletContextTracingInstaller implements ServletContextListener {
@@ -21,7 +22,8 @@ public class ServletContextTracingInstaller implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         ServletContext servletContext = servletContextEvent.getServletContext();
-        servletContext.setInitParameter("resteasy.providers", ServerTracingDynamicFeature.class.getName());
+        servletContext.setInitParameter("resteasy.providers",
+                ServerTracingDynamicFeature.class.getName() + "," + ClientTracingFeature.class.getName());
 
         // Span finishing filter
         Dynamic filterRegistration = servletContext.addFilter("spanFinishingFilter", new SpanFinishingFilter());
