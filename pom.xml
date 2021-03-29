@@ -16,7 +16,7 @@
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
     <version.resteasy>3.13.1.Final</version.resteasy>
     <version.grpc>1.36.0</version.grpc>
-    <version.jetty>11.0.1</version.jetty>
+    <version.jetty>11.0.2</version.jetty>
     <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
 
     <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
