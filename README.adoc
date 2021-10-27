@@ -1,18 +1,6 @@
 image:https://github.com/smallrye/smallrye-opentelemetry/workflows/SmallRye%20Build/badge.svg["CI", link="https://github.com/smallrye/smallrye-opentelemetry/actions"]
 image:https://img.shields.io/github/license/smallrye/smallrye-opentracing.svg["License", link="http://www.apache.org/licenses/LICENSE-2.0"]
 
-= SmallRye-OpenTelemetry
+= SmallRye OpenTelemetry
 
 This is a POC project that integrates OpenTelemetry in MicroProfile.
-
-The plan is to provide similar set of capabilities as defined in link:https://github.com/eclipse/microprofile-opentracing[MicroProfile-OpenTracing].
-
-
-=== Debug
-
-Debug of the deployment can be enabled in `arquillian.xml` configuration file.
-
-Run the following to debug tests on port `8788`.
-```bash
-mvn -Dmaven.surefire.debug="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8788 -Xnoagent -Djava.compiler=NONE" test
-```
