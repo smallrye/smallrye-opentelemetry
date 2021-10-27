@@ -1,110 +1,82 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-parent</artifactId>
-        <version>26</version>
+        <version>32</version>
     </parent>
 
-  <artifactId>smallrye-opentelemetry-parent</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <url>http://smallrye.io</url>
+    <groupId>io.smallrye.opentelemetry</groupId>
+    <artifactId>smallrye-opentelemetry-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
 
-  <properties>
-    <version.opentelemetry>0.8.0</version.opentelemetry>
-    <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
-    <version.resteasy>3.13.1.Final</version.resteasy>
-    <version.grpc>1.36.0</version.grpc>
-    <version.jetty>11.0.1</version.jetty>
-    <version.jakarta.servlet-api>4.0.4</version.jakarta.servlet-api>
+    <packaging>pom</packaging>
+    <name>SmallRye: OpenTelemetry Parent</name>
+    <url>http://smallrye.io</url>
 
-    <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
-  </properties>
+    <properties>
+        <version.opentelemetry>1.7.0</version.opentelemetry>
+        <version.opentelemetry-alpha>${version.opentelemetry}-alpha</version.opentelemetry-alpha>
+    </properties>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
-  <issueManagement>
-    <system>GitHub</system>
-    <url>https://github.com/smallrye/smallrye-opentelemetry/issues</url>
-  </issueManagement>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/smallrye/smallrye-opentelemetry/issues</url>
+    </issueManagement>
 
-  <scm>
-    <connection>scm:git:git@github.com:smallrye/smallrye-opentelemetry</connection>
-    <developerConnection>scm:git:git@github.com:smallrye/smallrye-opentelemetry</developerConnection>
-    <url>https://github.com/smallrye/smallrye-opentelemetry/</url>
-    <tag>HEAD</tag>
-  </scm>
+    <scm>
+        <connection>scm:git:git@github.com:smallrye/smallrye-opentelemetry</connection>
+        <developerConnection>scm:git:git@github.com:smallrye/smallrye-opentelemetry</developerConnection>
+        <url>https://github.com/smallrye/smallrye-opentelemetry/</url>
+        <tag>HEAD</tag>
+    </scm>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>smallrye-opentelemetry-jaxrs2</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>smallrye-opentelemetry-api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>smallrye-opentelemetry-example-resteasy</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${version.opentelemetry}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom-alpha</artifactId>
+                <version>${version.opentelemetry-alpha}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+                <version>${version.opentelemetry-alpha}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-api</artifactId>
-        <version>${version.opentelemetry}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-sdk</artifactId>
-        <version>${version.opentelemetry}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-proto</artifactId>
-        <version>${version.opentelemetry}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-exporters-logging</artifactId>
-        <version>${version.opentelemetry}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-exporters-otlp</artifactId>
-        <version>${version.opentelemetry}</version>
-      </dependency>
+            <!-- Internal -->
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-      <dependency>
-        <groupId>jakarta.servlet</groupId>
-        <artifactId>jakarta.servlet-api</artifactId>
-        <version>${version.jakarta.servlet-api}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jboss.arquillian</groupId>
-        <artifactId>arquillian-bom</artifactId>
-        <version>${version.org.jboss.arquillian}</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <modules>
-    <module>api</module>
-    <module>implementation-jaxrs2</module>
-    <module>tck</module>
-    <module>examples/resteasy</module>
-  </modules>
+    <modules>
+        <module>api</module>
+        <module>implementation</module>
+        <!-- Old code for the prototype. Requires review.
+        <module>examples/resteasy</module>
+        -->
+    </modules>
 </project>
