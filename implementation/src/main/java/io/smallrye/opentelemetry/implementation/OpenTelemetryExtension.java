@@ -26,6 +26,9 @@ public class OpenTelemetryExtension implements Extension {
     public void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager beanManager) {
         beforeBeanDiscovery.addInterceptorBinding(
                 new WithSpanAnnotatedType(beanManager.createAnnotatedType(WithSpan.class)));
+
+        beforeBeanDiscovery.addAnnotatedType(OpenTelemetryProducer.class, OpenTelemetryProducer.class.getName());
+        beforeBeanDiscovery.addAnnotatedType(TracerProducer.class, TracerProducer.class.getName());
     }
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {

@@ -10,7 +10,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.jboss.weld.junit5.auto.AddExtensions;
-import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 
 @EnableAutoWeld
 @AddExtensions(OpenTelemetryExtension.class)
-@AddPackages(OpenTelemetryExtension.class)
 class WithSpanInterceptorTest {
     @Inject
     SpanBean spanBean;

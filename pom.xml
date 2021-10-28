@@ -18,6 +18,12 @@
     <properties>
         <version.opentelemetry>1.7.0</version.opentelemetry>
         <version.opentelemetry-alpha>${version.opentelemetry}-alpha</version.opentelemetry-alpha>
+
+        <!-- Test -->
+        <version.arquillian>1.7.0.Alpha10</version.arquillian>
+        <version.arquillian.jetty>1.0.0.CR3</version.arquillian.jetty>
+        <version.jetty>9.4.44.v20210927</version.jetty>
+        <version.resteasy>4.7.2.Final</version.resteasy>
     </properties>
 
     <licenses>
@@ -69,14 +75,52 @@
                 <artifactId>smallrye-opentelemetry-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-implementation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>org.jboss.arquillian</groupId>
+                <artifactId>arquillian-bom</artifactId>
+                <version>1.7.0.Final-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.arquillian.container</groupId>
+                <artifactId>arquillian-jetty-embedded-9</artifactId>
+                <version>${version.arquillian.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>${version.jetty}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.weld.servlet</groupId>
+                <artifactId>weld-servlet-core</artifactId>
+                <version>${version.weld.core}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-bom</artifactId>
+                <version>${version.resteasy}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>api</module>
         <module>implementation</module>
-        <!-- Old code for the prototype. Requires review.
-        <module>examples/resteasy</module>
-        -->
+        <module>tck</module>
     </modules>
 </project>
