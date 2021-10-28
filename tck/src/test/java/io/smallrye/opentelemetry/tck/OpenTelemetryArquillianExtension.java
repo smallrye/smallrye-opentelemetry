@@ -7,5 +7,6 @@ public class OpenTelemetryArquillianExtension implements LoadableExtension {
     @Override
     public void register(ExtensionBuilder extensionBuilder) {
         extensionBuilder.service(ApplicationArchiveProcessor.class, OpenTelemetryDeploymentProcessor.class);
+        extensionBuilder.observer(OpenTelemetryBeforeDeploy.class);
     }
 }

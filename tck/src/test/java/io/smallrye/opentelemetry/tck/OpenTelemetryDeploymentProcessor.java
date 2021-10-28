@@ -19,13 +19,14 @@ public class OpenTelemetryDeploymentProcessor implements ApplicationArchiveProce
 
             String[] deps = {
                     "org.jboss.resteasy:resteasy-servlet-initializer",
+                    // Required for web-fragment and init of the CdiInjectorFactory
                     "org.jboss.resteasy:resteasy-cdi",
-                    "org.jboss.resteasy:resteasy-json-binding-provider",
-                    "io.smallrye.opentelemetry:smallrye-opentelemetry-implementation"
+                    "io.smallrye.opentelemetry:smallrye-opentelemetry-implementation-cdi",
+                    "io.smallrye.opentelemetry:smallrye-opentelemetry-implementation-rest"
             };
             File[] dependencies = Maven.configureResolver()
                     .workOffline()
-                    .loadPomFromFile(new File("pom.xml"))
+                    .loadPomFromFile(new File("pom.xml"), "arquillian-jetty")
                     .resolve(deps)
                     .withoutTransitivity()
                     .asFile();

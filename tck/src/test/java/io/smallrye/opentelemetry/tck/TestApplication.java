@@ -19,6 +19,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -71,7 +72,7 @@ public class TestApplication {
     }
 
     @ApplicationPath("/rest")
-    public static class RestApplication extends javax.ws.rs.core.Application {
+    public static class RestApplication extends Application {
 
     }
 
