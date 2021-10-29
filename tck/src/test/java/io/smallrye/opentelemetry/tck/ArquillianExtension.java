@@ -3,10 +3,10 @@ package io.smallrye.opentelemetry.tck;
 import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
 import org.jboss.arquillian.core.spi.LoadableExtension;
 
-public class OpenTelemetryArquillianExtension implements LoadableExtension {
+public class ArquillianExtension implements LoadableExtension {
     @Override
     public void register(ExtensionBuilder extensionBuilder) {
-        extensionBuilder.service(ApplicationArchiveProcessor.class, OpenTelemetryDeploymentProcessor.class);
-        extensionBuilder.observer(OpenTelemetryBeforeDeploy.class);
+        extensionBuilder.service(ApplicationArchiveProcessor.class, DeploymentProcessor.class);
+        extensionBuilder.observer(ArquillianLifecycle.class);
     }
 }

@@ -38,11 +38,7 @@ public class TestApplication {
 
     @Deployment
     public static WebArchive createDeployment() {
-        return ShrinkWrap
-                .create(WebArchive.class)
-                .addClass(TestServlet.class)
-                .addClass(RestApplication.class)
-                .addClass(TestEndpoint.class);
+        return ShrinkWrap.create(WebArchive.class);
     }
 
     @Test

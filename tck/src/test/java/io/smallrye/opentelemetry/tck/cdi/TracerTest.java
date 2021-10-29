@@ -18,9 +18,7 @@ import io.opentelemetry.api.trace.Tracer;
 public class TracerTest {
     @Deployment
     public static WebArchive createDeployment() {
-        return ShrinkWrap
-                .create(WebArchive.class)
-                .addClass(TracerBean.class);
+        return ShrinkWrap.create(WebArchive.class);
     }
 
     @Inject

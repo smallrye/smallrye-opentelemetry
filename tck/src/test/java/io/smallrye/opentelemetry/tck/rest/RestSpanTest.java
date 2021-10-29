@@ -37,10 +37,7 @@ import io.smallrye.opentelemetry.tck.TestSpanExporter;
 public class RestSpanTest {
     @Deployment
     public static WebArchive createDeployment() {
-        return ShrinkWrap
-                .create(WebArchive.class)
-                .addClass(RestApplication.class)
-                .addClass(SpanResource.class);
+        return ShrinkWrap.create(WebArchive.class);
     }
 
     @ArquillianResource
