@@ -40,7 +40,7 @@ public class RestSpanTest {
         return ShrinkWrap
                 .create(WebArchive.class)
                 .addClass(RestApplication.class)
-                .addClass(RestSpan.class);
+                .addClass(SpanResource.class);
     }
 
     @ArquillianResource
@@ -82,7 +82,7 @@ public class RestSpanTest {
     }
 
     @Path("/")
-    public static class RestSpan {
+    public static class SpanResource {
         @GET
         @Path("/span")
         public Response span() {
