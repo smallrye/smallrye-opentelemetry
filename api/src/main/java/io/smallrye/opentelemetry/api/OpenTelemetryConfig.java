@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.cdi;
+package io.smallrye.opentelemetry.api;
 
 public interface OpenTelemetryConfig {
     String INSTRUMENTATION_NAME = "io.smallrye.opentelemetry";

@@ -1,6 +1,6 @@
 package io.smallrye.opentelemetry.implementation.cdi;
 
-import static io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryConfig.INSTRUMENTATION_NAME;
+import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;

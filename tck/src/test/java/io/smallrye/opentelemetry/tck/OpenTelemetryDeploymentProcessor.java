@@ -16,6 +16,7 @@ public class OpenTelemetryDeploymentProcessor implements ApplicationArchiveProce
         if (archive instanceof WebArchive) {
             WebArchive war = (WebArchive) archive;
             war.addAsWebInfResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"));
+            war.addClass(TestSpanExporter.class);
 
             String[] deps = {
                     "org.jboss.resteasy:resteasy-servlet-initializer",
