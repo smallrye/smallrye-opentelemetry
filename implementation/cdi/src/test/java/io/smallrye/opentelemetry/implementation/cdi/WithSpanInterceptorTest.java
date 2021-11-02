@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation;
+package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -11,7 +11,7 @@ import javax.inject.Inject;
 
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -19,18 +19,19 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
+import io.smallrye.config.inject.ConfigExtension;
 
 @EnableAutoWeld
-@AddExtensions(OpenTelemetryExtension.class)
+@AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
 class WithSpanInterceptorTest {
+    InMemorySpanExporter spanExporter;
+
     @Inject
     SpanBean spanBean;
-    @Inject
-    TestSpanExporter spanExporter;
 
-    @AfterEach
-    void tearDown() {
+    @BeforeEach
+    void setUp() {
+        spanExporter = InMemorySpanExporter.HOLDER.get();
         spanExporter.reset();
         GlobalOpenTelemetry.resetForTest();
     }

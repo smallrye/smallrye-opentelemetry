@@ -19,10 +19,13 @@
         <version.opentelemetry>1.7.0</version.opentelemetry>
         <version.opentelemetry-alpha>${version.opentelemetry}-alpha</version.opentelemetry-alpha>
 
+        <version.microprofile.config>2.0</version.microprofile.config>
+
         <!-- Test -->
         <version.arquillian>1.7.0.Alpha10</version.arquillian>
         <version.arquillian.jetty>1.0.0.CR3</version.arquillian.jetty>
         <version.jetty>9.4.44.v20210927</version.jetty>
+        <version.smallrye.config>2.5.1</version.smallrye.config>
         <version.resteasy>4.7.2.Final</version.resteasy>
     </properties>
 
@@ -67,6 +70,14 @@
                 <version>${version.opentelemetry-alpha}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- MicroProfile -->
+            <dependency>
+                <groupId>org.eclipse.microprofile.config</groupId>
+                <artifactId>microprofile-config-api</artifactId>
+                <version>${version.microprofile.config}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Internal -->
@@ -119,6 +130,12 @@
                 <version>${version.resteasy}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.config</groupId>
+                <artifactId>smallrye-config</artifactId>
+                <version>${version.smallrye.config}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
