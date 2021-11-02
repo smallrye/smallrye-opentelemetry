@@ -18,7 +18,7 @@ public class DeploymentProcessor implements ApplicationArchiveProcessor {
             WebArchive war = (WebArchive) archive;
             war.addAsWebInfResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"));
             war.addAsServiceProvider(ConfigSource.class, TestConfigSource.class);
-            war.addClass(TestSpanExporter.class);
+            war.addClass(InMemorySpanExporter.class);
 
             String[] deps = {
                     "org.jboss.resteasy:resteasy-servlet-initializer",

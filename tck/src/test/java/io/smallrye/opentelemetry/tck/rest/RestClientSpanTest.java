@@ -1,7 +1,11 @@
 package io.smallrye.opentelemetry.tck.rest;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
@@ -18,8 +22,12 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
 public class RestClientSpanTest {
@@ -29,14 +37,33 @@ public class RestClientSpanTest {
                 .addAsResource(new StringAsset("client/mp-rest/url=${baseUri}"), "META-INF/microprofile-config.properties");
     }
 
+    InMemorySpanExporter spanExporter;
+
     @Inject
     @RestClient
     SpanResourceClient client;
+
+    @BeforeEach
+    void setUp() {
+        spanExporter = InMemorySpanExporter.HOLDER.get();
+        spanExporter.reset();
+    }
 
     @Test
     void span() {
         Response response = client.span();
         assertEquals(response.getStatus(), HTTP_OK);
+
+        List<SpanData> spans = spanExporter.getFinishedSpanItems();
+        assertEquals(2, spans.size());
+
+        SpanData server = spans.get(0);
+        assertEquals(SERVER, server.getKind());
+
+        SpanData client = spans.get(1);
+        assertEquals(CLIENT, client.getKind());
+
+        assertEquals(server.getTraceId(), client.getTraceId());
     }
 
     @Path("/")

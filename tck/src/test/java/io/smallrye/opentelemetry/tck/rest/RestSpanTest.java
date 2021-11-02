@@ -3,27 +3,22 @@ package io.smallrye.opentelemetry.tck.rest;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
+import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.net.URL;
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
-import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.smallrye.opentelemetry.tck.TestSpanExporter;
+import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
 public class RestSpanTest {
@@ -40,21 +35,17 @@ public class RestSpanTest {
         return ShrinkWrap.create(WebArchive.class);
     }
 
-    @ArquillianResource
-    URL url;
-    @Inject
-    TestSpanExporter spanExporter;
+    InMemorySpanExporter spanExporter;
 
     @BeforeEach
     void setUp() {
+        spanExporter = InMemorySpanExporter.HOLDER.get();
         spanExporter.reset();
     }
 
     @Test
     void span() {
-        WebTarget echoEndpointTarget = ClientBuilder.newClient().target(url.toExternalForm() + "/span");
-        Response response = echoEndpointTarget.request(TEXT_PLAIN).get();
-        assertEquals(response.getStatus(), HTTP_OK);
+        given().get("/span").then().statusCode(HTTP_OK);
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
         assertEquals(1, spanItems.size());
@@ -66,9 +57,7 @@ public class RestSpanTest {
 
     @Test
     void spanName() {
-        WebTarget echoEndpointTarget = ClientBuilder.newClient().target(url.toExternalForm() + "/span/1");
-        Response response = echoEndpointTarget.request(TEXT_PLAIN).get();
-        assertEquals(response.getStatus(), HTTP_OK);
+        given().get("/span/1").then().statusCode(HTTP_OK);
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
         assertEquals(1, spanItems.size());

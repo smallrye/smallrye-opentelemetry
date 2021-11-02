@@ -2,6 +2,7 @@ package io.smallrye.opentelemetry.implementation.rest;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -17,17 +18,14 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.TracerBuilder;
-import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -54,12 +52,12 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                         new TextMapGetter<ContainerRequestContext>() {
                             @Override
                             public Iterable<String> keys(final ContainerRequestContext carrier) {
-                                return null;
+                                return carrier.getHeaders().keySet();
                             }
 
                             @Override
                             public String get(final ContainerRequestContext carrier, final String key) {
-                                return null;
+                                return carrier.getHeaders().getOrDefault(key, singletonList(null)).get(0);
                             }
                         });
     }
@@ -73,20 +71,20 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
             Context spanContext = instrumenter.start(parentContext, request);
             Scope scope = spanContext.makeCurrent();
-            request.setProperty("otel.span.context", spanContext);
-            request.setProperty("otel.span.parentContext", parentContext);
-            request.setProperty("otel.span.scope", scope);
+            request.setProperty("otel.span.server.context", spanContext);
+            request.setProperty("otel.span.server.parentContext", parentContext);
+            request.setProperty("otel.span.server.scope", scope);
         }
     }
 
     @Override
     public void filter(final ContainerRequestContext request, final ContainerResponseContext response) {
-        Scope scope = (Scope) request.getProperty("otel.span.scope");
+        Scope scope = (Scope) request.getProperty("otel.span.server.scope");
         if (scope == null) {
             return;
         }
 
-        Context spanContext = (Context) request.getProperty("otel.span.context");
+        Context spanContext = (Context) request.getProperty("otel.span.server.context");
         try {
             instrumenter.end(spanContext, request, response, null);
         } finally {
@@ -94,9 +92,9 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
             request.removeProperty("rest.resource.class");
             request.removeProperty("rest.resource.method");
-            request.removeProperty("otel.span.context");
-            request.removeProperty("otel.span.parentContext");
-            request.removeProperty("otel.span.scope");
+            request.removeProperty("otel.span.server.context");
+            request.removeProperty("otel.span.server.parentContext");
+            request.removeProperty("otel.span.server.scope");
         }
     }
 
@@ -178,42 +176,6 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         protected List<String> responseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
                 final String name) {
             return response.getStringHeaders().getOrDefault(name, emptyList());
-        }
-    }
-
-    // To ignore the version and find our Tracer, because the version is hardcoded in the Instrumenter constructor.
-    private static final class OpenTelemetryInstrumenter implements OpenTelemetry {
-        private final OpenTelemetry openTelemetry;
-
-        public OpenTelemetryInstrumenter(final OpenTelemetry openTelemetry) {
-            this.openTelemetry = openTelemetry;
-        }
-
-        @Override
-        public TracerProvider getTracerProvider() {
-            return openTelemetry.getTracerProvider();
-        }
-
-        @Override
-        public Tracer getTracer(final String instrumentationName) {
-            return openTelemetry.getTracer(instrumentationName);
-        }
-
-        @Override
-        public Tracer getTracer(
-                final String instrumentationName,
-                final String instrumentationVersion) {
-            return openTelemetry.getTracer(instrumentationName);
-        }
-
-        @Override
-        public TracerBuilder tracerBuilder(final String instrumentationName) {
-            return openTelemetry.tracerBuilder(instrumentationName);
-        }
-
-        @Override
-        public ContextPropagators getPropagators() {
-            return openTelemetry.getPropagators();
         }
     }
 }

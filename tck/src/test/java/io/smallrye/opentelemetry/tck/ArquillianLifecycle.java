@@ -11,6 +11,7 @@ import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.test.spi.TestClass;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.restassured.RestAssured;
 
 public class ArquillianLifecycle {
     public void beforeDeploy(@Observes BeforeDeploy event, TestClass testClass) {
@@ -25,5 +26,8 @@ public class ArquillianLifecycle {
         Servlet servlet = httpContext.getServlets().iterator().next();
         String baseUri = servlet.getBaseURI().toString();
         TestConfigSource.configuration.put("baseUri", baseUri);
+
+        RestAssured.port = httpContext.getPort();
+        RestAssured.basePath = servlet.getBaseURI().getPath();
     }
 }
