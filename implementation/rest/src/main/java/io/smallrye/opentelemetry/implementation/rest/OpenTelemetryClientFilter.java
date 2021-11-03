@@ -35,6 +35,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
     public OpenTelemetryClientFilter(final OpenTelemetry openTelemetry) {
         ClientAttributesExtractor clientAttributesExtractor = new ClientAttributesExtractor();
 
+        // TODO - The Client Span name is only "HTTP {METHOD_NAME}": https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
         InstrumenterBuilder<ClientRequestContext, ClientResponseContext> builder = Instrumenter.newBuilder(
                 new OpenTelemetryInstrumenter(openTelemetry),
                 INSTRUMENTATION_NAME,
@@ -90,7 +91,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
         @Override
         protected String url(final ClientRequestContext request) {
-            return null;
+            return request.getUri().toString();
         }
 
         @Override
@@ -100,7 +101,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
         @Override
         protected String method(final ClientRequestContext request) {
-            return null;
+            return request.getMethod();
         }
 
         @Override
@@ -121,7 +122,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
         @Override
         protected Integer statusCode(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
+            return response.getStatus();
         }
 
         @Override

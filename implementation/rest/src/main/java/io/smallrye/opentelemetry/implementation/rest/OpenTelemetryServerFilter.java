@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -107,7 +108,13 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         @Override
         protected String target(final ContainerRequestContext request) {
-            return null;
+            URI requestUri = request.getUriInfo().getRequestUri();
+            String path = requestUri.getPath();
+            String query = requestUri.getQuery();
+            if (path != null && query != null && !query.isEmpty()) {
+                return path + "?" + query;
+            }
+            return path;
         }
 
         @Override
@@ -116,6 +123,11 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
             Method method = (Method) request.getProperty("rest.resource.method");
 
             UriBuilder template = UriBuilder.fromResource(resourceClass);
+            String contextRoot = request.getUriInfo().getBaseUri().getPath();
+            if (contextRoot != null) {
+                template.path(contextRoot);
+            }
+
             if (method.isAnnotationPresent(Path.class)) {
                 template.path(method);
             }
@@ -125,14 +137,12 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         @Override
         protected String scheme(final ContainerRequestContext request) {
-            return null;
+            return request.getUriInfo().getRequestUri().getScheme();
         }
 
         @Override
-        protected String serverName(
-                final ContainerRequestContext request,
-                final ContainerResponseContext response) {
-            return null;
+        protected String serverName(final ContainerRequestContext request, final ContainerResponseContext response) {
+            return request.getUriInfo().getRequestUri().getHost();
         }
 
         @Override

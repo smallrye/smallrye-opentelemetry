@@ -7,6 +7,7 @@ import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.net.URL;
 import java.util.List;
 
 import javax.ws.rs.ApplicationPath;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +39,9 @@ public class RestSpanTest {
 
     InMemorySpanExporter spanExporter;
 
+    @ArquillianResource
+    private URL url;
+
     @BeforeEach
     void setUp() {
         spanExporter = InMemorySpanExporter.HOLDER.get();
@@ -50,7 +55,7 @@ public class RestSpanTest {
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals("/span", spanItems.get(0).getName());
+        assertEquals(url.getPath() + "span", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
     }
@@ -62,7 +67,7 @@ public class RestSpanTest {
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals("/span/{name}", spanItems.get(0).getName());
+        assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
     }
