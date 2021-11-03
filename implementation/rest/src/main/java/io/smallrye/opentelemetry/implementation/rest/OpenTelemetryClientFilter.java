@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 @Provider
@@ -41,18 +42,10 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(clientAttributesExtractor));
 
-        this.instrumenter = builder.addAttributesExtractor(clientAttributesExtractor)
-                .newClientInstrumenter(new TextMapSetter<ClientRequestContext>() {
-                    @Override
-                    public void set(
-                            final ClientRequestContext carrier,
-                            final String key,
-                            final String value) {
-                        if (carrier != null) {
-                            carrier.getHeaders().put(key, singletonList(value));
-                        }
-                    }
-                });
+        this.instrumenter = builder
+                .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
+                .addAttributesExtractor(clientAttributesExtractor)
+                .newClientInstrumenter(new ClientRequestContextTextMapSetter());
     }
 
     @Override
@@ -83,6 +76,15 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
             request.removeProperty("otel.span.client.context");
             request.removeProperty("otel.span.client.parentContext");
             request.removeProperty("otel.span.client.scope");
+        }
+    }
+
+    private static class ClientRequestContextTextMapSetter implements TextMapSetter<ClientRequestContext> {
+        @Override
+        public void set(final ClientRequestContext carrier, final String key, final String value) {
+            if (carrier != null) {
+                carrier.getHeaders().put(key, singletonList(value));
+            }
         }
     }
 

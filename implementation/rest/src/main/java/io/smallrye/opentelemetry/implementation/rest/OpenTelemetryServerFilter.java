@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 @Provider
@@ -48,19 +49,10 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(serverAttributesExtractor));
 
-        this.instrumenter = builder.addAttributesExtractor(serverAttributesExtractor)
-                .newServerInstrumenter(
-                        new TextMapGetter<ContainerRequestContext>() {
-                            @Override
-                            public Iterable<String> keys(final ContainerRequestContext carrier) {
-                                return carrier.getHeaders().keySet();
-                            }
-
-                            @Override
-                            public String get(final ContainerRequestContext carrier, final String key) {
-                                return carrier.getHeaders().getOrDefault(key, singletonList(null)).get(0);
-                            }
-                        });
+        this.instrumenter = builder
+                .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
+                .addAttributesExtractor(serverAttributesExtractor)
+                .newServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
     @Override
@@ -96,6 +88,22 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
             request.removeProperty("otel.span.server.context");
             request.removeProperty("otel.span.server.parentContext");
             request.removeProperty("otel.span.server.scope");
+        }
+    }
+
+    private static class ContainerRequestContextTextMapGetter implements TextMapGetter<ContainerRequestContext> {
+        @Override
+        public Iterable<String> keys(final ContainerRequestContext carrier) {
+            return carrier.getHeaders().keySet();
+        }
+
+        @Override
+        public String get(final ContainerRequestContext carrier, final String key) {
+            if (carrier == null) {
+                return null;
+            }
+
+            return carrier.getHeaders().getOrDefault(key, singletonList(null)).get(0);
         }
     }
 
