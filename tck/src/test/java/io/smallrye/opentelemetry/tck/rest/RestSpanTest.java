@@ -23,6 +23,7 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +32,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
-public class RestSpanTest {
+class RestSpanTest {
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class);
@@ -45,6 +46,11 @@ public class RestSpanTest {
     @BeforeEach
     void setUp() {
         spanExporter = InMemorySpanExporter.HOLDER.get();
+        spanExporter.reset();
+    }
+
+    @AfterEach
+    void tearDown() {
         spanExporter.reset();
     }
 

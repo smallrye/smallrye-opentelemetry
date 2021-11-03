@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import io.opentelemetry.api.trace.Tracer;
 
 @ExtendWith(ArquillianExtension.class)
-public class TracerTest {
+class TracerTest {
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class);

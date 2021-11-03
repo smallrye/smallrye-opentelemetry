@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ArquillianExtension.class)
-public class TestApplication {
+class TestApplication {
     @ArquillianResource
     private URL url;
 

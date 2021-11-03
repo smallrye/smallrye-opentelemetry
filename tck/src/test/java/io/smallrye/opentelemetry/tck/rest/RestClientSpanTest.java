@@ -1,5 +1,6 @@
 package io.smallrye.opentelemetry.tck.rest;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -18,6 +19,7 @@ import java.net.URL;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.GET;
@@ -38,16 +40,20 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
-public class RestClientSpanTest {
+class RestClientSpanTest {
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class)
@@ -65,6 +71,11 @@ public class RestClientSpanTest {
     @BeforeEach
     void setUp() {
         spanExporter = InMemorySpanExporter.HOLDER.get();
+        spanExporter.reset();
+    }
+
+    @AfterEach
+    void tearDown() {
         spanExporter.reset();
     }
 
@@ -158,8 +169,8 @@ public class RestClientSpanTest {
     @Test
     void spanError() {
         // Can't use REST Client here due to org.jboss.resteasy.microprofile.client.DefaultResponseExceptionMapper
-        WebTarget echoEndpointTarget = ClientBuilder.newClient().target(url.toString() + "span/error");
-        Response response = echoEndpointTarget.request().get();
+        WebTarget target = ClientBuilder.newClient().target(url.toString() + "span/error");
+        Response response = target.request().get();
         assertEquals(response.getStatus(), HTTP_INTERNAL_ERROR);
 
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
@@ -194,9 +205,9 @@ public class RestClientSpanTest {
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
         assertEquals(3, spans.size());
 
-        SpanData method = spans.get(0);
-        assertEquals(INTERNAL, method.getKind());
-        assertEquals("SpanBean.spanChild", method.getName());
+        SpanData internal = spans.get(0);
+        assertEquals(INTERNAL, internal.getKind());
+        assertEquals("SpanBean.spanChild", internal.getName());
 
         SpanData server = spans.get(1);
         assertEquals(SERVER, server.getKind());
@@ -215,16 +226,87 @@ public class RestClientSpanTest {
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/child", client.getAttributes().get(HTTP_URL));
 
-        assertEquals(client.getTraceId(), method.getTraceId());
+        assertEquals(client.getTraceId(), internal.getTraceId());
         assertEquals(client.getTraceId(), server.getTraceId());
-        assertEquals(method.getParentSpanId(), server.getSpanId());
+        assertEquals(internal.getParentSpanId(), server.getSpanId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
     }
 
+    @Test
+    void spanCurrent() {
+        Response response = client.spanCurrent();
+        assertEquals(response.getStatus(), HTTP_OK);
+
+        List<SpanData> spans = spanExporter.getFinishedSpanItems();
+        assertEquals(2, spans.size());
+
+        SpanData server = spans.get(0);
+        assertEquals(SERVER, server.getKind());
+        assertEquals(url.getPath() + "span/current", server.getName());
+        assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
+        assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
+        assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
+        assertEquals(url.getHost(), server.getAttributes().get(HTTP_SERVER_NAME));
+        assertEquals(url.getHost() + ":" + url.getPort(), server.getAttributes().get(HTTP_HOST));
+        assertEquals(url.getPath() + "span/current", server.getAttributes().get(HTTP_TARGET));
+        assertEquals("tck.current.value", server.getAttributes().get(stringKey("tck.current.key")));
+
+        SpanData client = spans.get(1);
+        assertEquals(CLIENT, client.getKind());
+        assertEquals("HTTP GET", client.getName());
+        assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
+        assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
+        assertEquals(url.toString() + "span/current", client.getAttributes().get(HTTP_URL));
+
+        assertEquals(client.getTraceId(), server.getTraceId());
+        assertEquals(server.getParentSpanId(), client.getSpanId());
+    }
+
+    @Test
+    void spanNew() {
+        Response response = client.spanNew();
+        assertEquals(response.getStatus(), HTTP_OK);
+
+        List<SpanData> spans = spanExporter.getFinishedSpanItems();
+        assertEquals(3, spans.size());
+
+        SpanData internal = spans.get(0);
+        assertEquals(INTERNAL, internal.getKind());
+        assertEquals("span.new", internal.getName());
+        assertEquals("tck.new.value", internal.getAttributes().get(stringKey("tck.new.key")));
+
+        SpanData server = spans.get(1);
+        assertEquals(SERVER, server.getKind());
+        assertEquals(url.getPath() + "span/new", server.getName());
+        assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
+        assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
+        assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
+        assertEquals(url.getHost(), server.getAttributes().get(HTTP_SERVER_NAME));
+        assertEquals(url.getHost() + ":" + url.getPort(), server.getAttributes().get(HTTP_HOST));
+        assertEquals(url.getPath() + "span/new", server.getAttributes().get(HTTP_TARGET));
+
+        SpanData client = spans.get(2);
+        assertEquals(CLIENT, client.getKind());
+        assertEquals("HTTP GET", client.getName());
+        assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
+        assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
+        assertEquals(url.toString() + "span/new", client.getAttributes().get(HTTP_URL));
+
+        assertEquals(client.getTraceId(), internal.getTraceId());
+        assertEquals(client.getTraceId(), server.getTraceId());
+        assertEquals(internal.getParentSpanId(), server.getSpanId());
+        assertEquals(server.getParentSpanId(), client.getSpanId());
+    }
+
+    @RequestScoped
     @Path("/")
     public static class SpanResource {
         @Inject
         SpanBean spanBean;
+        @Inject
+        Span span;
+        @Inject
+        Tracer tracer;
 
         @GET
         @Path("/span")
@@ -248,6 +330,27 @@ public class RestClientSpanTest {
         @Path("/span/child")
         public Response spanChild() {
             spanBean.spanChild();
+            return Response.ok().build();
+        }
+
+        @GET
+        @Path("/span/current")
+        public Response spanCurrent() {
+            span.setAttribute("tck.current.key", "tck.current.value");
+            return Response.ok().build();
+        }
+
+        @GET
+        @Path("/span/new")
+        public Response spanNew() {
+            Span span = tracer.spanBuilder("span.new")
+                    .setSpanKind(INTERNAL)
+                    .setParent(Context.current().with(this.span))
+                    .setAttribute("tck.new.key", "tck.new.value")
+                    .startSpan();
+
+            span.end();
+
             return Response.ok().build();
         }
     }
@@ -278,6 +381,14 @@ public class RestClientSpanTest {
         @GET
         @Path("/span/child")
         Response spanChild();
+
+        @GET
+        @Path("/span/current")
+        Response spanCurrent();
+
+        @GET
+        @Path("/span/new")
+        Response spanNew();
     }
 
     @ApplicationPath("/")

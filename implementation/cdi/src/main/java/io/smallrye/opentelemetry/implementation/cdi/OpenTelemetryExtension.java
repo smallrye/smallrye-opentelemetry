@@ -28,7 +28,6 @@ public class OpenTelemetryExtension implements Extension {
                 new WithSpanAnnotatedType(beanManager.createAnnotatedType(WithSpan.class)));
 
         beforeBeanDiscovery.addAnnotatedType(OpenTelemetryProducer.class, OpenTelemetryProducer.class.getName());
-        beforeBeanDiscovery.addAnnotatedType(TracerProducer.class, TracerProducer.class.getName());
         beforeBeanDiscovery.addAnnotatedType(OpenTelemetryConfigProperties.class,
                 OpenTelemetryConfigProperties.class.getName());
     }
