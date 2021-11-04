@@ -1,6 +1,8 @@
 package io.smallrye.opentelemetry.tck.rest;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_VERSION;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.restassured.RestAssured.given;
@@ -18,6 +20,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -64,6 +67,9 @@ class RestSpanTest {
         assertEquals(url.getPath() + "span", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
+
+        assertEquals("tck", spanItems.get(0).getResource().getAttribute(SERVICE_NAME));
+        assertEquals("0.1.0-SNAPSHOT", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
     }
 
     @Test
