@@ -17,7 +17,7 @@
 
     <properties>
         <version.opentelemetry>1.7.0</version.opentelemetry>
-        <version.opentelemetry-alpha>${version.opentelemetry}-alpha</version.opentelemetry-alpha>
+        <version.opentelemetry-alpha>1.9.1-alpha</version.opentelemetry-alpha>
 
         <version.microprofile.config>2.0</version.microprofile.config>
 
