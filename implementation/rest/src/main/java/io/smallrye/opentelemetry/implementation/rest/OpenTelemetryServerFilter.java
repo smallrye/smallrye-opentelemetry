@@ -1,6 +1,7 @@
 package io.smallrye.opentelemetry.implementation.rest;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
+import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -44,9 +44,10 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     public OpenTelemetryServerFilter(final OpenTelemetry openTelemetry) {
         ServerAttributesExtractor serverAttributesExtractor = new ServerAttributesExtractor();
 
-        InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.newBuilder(
-                new OpenTelemetryInstrumenter(openTelemetry),
+        InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
+                openTelemetry,
                 INSTRUMENTATION_NAME,
+                INSTRUMENTATION_VERSION,
                 HttpSpanNameExtractor.create(serverAttributesExtractor));
 
         this.instrumenter = builder

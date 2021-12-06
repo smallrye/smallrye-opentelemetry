@@ -6,7 +6,6 @@ import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SE
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_URL;
 import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +21,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -33,7 +31,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -72,6 +72,10 @@ class RestSpanTest {
 
         assertEquals("tck", spanItems.get(0).getResource().getAttribute(SERVICE_NAME));
         assertEquals("0.1.0-SNAPSHOT", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
+
+        InstrumentationLibraryInfo libraryInfo = spanItems.get(0).getInstrumentationLibraryInfo();
+        assertEquals(OpenTelemetryConfig.INSTRUMENTATION_NAME, libraryInfo.getName());
+        assertEquals(OpenTelemetryConfig.INSTRUMENTATION_VERSION, libraryInfo.getVersion());
     }
 
     @Test

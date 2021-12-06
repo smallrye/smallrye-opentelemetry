@@ -1,6 +1,7 @@
 package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
+import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -20,14 +21,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 public class WithSpanInterceptor {
     private final Instrumenter<MethodRequest, Void> instrumenter;
 
     public WithSpanInterceptor(final OpenTelemetry openTelemetry) {
-        InstrumenterBuilder<MethodRequest, Void> builder = Instrumenter.newBuilder(new OpenTelemetryInstrumenter(openTelemetry),
-                INSTRUMENTATION_NAME,
+        InstrumenterBuilder<MethodRequest, Void> builder = Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME,
+                INSTRUMENTATION_VERSION,
                 new MethodRequestSpanNameExtractor());
 
         MethodSpanAttributesExtractor<MethodRequest, Void> attributesExtractor = MethodSpanAttributesExtractor.newInstance(

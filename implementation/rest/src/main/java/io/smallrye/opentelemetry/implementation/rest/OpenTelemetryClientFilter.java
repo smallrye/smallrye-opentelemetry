@@ -1,6 +1,7 @@
 package io.smallrye.opentelemetry.implementation.rest;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
+import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.smallrye.opentelemetry.api.OpenTelemetryInstrumenter;
 
 @Provider
 public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -37,9 +37,10 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         ClientAttributesExtractor clientAttributesExtractor = new ClientAttributesExtractor();
 
         // TODO - The Client Span name is only "HTTP {METHOD_NAME}": https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
-        InstrumenterBuilder<ClientRequestContext, ClientResponseContext> builder = Instrumenter.newBuilder(
-                new OpenTelemetryInstrumenter(openTelemetry),
+        InstrumenterBuilder<ClientRequestContext, ClientResponseContext> builder = Instrumenter.builder(
+                openTelemetry,
                 INSTRUMENTATION_NAME,
+                INSTRUMENTATION_VERSION,
                 HttpSpanNameExtractor.create(clientAttributesExtractor));
 
         this.instrumenter = builder
