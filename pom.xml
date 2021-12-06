@@ -145,5 +145,6 @@
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
         <module>tck</module>
+        <module>examples</module>
     </modules>
 </project>
