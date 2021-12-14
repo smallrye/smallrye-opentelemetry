@@ -32,7 +32,7 @@
         <version.smallrye.config>2.7.0</version.smallrye.config>
 
         <version.opentelemetry>1.9.1</version.opentelemetry>
-        <version.grpc-okhttp>1.41.0</version.grpc-okhttp>
+        <version.grpc-okhttp>1.42.1</version.grpc-okhttp>
 
         <sonar.skip>true</sonar.skip>
     </properties>
