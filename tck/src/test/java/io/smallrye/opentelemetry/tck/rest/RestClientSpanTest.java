@@ -40,7 +40,6 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,22 +59,16 @@ class RestClientSpanTest {
                 .addAsResource(new StringAsset("client/mp-rest/url=${baseUri}"), "META-INF/microprofile-config.properties");
     }
 
-    InMemorySpanExporter spanExporter;
-
     @ArquillianResource
-    private URL url;
+    URL url;
+    @Inject
+    InMemorySpanExporter spanExporter;
     @Inject
     @RestClient
     SpanResourceClient client;
 
     @BeforeEach
     void setUp() {
-        spanExporter = InMemorySpanExporter.HOLDER.get();
-        spanExporter.reset();
-    }
-
-    @AfterEach
-    void tearDown() {
         spanExporter.reset();
     }
 
@@ -84,8 +77,7 @@ class RestClientSpanTest {
         Response response = client.span();
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
@@ -113,8 +105,7 @@ class RestClientSpanTest {
         Response response = client.spanName("1");
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
@@ -142,8 +133,7 @@ class RestClientSpanTest {
         Response response = client.spanNameQuery("1", "query");
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
@@ -173,8 +163,7 @@ class RestClientSpanTest {
         Response response = target.request().get();
         assertEquals(response.getStatus(), HTTP_INTERNAL_ERROR);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
@@ -202,8 +191,7 @@ class RestClientSpanTest {
         Response response = client.spanChild();
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(3, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(3);
 
         SpanData internal = spans.get(0);
         assertEquals(INTERNAL, internal.getKind());
@@ -237,8 +225,7 @@ class RestClientSpanTest {
         Response response = client.spanCurrent();
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
@@ -267,8 +254,7 @@ class RestClientSpanTest {
         Response response = client.spanNew();
         assertEquals(response.getStatus(), HTTP_OK);
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(3, spans.size());
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(3);
 
         SpanData internal = spans.get(0);
         assertEquals(INTERNAL, internal.getKind());

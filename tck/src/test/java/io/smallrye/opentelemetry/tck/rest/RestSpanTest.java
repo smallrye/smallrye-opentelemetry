@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.URL;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
@@ -26,7 +27,6 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,19 +43,13 @@ class RestSpanTest {
         return ShrinkWrap.create(WebArchive.class);
     }
 
-    InMemorySpanExporter spanExporter;
-
     @ArquillianResource
-    private URL url;
+    URL url;
+    @Inject
+    InMemorySpanExporter spanExporter;
 
     @BeforeEach
     void setUp() {
-        spanExporter = InMemorySpanExporter.HOLDER.get();
-        spanExporter.reset();
-    }
-
-    @AfterEach
-    void tearDown() {
         spanExporter.reset();
     }
 
@@ -63,7 +57,7 @@ class RestSpanTest {
     void span() {
         given().get("/span").then().statusCode(HTTP_OK);
 
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
         assertEquals(url.getPath() + "span", spanItems.get(0).getName());
@@ -82,7 +76,7 @@ class RestSpanTest {
     void spanName() {
         given().get("/span/1").then().statusCode(HTTP_OK);
 
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
         assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getName());
@@ -94,7 +88,7 @@ class RestSpanTest {
     void spanNameWithoutQueryString() {
         given().get("/span/1?id=1").then().statusCode(HTTP_OK);
 
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems();
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
         assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getName());

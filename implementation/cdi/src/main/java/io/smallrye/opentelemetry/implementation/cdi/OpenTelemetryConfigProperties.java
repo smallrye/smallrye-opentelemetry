@@ -6,11 +6,13 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.spi.Converter;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
@@ -47,8 +49,7 @@ public class OpenTelemetryConfigProperties implements ConfigProperties {
 
     @Override
     public Duration getDuration(final String name) {
-        // TODO - May require a Duration Converter. Need to check how it is supposed to be set in OpenTel
-        return config.getOptionalValue(name, Duration.class).orElse(null);
+        return config.getOptionalValue(name, String.class).map(DURATION_CONVERTER::convert).orElse(null);
     }
 
     @Override
@@ -75,5 +76,60 @@ public class OpenTelemetryConfigProperties implements ConfigProperties {
             }
         }
         return values;
+    }
+
+    private static final Converter<Duration> DURATION_CONVERTER = new DurationConverter();
+
+    /**
+     * Mostly a copy from OTel Duration conversion. Check io.opentelemetry.sdk.autoconfigure.DefaultConfigProperties.
+     */
+    private static class DurationConverter implements Converter<Duration> {
+        @Override
+        public Duration convert(final String value) throws IllegalArgumentException, NullPointerException {
+            if (value == null || value.isEmpty()) {
+                return null;
+            }
+
+            String unitString = getUnitString(value);
+            String numberString = value.substring(0, value.length() - unitString.length());
+            try {
+                long rawNumber = Long.parseLong(numberString.trim());
+                TimeUnit unit = getDurationUnit(unitString.trim());
+                return Duration.ofMillis(TimeUnit.MILLISECONDS.convert(rawNumber, unit));
+            } catch (NumberFormatException | ConfigurationException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        private static String getUnitString(String rawValue) {
+            int lastDigitIndex = rawValue.length() - 1;
+            while (lastDigitIndex >= 0) {
+                char c = rawValue.charAt(lastDigitIndex);
+                if (Character.isDigit(c)) {
+                    break;
+                }
+                lastDigitIndex -= 1;
+            }
+            // Pull everything after the last digit.
+            return rawValue.substring(lastDigitIndex + 1);
+        }
+
+        private static TimeUnit getDurationUnit(String unitString) {
+            switch (unitString) {
+                case "": // Fallthrough expected
+                case "ms":
+                    return TimeUnit.MILLISECONDS;
+                case "s":
+                    return TimeUnit.SECONDS;
+                case "m":
+                    return TimeUnit.MINUTES;
+                case "h":
+                    return TimeUnit.HOURS;
+                case "d":
+                    return TimeUnit.DAYS;
+                default:
+                    throw new ConfigurationException("Invalid duration string, found: " + unitString);
+            }
+        }
     }
 }

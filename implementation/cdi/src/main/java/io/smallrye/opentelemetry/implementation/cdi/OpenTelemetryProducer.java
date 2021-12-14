@@ -25,6 +25,7 @@ public class OpenTelemetryProducer {
         // TODO - Register exporters as CDI Beans?
         // TODO - We need some changes in the auto configuration code, so we can customize it a bit better
         // TODO - Careful that auto configuration adds a shutdown hook here: io/opentelemetry/sdk/autoconfigure/TracerProviderConfiguration.java:58
+        //      - A new OpenTelemetry is started per Weld instance, but when Weld is closed the OpenTelemetry only closes on JVM shutdown.
         return OpenTelemetrySdkAutoConfiguration.initialize(true, configProperties);
     }
 

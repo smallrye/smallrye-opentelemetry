@@ -4,7 +4,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.URL;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
@@ -20,13 +19,11 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -36,19 +33,13 @@ class BaggageTest {
         return ShrinkWrap.create(WebArchive.class);
     }
 
-    InMemorySpanExporter spanExporter;
-
     @ArquillianResource
-    private URL url;
+    URL url;
+    @Inject
+    InMemorySpanExporter spanExporter;
 
     @BeforeEach
     void setUp() {
-        spanExporter = InMemorySpanExporter.HOLDER.get();
-        spanExporter.reset();
-    }
-
-    @AfterEach
-    void tearDown() {
         spanExporter.reset();
     }
 
@@ -58,8 +49,7 @@ class BaggageTest {
         Response response = target.request().header("baggage", "user=naruto").get();
         assertEquals(HTTP_OK, response.getStatus());
 
-        List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertEquals(2, spans.size());
+        spanExporter.getFinishedSpanItems(2);
     }
 
     @Path("/baggage")
