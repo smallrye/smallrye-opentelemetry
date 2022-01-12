@@ -31,7 +31,8 @@
     <name>SmallRye: OpenTelemetry Examples</name>
 
     <modules>
-        <module>jaeger</module>
+        <module>library</module>
+        <module>agent</module>
     </modules>
 
     <build>

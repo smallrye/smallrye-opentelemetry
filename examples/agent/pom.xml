@@ -11,20 +11,20 @@
     </parent>
 
     <groupId>smallrye-opentelemetry-examples</groupId>
-    <artifactId>smallrye-opentelemetry-examples-jaeger</artifactId>
+    <artifactId>smallrye-opentelemetry-examples-agent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>SmallRye: OpenTelemetry Examples: Jaeger</name>
+    <name>SmallRye: OpenTelemetry Examples: Agent</name>
 
     <properties>
-        <java.version>8</java.version>
+        <java.version>11</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
         <version.plugin.compiler>3.7.0</version.plugin.compiler>
         <version.plugin.war>3.3.2</version.plugin.war>
         <version.plugin.dependency>3.2.0</version.plugin.dependency>
-        <version.plugin.jetty>11.0.7</version.plugin.jetty>
+        <version.plugin.jetty>10.0.7</version.plugin.jetty>
 
         <version.weld.api>3.1.Final</version.weld.api>
         <version.weld.core>3.1.7.SP1</version.weld.core>
@@ -32,9 +32,6 @@
         <version.smallrye.config>2.8.1</version.smallrye.config>
 
         <version.opentelemetry>1.9.1</version.opentelemetry>
-        <version.grpc-okhttp>1.43.2</version.grpc-okhttp>
-
-        <sonar.skip>true</sonar.skip>
     </properties>
 
     <build>
@@ -72,10 +69,42 @@
                         <webApp>
                             <contextPath>/</contextPath>
                         </webApp>
+                        <deployMode>FORK</deployMode>
+                        <jvmArgs>-javaagent:target/agent/opentelemetry-javaagent.jar -Dotel.javaagent.configuration-file=target/classes/META-INF/microprofile-config.properties</jvmArgs>
                     </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${version.plugin.dependency}</version>
+                <executions>
+                    <execution>
+                        <id>copy-jetty-agent</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>io.opentelemetry.javaagent</groupId>
+                                    <artifactId>opentelemetry-javaagent</artifactId>
+                                    <version>${version.opentelemetry}</version>
+                                    <type>jar</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/agent</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
@@ -109,73 +138,6 @@
             <artifactId>smallrye-config</artifactId>
             <version>${version.smallrye.config}</version>
         </dependency>
-
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-jaeger</artifactId>
-            <version>${version.opentelemetry}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-okhttp</artifactId>
-            <version>${version.grpc-okhttp}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-implementation-cdi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-implementation-rest</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>jetty-agent</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <version>${version.plugin.dependency}</version>
-                        <executions>
-                            <execution>
-                                <id>copy-jetty-agent</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <configuration>
-                                    <stripVersion>true</stripVersion>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>io.opentelemetry.javaagent</groupId>
-                                            <artifactId>opentelemetry-javaagent</artifactId>
-                                            <version>${version.opentelemetry}</version>
-                                            <type>jar</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/agent</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-maven-plugin</artifactId>
-                        <version>${version.plugin.jetty}</version>
-                        <configuration>
-                            <deployMode>FORK</deployMode>
-                            <jvmArgs>-javaagent:target/agent/opentelemetry-javaagent.jar -Dotel.javaagent.configuration-file=target/classes/META-INF/microprofile-config.properties</jvmArgs>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
