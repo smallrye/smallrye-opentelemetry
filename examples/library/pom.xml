@@ -113,7 +113,7 @@
         <!-- Open Telemetry -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-jaeger</artifactId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
             <version>${version.opentelemetry}</version>
         </dependency>
         <dependency>
