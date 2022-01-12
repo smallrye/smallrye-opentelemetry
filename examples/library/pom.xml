@@ -31,7 +31,7 @@
         <version.resteasy>4.7.2.Final</version.resteasy>
         <version.smallrye.config>2.8.1</version.smallrye.config>
 
-        <version.opentelemetry>1.9.1</version.opentelemetry>
+        <version.opentelemetry>1.10.0</version.opentelemetry>
         <version.grpc-okhttp>1.43.2</version.grpc-okhttp>
 
         <sonar.skip>true</sonar.skip>
