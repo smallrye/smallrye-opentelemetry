@@ -16,8 +16,11 @@
     <url>http://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.9.2</version.opentelemetry>
+        <java.version>11</java.version>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
 
+        <version.opentelemetry>1.9.2</version.opentelemetry>
         <version.microprofile.config>2.0</version.microprofile.config>
 
         <!-- Test -->

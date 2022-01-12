@@ -17,7 +17,7 @@
     <name>SmallRye: OpenTelemetry Examples: Library</name>
 
     <properties>
-        <java.version>8</java.version>
+        <java.version>11</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
