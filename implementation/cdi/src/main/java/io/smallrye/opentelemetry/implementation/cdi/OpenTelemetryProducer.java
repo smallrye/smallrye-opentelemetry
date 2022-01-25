@@ -2,31 +2,46 @@ package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.eclipse.microprofile.config.Config;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 
 @Singleton
 public class OpenTelemetryProducer {
     @Inject
-    OpenTelemetryConfigProperties configProperties;
+    Config config;
 
     @Produces
     @Singleton
     public OpenTelemetry getOpenTelemetry() {
-        // TODO - Register exporters as CDI Beans?
-        // TODO - We need some changes in the auto configuration code, so we can customize it a bit better
-        // TODO - Careful that auto configuration adds a shutdown hook here: io/opentelemetry/sdk/autoconfigure/TracerProviderConfiguration.java:58
-        //      - A new OpenTelemetry is started per Weld instance, but when Weld is closed the OpenTelemetry only closes on JVM shutdown.
-        return OpenTelemetrySdkAutoConfiguration.initialize(true, configProperties);
+        Map<String, String> oTelConfigs = new HashMap<>();
+        for (String propertyName : config.getPropertyNames()) {
+            if (propertyName.startsWith("otel.") || propertyName.startsWith("OTEL_")) {
+                config.getOptionalValue(propertyName, String.class).ifPresent(
+                        value -> oTelConfigs.put(propertyName, value));
+            }
+        }
+
+        AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
+        return builder.setResultAsGlobal(true)
+                //.registerShutdownHook(false) -> Not released yet
+                .addPropertiesSupplier(() -> oTelConfigs)
+                .build()
+                .getOpenTelemetrySdk();
     }
 
     @Produces
