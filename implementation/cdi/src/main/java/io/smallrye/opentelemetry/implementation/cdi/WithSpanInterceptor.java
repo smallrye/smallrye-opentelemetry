@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
 
 public class WithSpanInterceptor {
     private final Instrumenter<MethodRequest, Void> instrumenter;

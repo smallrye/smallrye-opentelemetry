@@ -26,6 +26,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 
@@ -52,7 +53,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
-                .addAttributesExtractor(serverAttributesExtractor)
+                .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesExtractor))
                 .newServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
@@ -109,14 +110,14 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     }
 
     private static class ServerAttributesExtractor
-            extends HttpServerAttributesExtractor<ContainerRequestContext, ContainerResponseContext> {
+            implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
-        protected String flavor(final ContainerRequestContext request) {
+        public String flavor(final ContainerRequestContext request) {
             return null;
         }
 
         @Override
-        protected String target(final ContainerRequestContext request) {
+        public String target(final ContainerRequestContext request) {
             URI requestUri = request.getUriInfo().getRequestUri();
             String path = requestUri.getPath();
             String query = requestUri.getQuery();
@@ -127,7 +128,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        protected String route(final ContainerRequestContext request) {
+        public String route(final ContainerRequestContext request) {
             Class<?> resourceClass = (Class<?>) request.getProperty("rest.resource.class");
             Method method = (Method) request.getProperty("rest.resource.method");
 
@@ -145,54 +146,54 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        protected String scheme(final ContainerRequestContext request) {
+        public String scheme(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getScheme();
         }
 
         @Override
-        protected String serverName(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public String serverName(final ContainerRequestContext request, final ContainerResponseContext response) {
             return request.getUriInfo().getRequestUri().getHost();
         }
 
         @Override
-        protected String method(final ContainerRequestContext request) {
+        public String method(final ContainerRequestContext request) {
             return request.getMethod();
         }
 
         @Override
-        protected List<String> requestHeader(final ContainerRequestContext request, final String name) {
+        public List<String> requestHeader(final ContainerRequestContext request, final String name) {
             return request.getHeaders().getOrDefault(name, emptyList());
         }
 
         @Override
-        protected Long requestContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public Long requestContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
             return null;
         }
 
         @Override
-        protected Long requestContentLengthUncompressed(final ContainerRequestContext request,
+        public Long requestContentLengthUncompressed(final ContainerRequestContext request,
                 final ContainerResponseContext response) {
             return null;
         }
 
         @Override
-        protected Integer statusCode(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public Integer statusCode(final ContainerRequestContext request, final ContainerResponseContext response) {
             return response.getStatus();
         }
 
         @Override
-        protected Long responseContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public Long responseContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
             return null;
         }
 
         @Override
-        protected Long responseContentLengthUncompressed(final ContainerRequestContext request,
+        public Long responseContentLengthUncompressed(final ContainerRequestContext request,
                 final ContainerResponseContext response) {
             return null;
         }
 
         @Override
-        protected List<String> responseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
+        public List<String> responseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
                 final String name) {
             return response.getStringHeaders().getOrDefault(name, emptyList());
         }
