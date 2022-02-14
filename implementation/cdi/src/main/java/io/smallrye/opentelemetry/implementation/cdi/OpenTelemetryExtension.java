@@ -28,8 +28,6 @@ public class OpenTelemetryExtension implements Extension {
                 new WithSpanAnnotatedType(beanManager.createAnnotatedType(WithSpan.class)));
 
         beforeBeanDiscovery.addAnnotatedType(OpenTelemetryProducer.class, OpenTelemetryProducer.class.getName());
-        beforeBeanDiscovery.addAnnotatedType(OpenTelemetryConfigProperties.class,
-                OpenTelemetryConfigProperties.class.getName());
     }
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
