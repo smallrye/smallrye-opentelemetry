@@ -20,7 +20,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
-        <version.opentelemetry>1.10.0</version.opentelemetry>
+        <version.opentelemetry>1.11.0-alpha</version.opentelemetry>
         <version.microprofile.config>2.0</version.microprofile.config>
 
         <!-- Test -->
@@ -56,7 +56,7 @@
             <dependency>
                 <groupId>io.opentelemetry.instrumentation</groupId>
                 <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
-                <version>${version.opentelemetry}-alpha</version>
+                <version>${version.opentelemetry}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
