@@ -21,7 +21,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
         <version.opentelemetry>1.11.0</version.opentelemetry>
-        <version.microprofile.config>2.0</version.microprofile.config>
+        <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
         <version.arquillian>1.7.0.Alpha10</version.arquillian>
