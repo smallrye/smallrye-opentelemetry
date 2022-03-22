@@ -151,7 +151,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        public String serverName(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public String serverName(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getHost();
         }
 
