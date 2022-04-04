@@ -24,7 +24,7 @@
         <version.plugin.compiler>3.7.0</version.plugin.compiler>
         <version.plugin.war>3.3.2</version.plugin.war>
         <version.plugin.dependency>3.3.0</version.plugin.dependency>
-        <version.plugin.jetty>10.0.8</version.plugin.jetty>
+        <version.plugin.jetty>10.0.9</version.plugin.jetty>
 
         <version.weld.api>3.1.Final</version.weld.api>
         <version.weld.core>3.1.7.SP1</version.weld.core>
