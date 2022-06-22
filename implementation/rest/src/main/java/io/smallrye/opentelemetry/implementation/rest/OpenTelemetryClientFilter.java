@@ -41,8 +41,8 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         InstrumenterBuilder<ClientRequestContext, ClientResponseContext> builder = Instrumenter.builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                INSTRUMENTATION_VERSION,
                 HttpSpanNameExtractor.create(clientAttributesExtractor));
+        builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))

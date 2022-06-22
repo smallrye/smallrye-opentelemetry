@@ -20,15 +20,15 @@ import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
+import io.opentelemetry.instrumentation.api.util.SpanNames;
 
 public class WithSpanInterceptor {
     private final Instrumenter<MethodRequest, Void> instrumenter;
 
     public WithSpanInterceptor(final OpenTelemetry openTelemetry) {
         InstrumenterBuilder<MethodRequest, Void> builder = Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME,
-                INSTRUMENTATION_VERSION,
                 new MethodRequestSpanNameExtractor());
+        builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
         MethodSpanAttributesExtractor<MethodRequest, Void> attributesExtractor = MethodSpanAttributesExtractor.newInstance(
                 MethodRequest::getMethod,
