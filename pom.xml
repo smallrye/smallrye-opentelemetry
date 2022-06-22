@@ -20,7 +20,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
-        <version.opentelemetry>1.12.1</version.opentelemetry>
+        <version.opentelemetry>1.14.0</version.opentelemetry>
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
