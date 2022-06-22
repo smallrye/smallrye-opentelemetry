@@ -48,8 +48,8 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                INSTRUMENTATION_VERSION,
                 HttpSpanNameExtractor.create(serverAttributesExtractor));
+        builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
