@@ -28,7 +28,7 @@
         <version.arquillian.jetty>1.0.0.CR4</version.arquillian.jetty>
         <version.jetty>9.4.45.v20220203</version.jetty>
         <version.smallrye.config>2.10.1</version.smallrye.config>
-        <version.resteasy>4.7.5.Final</version.resteasy>
+        <version.resteasy>4.7.6.Final</version.resteasy>
     </properties>
 
     <licenses>
