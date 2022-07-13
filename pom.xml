@@ -71,6 +71,12 @@
 
             <!-- Internal -->
             <dependency>
+                <groupId>io.smallrye.config</groupId>
+                <artifactId>smallrye-config-core</artifactId>
+                <version>${version.smallrye.config}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-api</artifactId>
                 <version>${project.version}</version>
