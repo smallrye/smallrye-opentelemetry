@@ -1,12 +1,12 @@
 package io.smallrye.opentelemetry.implementation.common;
 
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import io.opentelemetry.extension.annotations.SpanAttribute;
+import io.opentelemetry.extension.annotations.WithSpan;
 
 @ApplicationScoped
 public class SpanBean {

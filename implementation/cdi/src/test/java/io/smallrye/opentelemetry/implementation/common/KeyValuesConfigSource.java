@@ -15,13 +15,13 @@
  */
 package io.smallrye.opentelemetry.implementation.common;
 
-import org.eclipse.microprofile.config.spi.ConfigSource;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.eclipse.microprofile.config.spi.ConfigSource;
 
 public class KeyValuesConfigSource implements ConfigSource, Serializable {
 

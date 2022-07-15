@@ -1,14 +1,19 @@
 package io.smallrye.opentelemetry.implementation.config;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
-import io.smallrye.config.SmallRyeConfig;
-import io.smallrye.config.SmallRyeConfigBuilder;
-import io.smallrye.config.inject.ConfigExtension;
-import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
-import io.smallrye.opentelemetry.implementation.common.InMemorySpanExporter;
+import static io.smallrye.opentelemetry.implementation.common.KeyValuesConfigSource.config;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import javax.inject.Inject;
+
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.ConfigValue;
@@ -20,29 +25,25 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
-
-import static io.smallrye.opentelemetry.implementation.common.KeyValuesConfigSource.config;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigBuilder;
+import io.smallrye.config.inject.ConfigExtension;
+import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
+import io.smallrye.opentelemetry.implementation.common.InMemorySpanExporter;
 
 @EnableAutoWeld
-@AddExtensions({OpenTelemetryExtension.class, ConfigExtension.class})
+@AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
 public class AutoconfigureTest {
     public static SmallRyeConfig config;
 
     @BeforeAll
     static void beforeAll() {
         ConfigProviderResolver.instance().releaseConfig(ConfigProvider.getConfig());
-        String[] properties = {"otel.experimental.sdk.enabled", "true",
+        String[] properties = { "otel.experimental.sdk.enabled", "true",
                 "otel.traces.exporter", "in-memory",
                 "otel.exporter.otlp.endpoint", "endpoint",
                 "otel.exporter.otlp.headers", "myheader=stuff,myheader2=stuff2",
@@ -52,7 +53,7 @@ public class AutoconfigureTest {
                 "otel.exporter.otlp.traces.headers", "mytraceheader=tracestuff,mytraceheader2=tracestuff2",
                 "otel.exporter.otlp.traces.compression", "none",
                 "otel.exporter.otlp.traces.timeout", "2000",
-                "otel.metrics.exporter", "none"};
+                "otel.metrics.exporter", "none" };
         config = new SmallRyeConfigBuilder()
                 .withSources(config(properties))
                 .addDefaultInterceptors()
@@ -84,23 +85,21 @@ public class AutoconfigureTest {
     @BeforeEach
     void resetGlobal() {
         GlobalOpenTelemetry.resetForTest();
-        builder =
-                AutoConfiguredOpenTelemetrySdk.builder()
-                        .setResultAsGlobal(false)
-                        .addPropertiesSupplier(disableExportPropertySupplier());
+        builder = AutoConfiguredOpenTelemetrySdk.builder()
+                .setResultAsGlobal(false)
+                .addPropertiesSupplier(disableExportPropertySupplier());
     }
 
     @Test
     public void basicAutoconfigureTest() {
-        AutoConfiguredOpenTelemetrySdk autoConfigured =
-                builder
-                        .addPropertiesSupplier(() -> Collections.singletonMap("key", "valueUnused"))
-                        .addPropertiesSupplier(() -> Collections.singletonMap("key", "value"))
-                        .addPropertiesSupplier(() -> Collections.singletonMap("otel-key", "otel-value"))
-                        .addPropertiesSupplier(
-                                () -> Collections.singletonMap("otel.service.name", "test-service"))
-                        .setResultAsGlobal(false)
-                        .build();
+        AutoConfiguredOpenTelemetrySdk autoConfigured = builder
+                .addPropertiesSupplier(() -> Collections.singletonMap("key", "valueUnused"))
+                .addPropertiesSupplier(() -> Collections.singletonMap("key", "value"))
+                .addPropertiesSupplier(() -> Collections.singletonMap("otel-key", "otel-value"))
+                .addPropertiesSupplier(
+                        () -> Collections.singletonMap("otel.service.name", "test-service"))
+                .setResultAsGlobal(false)
+                .build();
 
         assertEquals("test-service",
                 autoConfigured.getResource().getAttribute(ResourceAttributes.SERVICE_NAME));
@@ -121,11 +120,10 @@ public class AutoconfigureTest {
             mpConfigAttributes.put(name, value.getValue());
         });
 
-        AutoConfiguredOpenTelemetrySdk autoConfigured =
-                builder
-                        .addPropertiesSupplier(() -> mpConfigAttributes)
-                        .setResultAsGlobal(false)
-                        .build();
+        AutoConfiguredOpenTelemetrySdk autoConfigured = builder
+                .addPropertiesSupplier(() -> mpConfigAttributes)
+                .setResultAsGlobal(false)
+                .build();
 
         assertEquals(Boolean.TRUE,
                 autoConfigured.getConfig().getBoolean("otel.experimental.sdk.enabled"));

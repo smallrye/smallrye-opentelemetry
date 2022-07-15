@@ -6,11 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.smallrye.opentelemetry.implementation.common.InMemorySpanExporter;
-import io.smallrye.opentelemetry.implementation.common.SpanBean;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +15,10 @@ import org.junit.jupiter.api.Test;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.config.inject.ConfigExtension;
+import io.smallrye.opentelemetry.implementation.common.InMemorySpanExporter;
+import io.smallrye.opentelemetry.implementation.common.SpanBean;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
