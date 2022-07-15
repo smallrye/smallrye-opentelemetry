@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.cdi;
+package io.smallrye.opentelemetry.implementation.common;
 
 import javax.enterprise.inject.spi.CDI;
 

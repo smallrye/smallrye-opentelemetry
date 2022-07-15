@@ -1,1 +1,1 @@
-io.smallrye.opentelemetry.implementation.cdi.InMemorySpanExporterProvider
+io.smallrye.opentelemetry.implementation.common.InMemorySpanExporterProvider

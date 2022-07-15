@@ -1,9 +1,9 @@
 package io.smallrye.opentelemetry.implementation.config.traces;
 
+import java.util.Optional;
+
 import io.smallrye.config.WithDefault;
 import io.smallrye.opentelemetry.implementation.config.OtelConnectionConfig;
-
-import java.util.Optional;
 
 /**
  * Path: otel.exporter.traces
@@ -19,6 +19,6 @@ public interface TracesExporterConfig extends OtelConnectionConfig {
      * and either this value is true, or this value is unset.
      */
     @WithDefault("true")
-    Optional<Boolean> enabled();
+    Optional<Boolean> enabled(); // FIXME deployment config
 
 }

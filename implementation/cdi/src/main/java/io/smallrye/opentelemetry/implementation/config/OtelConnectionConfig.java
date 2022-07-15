@@ -1,12 +1,12 @@
 package io.smallrye.opentelemetry.implementation.config;
 
-import io.smallrye.config.WithDefault;
-import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
+import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.*;
 
 import java.util.Map;
 import java.util.Optional;
 
-import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.*;
+import io.smallrye.config.WithDefault;
+import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
 
 public interface OtelConnectionConfig {
 
@@ -62,6 +62,7 @@ public interface OtelConnectionConfig {
     enum CompressionType {
         GZIP("gzip"),
         NONE("none");
+
         private String value;
 
         CompressionType(String value) {

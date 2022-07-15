@@ -1,13 +1,13 @@
 package io.smallrye.opentelemetry.implementation.config.traces;
 
-import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithParentName;
-import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
+import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.OTLP_VALUE;
 
 import java.util.List;
 import java.util.Optional;
 
-import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.OTLP_VALUE;
+import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithParentName;
+import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
 
 public interface TracesConfig {
 
@@ -23,7 +23,7 @@ public interface TracesConfig {
      * @return
      */
     @WithDefault(OTLP_VALUE)
-    List<String> exporter();
+    List<String> exporter(); // FIXME deployment config
 
     SamplerConfig sampler();
 

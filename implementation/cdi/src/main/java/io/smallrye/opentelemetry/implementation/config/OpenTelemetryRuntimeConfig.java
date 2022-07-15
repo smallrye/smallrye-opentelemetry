@@ -1,16 +1,15 @@
 package io.smallrye.opentelemetry.implementation.config;
 
-
-import io.smallrye.config.ConfigMapping;
-import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithName;
-import io.smallrye.opentelemetry.implementation.config.traces.TracesConfig;
+import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.PropagatorType.Constants.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.PropagatorType.Constants.*;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
+import io.smallrye.opentelemetry.implementation.config.traces.TracesConfig;
 
 @ConfigMapping(prefix = "otel")
 public interface OpenTelemetryRuntimeConfig {
@@ -22,7 +21,7 @@ public interface OpenTelemetryRuntimeConfig {
      */
     @WithDefault("true")
     @WithName("experimental.sdk.enabled")
-    boolean experimentalSdkEnabled();
+    Boolean experimentalSdkEnabled(); // FIXME deploy config
 
     TracesConfig traces();
 
@@ -30,6 +29,7 @@ public interface OpenTelemetryRuntimeConfig {
      * The OpenTelemetry Protocol (OTLP) span, metric, and log exporters
      */
     ExporterType exporter(); // TODO if exporter=otlp then ExporterOtlpTraceConfig must be present...
+    // FIXME deploy config
 
     AttributeConfig attributes();
 
@@ -64,11 +64,9 @@ public interface OpenTelemetryRuntimeConfig {
      * Default is {@value PropagatorType.Constants#TRACE_CONTEXT},{@value PropagatorType.Constants#BAGGAGE} (W3C).
      */
     @WithDefault(TRACE_CONTEXT + "," + BAGGAGE)
-    List<String> propagators();
-
+    List<String> propagators(); // FIXME deploy config
 
     //********************************** inner structures ***************************
-
 
     interface AttributeConfig {
 

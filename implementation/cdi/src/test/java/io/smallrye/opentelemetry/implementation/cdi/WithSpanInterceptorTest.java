@@ -9,6 +9,8 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.smallrye.opentelemetry.implementation.common.InMemorySpanExporter;
+import io.smallrye.opentelemetry.implementation.common.SpanBean;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,44 +77,5 @@ class WithSpanInterceptorTest {
         assertEquals("SpanChildBean.spanChild", spanItems.get(0).getName());
         assertEquals("SpanBean.spanChild", spanItems.get(1).getName());
         assertEquals(spanItems.get(0).getParentSpanId(), spanItems.get(1).getSpanId());
-    }
-
-    @ApplicationScoped
-    public static class SpanBean {
-        @WithSpan
-        public void span() {
-
-        }
-
-        @WithSpan("name")
-        public void spanName() {
-
-        }
-
-        @WithSpan(kind = SERVER)
-        public void spanKind() {
-
-        }
-
-        @WithSpan
-        public void spanArgs(@SpanAttribute(value = "arg") String arg) {
-
-        }
-
-        @Inject
-        SpanChildBean spanChildBean;
-
-        @WithSpan
-        public void spanChild() {
-            spanChildBean.spanChild();
-        }
-    }
-
-    @ApplicationScoped
-    public static class SpanChildBean {
-        @WithSpan
-        public void spanChild() {
-
-        }
     }
 }

@@ -20,7 +20,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
 
-        <version.opentelemetry>1.14.0</version.opentelemetry>
+        <version.opentelemetry>1.15.0</version.opentelemetry>
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
@@ -70,6 +70,12 @@
             </dependency>
 
             <!-- Internal -->
+            <dependency>
+                <groupId>io.smallrye.config</groupId>
+                <artifactId>smallrye-config-core</artifactId>
+                <version>${version.smallrye.config}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-api</artifactId>

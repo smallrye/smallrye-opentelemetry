@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.cdi;
+package io.smallrye.opentelemetry.implementation.common;
 
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -11,7 +11,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -37,6 +43,10 @@ public class InMemorySpanExporter implements SpanExporter {
         await().atMost(10, SECONDS).untilAsserted(() -> assertEquals(spanCount, finishedSpanItems.size()));
     }
 
+    public void assertSpanCount(int spanCount, int timeout) {
+        await().atMost(timeout, SECONDS).untilAsserted(() -> assertEquals(spanCount, finishedSpanItems.size()));
+    }
+
     public void reset() {
         finishedSpanItems.clear();
     }
@@ -60,5 +70,10 @@ public class InMemorySpanExporter implements SpanExporter {
         finishedSpanItems.clear();
         isStopped = true;
         return CompletableResultCode.ofSuccess();
+    }
+
+    public OpenTelemetry getSDK() {
+
+        return GlobalOpenTelemetry.get();
     }
 }
