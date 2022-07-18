@@ -12,6 +12,17 @@ import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfi
 public interface TracesConfig {
 
     /**
+     * Enable tracing with OpenTelemetry.
+     * <p>
+     * This property is not available in the Open Telemetry SDK. It's Quarkus specific.
+     * <p>
+     * Support for tracing will be enabled if OpenTelemetry support is enabled
+     * and either this value is true, or this value is unset.
+     */
+    @WithDefault("true")
+    Optional<Boolean> enabled(); // FIXME deployment config
+
+    /**
      * List of exporters supported by Quarkus.
      * <p>
      * List of exporters to be used for tracing, separated by commas. none means no autoconfigured exporter.

@@ -8,7 +8,7 @@ import java.util.Optional;
 import io.smallrye.config.WithDefault;
 import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
 
-public interface OtelConnectionConfig {
+public interface ConnectionConfig {
 
     /**
      * Exporter specific

@@ -44,6 +44,7 @@ public class AutoconfigureTest {
     static void beforeAll() {
         ConfigProviderResolver.instance().releaseConfig(ConfigProvider.getConfig());
         String[] properties = { "otel.experimental.sdk.enabled", "true",
+                "otel.traces.enabled", "false",
                 "otel.traces.exporter", "in-memory",
                 "otel.exporter.otlp.endpoint", "endpoint",
                 "otel.exporter.otlp.headers", "myheader=stuff,myheader2=stuff2",
@@ -127,6 +128,8 @@ public class AutoconfigureTest {
 
         assertEquals(Boolean.TRUE,
                 autoConfigured.getConfig().getBoolean("otel.experimental.sdk.enabled"));
+        assertEquals(Boolean.FALSE,
+                autoConfigured.getConfig().getBoolean(  "otel.traces.enabled"));
         assertEquals("in-memory",
                 autoConfigured.getConfig().getString("otel.traces.exporter"));
         assertEquals("endpoint",

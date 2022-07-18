@@ -1,11 +1,13 @@
-package io.smallrye.opentelemetry.implementation.config.traces.jaeger;
+package io.smallrye.opentelemetry.implementation.config.traces.otlp;
 
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 import io.smallrye.opentelemetry.implementation.config.ConnectionConfig;
 
-@ConfigMapping(prefix = "otel.exporter.jaeger")
-public interface ExporterJaegerTraceConfig extends ConnectionConfig {
-    // TODO default Jaeger endpoint
+import java.util.Optional;
+
+@ConfigMapping(prefix = "otel.exporter.otlp")
+public interface OtelExporterConfig extends ConnectionConfig {
     @Override
     String endpoint();
 
@@ -18,4 +20,7 @@ public interface ExporterJaegerTraceConfig extends ConnectionConfig {
     //    String timeout(); from parent
 
     //    ExporterType protocol(); from parent
+    ExporterOtlpTraceConfig traces();
+    // TODO metrics();
+    // TODO logs();
 }
