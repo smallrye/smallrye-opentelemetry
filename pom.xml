@@ -24,7 +24,7 @@
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
-        <version.arquillian>1.7.0.Alpha10</version.arquillian>
+        <version.arquillian>1.7.0.Alpha11</version.arquillian>
         <version.arquillian.jetty>1.0.0.Final</version.arquillian.jetty>
         <version.jetty>9.4.48.v20220622</version.jetty>
         <version.smallrye.config>2.11.0</version.smallrye.config>
