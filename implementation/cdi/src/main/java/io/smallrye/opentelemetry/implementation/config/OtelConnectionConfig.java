@@ -1,26 +1,26 @@
 package io.smallrye.opentelemetry.implementation.config;
 
-import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.*;
+import static io.smallrye.opentelemetry.implementation.config.ExporterType.Constants.OTLP_VALUE;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
 import io.smallrye.config.WithDefault;
-import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
 
-public interface ConnectionConfig {
+public interface OtelConnectionConfig {
 
     /**
      * Exporter specific
      */
-    String endpoint(); // FIXME consider put in the same class as optional... Not final solution.
+    Optional<String> endpoint();
 
     /**
      * Sets the certificate chain to use for verifying servers when TLS is enabled. The {@code byte[]}
      * should contain an X.509 certificate collection in PEM format. If not set, TLS connections will
      * use the system default trusted certificates.
      */
-    Optional<Byte[]> certificate();
+    Optional<byte[]> certificate();
 
     /**
      * Sets ths client key and the certificate chain to use for verifying client when TLS is enabled.
@@ -43,8 +43,8 @@ public interface ConnectionConfig {
      * Sets the maximum time to wait for the collector to process an exported batch of spans. If
      * unset, defaults to {@value Constants#DEFAULT_TIMEOUT_SECS}s.
      */
-    @WithDefault("10")
-    Integer timeout();
+    @WithDefault(Constants.DEFAULT_TIMEOUT_SECS)
+    Duration timeout();
 
     /**
      * OTLP defines the encoding of telemetry data and the protocol used to exchange data between the client and the server.

@@ -129,7 +129,7 @@ public class AutoconfigureTest {
         assertEquals(Boolean.TRUE,
                 autoConfigured.getConfig().getBoolean("otel.experimental.sdk.enabled"));
         assertEquals(Boolean.FALSE,
-                autoConfigured.getConfig().getBoolean(  "otel.traces.enabled"));
+                autoConfigured.getConfig().getBoolean("otel.traces.enabled"));
         assertEquals("in-memory",
                 autoConfigured.getConfig().getString("otel.traces.exporter"));
         assertEquals("endpoint",

@@ -1,15 +1,16 @@
 package io.smallrye.opentelemetry.implementation.config.traces;
 
-import static io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType.Constants.OTLP_VALUE;
+import static io.smallrye.opentelemetry.implementation.config.ExporterType.Constants.OTLP_VALUE;
+import static io.smallrye.opentelemetry.implementation.config.traces.TracesBuildConfig.SamplerType.Constants.PARENT_BASED_ALWAYS_ON;
 
 import java.util.List;
 import java.util.Optional;
 
+import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithParentName;
-import io.smallrye.opentelemetry.implementation.config.OpenTelemetryRuntimeConfig.ExporterType;
 
-public interface TracesConfig {
+public interface TracesBuildConfig {
 
     /**
      * Enable tracing with OpenTelemetry.
@@ -19,8 +20,8 @@ public interface TracesConfig {
      * Support for tracing will be enabled if OpenTelemetry support is enabled
      * and either this value is true, or this value is unset.
      */
-    @WithDefault("true")
-    Optional<Boolean> enabled(); // FIXME deployment config
+    @WithDefault("${quarkus.opentelemetry.tracer.enabled:true}")
+    Optional<Boolean> enabled();
 
     /**
      * List of exporters supported by Quarkus.
@@ -34,10 +35,16 @@ public interface TracesConfig {
      * @return
      */
     @WithDefault(OTLP_VALUE)
-    List<String> exporter(); // FIXME deployment config
+    List<String> exporter();
 
+    /**
+     * Trace sampler configs
+     */
     SamplerConfig sampler();
 
+    /**
+     * Quarkus specific extra properties
+     */
     interface SamplerConfig {
         /**
          * The sampler to use for tracing.
@@ -45,17 +52,23 @@ public interface TracesConfig {
          * Has one of the values on {@link SamplerType} or the full qualified name of a class implementing
          * {@link io.opentelemetry.sdk.trace.samplers.Sampler}
          * <p>
-         * Defaults to {@value SamplerType.Constants#PARENT_BASED_ALWAYS_ON}
+         * Defaults to {@value SamplerType.Constants#PARENT_BASED_ALWAYS_ON} or
+         * the legacy quarkus.opentelemetry.tracer.sampler.sampler.name property
          */
-        @WithDefault(SamplerType.Constants.PARENT_BASED_ALWAYS_ON)
+        @WithDefault("${quarkus.opentelemetry.tracer.sampler:" + PARENT_BASED_ALWAYS_ON + "}")
         @WithParentName
+        @WithConverter(LegacySamplerNameConverter.class)
         String sampler();
         // FIXME Add a build step on the quarkus extension to load this Sample impl class, if it exists.
+        // FIXME Map with old props
 
         /**
          * An argument to the configured tracer if supported, for example a ratio.
+         * <p>
+         * Default ratio is 1.0 or the legacy quarkus.opentelemetry.tracer.sampler.ratio property
          */
-        Optional<List<String>> arg();
+        @WithDefault("${quarkus.opentelemetry.tracer.sampler.ratio:1.0d}")
+        Optional<Double> arg();
     }
 
     enum SamplerType {
