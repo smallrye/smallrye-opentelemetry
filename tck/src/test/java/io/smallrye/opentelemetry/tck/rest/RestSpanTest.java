@@ -31,7 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
@@ -67,7 +67,7 @@ class RestSpanTest {
         assertEquals("tck", spanItems.get(0).getResource().getAttribute(SERVICE_NAME));
         assertEquals("0.1.0-SNAPSHOT", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
 
-        InstrumentationLibraryInfo libraryInfo = spanItems.get(0).getInstrumentationLibraryInfo();
+        InstrumentationScopeInfo libraryInfo = spanItems.get(0).getInstrumentationScopeInfo();
         assertEquals(OpenTelemetryConfig.INSTRUMENTATION_NAME, libraryInfo.getName());
         assertEquals(OpenTelemetryConfig.INSTRUMENTATION_VERSION, libraryInfo.getVersion());
     }

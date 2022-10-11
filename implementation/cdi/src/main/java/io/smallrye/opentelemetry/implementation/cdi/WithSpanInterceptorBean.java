@@ -18,7 +18,7 @@ import javax.interceptor.InvocationContext;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 
 public class WithSpanInterceptorBean implements Interceptor<WithSpanInterceptor>, Prioritized {
     private final BeanManager beanManager;
@@ -63,7 +63,6 @@ public class WithSpanInterceptorBean implements Interceptor<WithSpanInterceptor>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public WithSpanInterceptor create(final CreationalContext<WithSpanInterceptor> creationalContext) {
         Bean<?> bean = beanManager.resolve(beanManager.getBeans(OpenTelemetry.class));
         OpenTelemetry openTelemetry = (OpenTelemetry) beanManager.getReference(bean, OpenTelemetry.class, creationalContext);

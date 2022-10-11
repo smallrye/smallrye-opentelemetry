@@ -54,7 +54,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
                 .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesExtractor))
-                .newServerInstrumenter(new ContainerRequestContextTextMapGetter());
+                .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
     @Override
@@ -166,30 +166,9 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        public Long requestContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Long requestContentLengthUncompressed(final ContainerRequestContext request,
-                final ContainerResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Integer statusCode(final ContainerRequestContext request, final ContainerResponseContext response) {
+        public Integer statusCode(final ContainerRequestContext request, final ContainerResponseContext response,
+                final Throwable throwable) {
             return response.getStatus();
-        }
-
-        @Override
-        public Long responseContentLength(final ContainerRequestContext request, final ContainerResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Long responseContentLengthUncompressed(final ContainerRequestContext request,
-                final ContainerResponseContext response) {
-            return null;
         }
 
         @Override

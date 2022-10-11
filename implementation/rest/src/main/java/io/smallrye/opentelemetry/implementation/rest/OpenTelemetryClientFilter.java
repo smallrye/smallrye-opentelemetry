@@ -47,7 +47,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
-                .newClientInstrumenter(new ClientRequestContextTextMapSetter());
+                .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
     }
 
     @Override
@@ -114,30 +114,9 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         }
 
         @Override
-        public Long requestContentLength(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Long requestContentLengthUncompressed(final ClientRequestContext request,
-                final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Integer statusCode(final ClientRequestContext request, final ClientResponseContext response) {
+        public Integer statusCode(final ClientRequestContext request, final ClientResponseContext response,
+                final Throwable throwable) {
             return response.getStatus();
-        }
-
-        @Override
-        public Long responseContentLength(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Long responseContentLengthUncompressed(final ClientRequestContext request,
-                final ClientResponseContext response) {
-            return null;
         }
 
         @Override
