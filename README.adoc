@@ -3,5 +3,6 @@
 
 image:https://github.com/smallrye/smallrye-opentelemetry/workflows/SmallRye%20Build/badge.svg?branch=main[link={ci}]
 image:https://img.shields.io/github/license/smallrye/smallrye-opentracing.svg["License", link="http://www.apache.org/licenses/LICENSE-2.0"]
+image:https://img.shields.io/maven-central/v/io.smallrye.opentelemetry/smallrye-opentelemetry-parent?color=green["Maven", link="https://search.maven.org/search?q=g:io.smallrye.opentelemetry%20AND%20a:smallrye-opentelemetry-api"]
 
 = SmallRye OpenTelemetry
