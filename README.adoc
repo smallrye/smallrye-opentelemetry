@@ -5,5 +5,3 @@ image:https://github.com/smallrye/smallrye-opentelemetry/workflows/SmallRye%20Bu
 image:https://img.shields.io/github/license/smallrye/smallrye-opentracing.svg["License", link="http://www.apache.org/licenses/LICENSE-2.0"]
 
 = SmallRye OpenTelemetry
-
-This is a POC project that integrates OpenTelemetry in MicroProfile.
