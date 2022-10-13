@@ -65,7 +65,7 @@ class RestSpanTest {
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
 
         assertEquals("tck", spanItems.get(0).getResource().getAttribute(SERVICE_NAME));
-        assertEquals("0.1.0-SNAPSHOT", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
+        assertEquals("1.0", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
 
         InstrumentationScopeInfo libraryInfo = spanItems.get(0).getInstrumentationScopeInfo();
         assertEquals(OpenTelemetryConfig.INSTRUMENTATION_NAME, libraryInfo.getName());
