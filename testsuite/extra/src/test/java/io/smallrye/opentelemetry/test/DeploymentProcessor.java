@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck;
+package io.smallrye.opentelemetry.test;
 
 import java.io.File;
 

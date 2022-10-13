@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck;
+package io.smallrye.opentelemetry.test;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.junit.jupiter.api.Assertions.assertEquals;

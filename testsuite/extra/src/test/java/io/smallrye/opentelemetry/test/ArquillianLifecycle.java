@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck;
+package io.smallrye.opentelemetry.test;
 
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaData;

@@ -10,8 +10,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smallrye-opentelemetry-implementation-rest</artifactId>
-    <name>SmallRye: OpenTelemetry REST Implementation</name>
+    <artifactId>smallrye-opentelemetry-rest</artifactId>
+    <name>SmallRye OpenTelemetry: REST</name>
 
     <dependencies>
         <dependency>
@@ -21,7 +21,7 @@
 
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-implementation-cdi</artifactId>
+            <artifactId>smallrye-opentelemetry-cdi</artifactId>
         </dependency>
 
         <dependency>

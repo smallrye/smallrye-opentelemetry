@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck.cdi;
+package io.smallrye.opentelemetry.test.cdi;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

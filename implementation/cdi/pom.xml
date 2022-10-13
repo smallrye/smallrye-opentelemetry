@@ -10,8 +10,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smallrye-opentelemetry-implementation-cdi</artifactId>
-    <name>SmallRye: OpenTelemetry CDI Implementation</name>
+    <artifactId>smallrye-opentelemetry-cdi</artifactId>
+    <name>SmallRye OpenTelemetry: CDI</name>
 
     <dependencies>
         <dependency>

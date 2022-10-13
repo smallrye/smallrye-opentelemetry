@@ -14,7 +14,7 @@
     <artifactId>smallrye-opentelemetry-examples-library</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>SmallRye: OpenTelemetry Examples: Library</name>
+    <name>SmallRye OpenTelemetry Examples: Library</name>
 
     <properties>
         <java.version>11</java.version>
@@ -117,12 +117,12 @@
         </dependency>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-implementation-cdi</artifactId>
+            <artifactId>smallrye-opentelemetry-cdi</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-implementation-rest</artifactId>
+            <artifactId>smallrye-opentelemetry-rest</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

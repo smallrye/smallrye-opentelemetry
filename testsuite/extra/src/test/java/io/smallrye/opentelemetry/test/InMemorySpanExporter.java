@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck;
+package io.smallrye.opentelemetry.test;
 
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;

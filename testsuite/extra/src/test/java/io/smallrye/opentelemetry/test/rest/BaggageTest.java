@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.tck.rest;
+package io.smallrye.opentelemetry.test.rest;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.api.baggage.Baggage;
-import io.smallrye.opentelemetry.tck.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
 class BaggageTest {

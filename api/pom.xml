@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>smallrye-opentelemetry-api</artifactId>
-    <name>SmallRye: OpenTelemetry API</name>
+    <name>SmallRye OpenTelemetry: API</name>
 
     <build>
         <plugins>
