@@ -10,8 +10,8 @@
         <version>36</version>
     </parent>
 
-    <groupId>smallrye-opentelemetry-examples</groupId>
-    <artifactId>smallrye-opentelemetry-examples-agent</artifactId>
+    <groupId>io.smallrye.opentelemetry.examples</groupId>
+    <artifactId>agent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>SmallRye OpenTelemetry Examples: Agent</name>
@@ -26,8 +26,6 @@
         <version.plugin.dependency>3.3.0</version.plugin.dependency>
         <version.plugin.jetty>10.0.12</version.plugin.jetty>
 
-        <version.weld.api>3.1.Final</version.weld.api>
-        <version.weld.core>3.1.7.SP1</version.weld.core>
         <version.resteasy>4.7.7.Final</version.resteasy>
         <version.smallrye.config>2.12.1</version.smallrye.config>
 
@@ -107,6 +105,18 @@
         </plugins>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-bom</artifactId>
+                <version>${version.resteasy}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.jboss.weld.servlet</groupId>
@@ -116,22 +126,14 @@
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-servlet-initializer</artifactId>
-            <version>${version.resteasy}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-cdi</artifactId>
-            <version>${version.resteasy}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-json-binding-provider</artifactId>
-            <version>${version.resteasy}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client-microprofile</artifactId>
-            <version>${version.resteasy}</version>
         </dependency>
         <dependency>
             <groupId>io.smallrye.config</groupId>
