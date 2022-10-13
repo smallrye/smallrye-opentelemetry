@@ -23,8 +23,8 @@
         <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>smallrye-opentelemetry-examples</groupId>
-    <artifactId>smallrye-opentelemetry-examples-parent</artifactId>
+    <groupId>io.smallrye.config.examples</groupId>
+    <artifactId>smallrye-opentelemetry-examples</artifactId>
     <packaging>pom</packaging>
 
     <name>SmallRye OpenTelemetry Examples</name>
