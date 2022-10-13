@@ -6,8 +6,8 @@ import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-import javax.interceptor.AroundInvoke;
-import javax.interceptor.InvocationContext;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.InvocationContext;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;

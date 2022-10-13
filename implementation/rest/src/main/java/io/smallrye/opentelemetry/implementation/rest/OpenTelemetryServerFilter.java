@@ -10,15 +10,15 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.ws.rs.Path;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.Provider;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.container.ResourceInfo;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.ext.Provider;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -37,7 +37,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
     private Instrumenter<ContainerRequestContext, ContainerResponseContext> instrumenter;
 
-    @javax.ws.rs.core.Context
+    @jakarta.ws.rs.core.Context
     ResourceInfo resourceInfo;
 
     // RESTEasy requires no-arg constructor for CDI injection: https://issues.redhat.com/browse/RESTEASY-1538
