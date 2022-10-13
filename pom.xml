@@ -27,7 +27,7 @@
         <version.arquillian>1.7.0.Alpha12</version.arquillian>
         <version.arquillian.jetty>1.0.0.Final</version.arquillian.jetty>
         <version.jetty>9.4.49.v20220914</version.jetty>
-        <version.smallrye.config>2.11.0</version.smallrye.config>
+        <version.smallrye.config>2.12.1</version.smallrye.config>
         <version.resteasy>4.7.7.Final</version.resteasy>
     </properties>
 
