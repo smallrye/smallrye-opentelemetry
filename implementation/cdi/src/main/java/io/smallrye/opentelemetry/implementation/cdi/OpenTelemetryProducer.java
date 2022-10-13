@@ -43,7 +43,8 @@ public class OpenTelemetryProducer {
         }
 
         AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
-        return builder.setResultAsGlobal(true)
+        return builder
+                .setResultAsGlobal(true)
                 .registerShutdownHook(false)
                 .addPropertiesSupplier(() -> oTelConfigs)
                 .build()
@@ -73,7 +74,7 @@ public class OpenTelemetryProducer {
         List<CompletableResultCode> shutdown = new ArrayList<>();
         shutdown.add(openTelemetrySdk.getSdkTracerProvider().shutdown());
         shutdown.add(openTelemetrySdk.getSdkMeterProvider().shutdown());
-        shutdown.add(openTelemetrySdk.getSdkLogEmitterProvider().shutdown());
+        shutdown.add(openTelemetrySdk.getSdkLoggerProvider().shutdown());
         CompletableResultCode.ofAll(shutdown).join(10, TimeUnit.SECONDS);
     }
 }

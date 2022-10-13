@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -43,7 +44,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
     @Inject
     public OpenTelemetryServerFilter(final OpenTelemetry openTelemetry) {
-        ServerAttributesExtractor serverAttributesExtractor = new ServerAttributesExtractor();
+        HttpServerAttributesExtractor serverAttributesExtractor = new HttpServerAttributesExtractor();
 
         InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
                 openTelemetry,
@@ -53,7 +54,10 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
-                .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesExtractor))
+                .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
+                        .create(serverAttributesExtractor))
+                .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor
+                        .create(new NetServerAttributesExtractor()))
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
@@ -109,7 +113,24 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
     }
 
-    private static class ServerAttributesExtractor
+    private static class NetServerAttributesExtractor implements NetServerAttributesGetter<ContainerRequestContext> {
+        @Override
+        public String transport(final ContainerRequestContext request) {
+            return null;
+        }
+
+        @Override
+        public String hostName(final ContainerRequestContext request) {
+            return request.getUriInfo().getRequestUri().getHost();
+        }
+
+        @Override
+        public Integer hostPort(final ContainerRequestContext request) {
+            return request.getUriInfo().getRequestUri().getPort();
+        }
+    }
+
+    private static class HttpServerAttributesExtractor
             implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
         public String flavor(final ContainerRequestContext request) {
@@ -148,11 +169,6 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         @Override
         public String scheme(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getScheme();
-        }
-
-        @Override
-        public String serverName(final ContainerRequestContext request) {
-            return request.getUriInfo().getRequestUri().getHost();
         }
 
         @Override
