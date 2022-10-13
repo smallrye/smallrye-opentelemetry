@@ -21,15 +21,12 @@ public class DeploymentProcessor implements ApplicationArchiveProcessor {
             war.addClass(InMemorySpanExporter.class);
 
             String[] deps = {
-                    "org.jboss.resteasy:resteasy-servlet-initializer",
                     // Required for web-fragment and init of the CdiInjectorFactory
                     "org.jboss.resteasy:resteasy-cdi",
-                    "io.smallrye.opentelemetry:smallrye-opentelemetry-implementation-cdi",
-                    "io.smallrye.opentelemetry:smallrye-opentelemetry-implementation-rest"
             };
             File[] dependencies = Maven.configureResolver()
                     .workOffline()
-                    .loadPomFromFile(new File("pom.xml"), "arquillian-jetty")
+                    .loadPomFromFile(new File("pom.xml"))
                     .resolve(deps)
                     .withoutTransitivity()
                     .asFile();
