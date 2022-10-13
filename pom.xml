@@ -24,11 +24,17 @@
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
+        <!-- For jakarta auto migration -->
+        <artifactId.arquillian.jetty>arquillian-jetty-embedded-9</artifactId.arquillian.jetty>
         <version.arquillian>1.7.0.Alpha12</version.arquillian>
         <version.arquillian.jetty>1.0.0.Final</version.arquillian.jetty>
         <version.jetty>9.4.49.v20220914</version.jetty>
         <version.smallrye.config>2.12.1</version.smallrye.config>
         <version.resteasy>4.7.7.Final</version.resteasy>
+        <!-- RESTEasy REST Client relocated to another GAV, so these props are for jakarta auto migration -->
+        <groupId.resteasy.client>org.jboss.resteasy</groupId.resteasy.client>
+        <artifactId.resteasy.client>resteasy-client-microprofile</artifactId.resteasy.client>
+        <version.resteasy.client>4.7.7.Final</version.resteasy.client>
     </properties>
 
     <licenses>
@@ -96,7 +102,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.arquillian.container</groupId>
-                <artifactId>arquillian-jetty-embedded-9</artifactId>
+                <artifactId>${artifactId.arquillian.jetty}</artifactId>
                 <version>${version.arquillian.jetty}</version>
                 <scope>test</scope>
             </dependency>
