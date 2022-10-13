@@ -23,11 +23,6 @@
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
             <artifactId>smallrye-opentelemetry-cdi</artifactId>
-            <scope>config</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-cdi</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
