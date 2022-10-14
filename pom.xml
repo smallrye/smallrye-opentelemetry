@@ -25,7 +25,7 @@
         <!-- Test -->
         <!-- For jakarta auto migration -->
         <artifactId.arquillian.jetty>arquillian-jetty-embedded-9</artifactId.arquillian.jetty>
-        <version.arquillian>1.7.0.Alpha12</version.arquillian>
+        <version.arquillian>1.7.0.Alpha13</version.arquillian>
         <version.arquillian.jetty>1.0.0.Final</version.arquillian.jetty>
         <version.jetty>9.4.49.v20220914</version.jetty>
         <version.smallrye.config>2.12.1</version.smallrye.config>
