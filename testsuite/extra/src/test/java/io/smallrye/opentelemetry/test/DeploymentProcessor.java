@@ -18,6 +18,7 @@ public class DeploymentProcessor implements ApplicationArchiveProcessor {
             WebArchive war = (WebArchive) archive;
             war.addAsWebInfResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"));
             war.addAsServiceProvider(ConfigSource.class, TestConfigSource.class);
+            war.addClass(HttpServerAttributesFilter.class);
             war.addClass(InMemorySpanExporter.class);
 
             String[] deps = {

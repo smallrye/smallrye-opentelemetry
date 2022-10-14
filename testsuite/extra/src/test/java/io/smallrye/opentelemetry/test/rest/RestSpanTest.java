@@ -3,12 +3,28 @@ package io.smallrye.opentelemetry.test.rest;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_VERSION;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_CLIENT_IP;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_FLAVOR;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_SCHEME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_NAME;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_PORT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_FAMILY;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_HOST_ADDR;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_HOST_PORT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_ADDR;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_NAME;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_PORT;
 import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URL;
 import java.util.List;
@@ -17,6 +33,7 @@ import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Application;
@@ -95,6 +112,40 @@ class RestSpanTest {
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
         assertEquals(url.getPath() + "span/1?id=1", spanItems.get(0).getAttributes().get(HTTP_TARGET));
+        assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getAttributes().get(HTTP_ROUTE));
+    }
+
+    @Test
+    void spanPost() {
+        given().body("payload").post("/span").then().statusCode(HTTP_OK);
+
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        assertEquals(1, spanItems.size());
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(url.getPath() + "span", span.getName());
+
+        // Common Attributes
+        assertEquals(HttpMethod.POST, span.getAttributes().get(HTTP_METHOD)); // http.method
+        assertEquals(HTTP_OK, span.getAttributes().get(HTTP_STATUS_CODE)); // http.status_code
+        assertNotNull(span.getAttributes().get(HTTP_FLAVOR)); // http.flavor
+        assertNotNull(span.getAttributes().get(HTTP_USER_AGENT)); // http.user_agent
+        assertNotNull(span.getAttributes().get(HTTP_REQUEST_CONTENT_LENGTH)); // http.request_content_length
+        // assertNotNull(spanItems.get(0).getAttributes().get(HTTP_RESPONSE_CONTENT_LENGTH));       // http.response_content_length
+        assertNull(span.getAttributes().get(NET_SOCK_FAMILY)); // net.sock.family
+        assertNull(span.getAttributes().get(NET_SOCK_PEER_ADDR)); // net.sock.peer.addr
+        assertNull(span.getAttributes().get(NET_SOCK_PEER_NAME)); // net.sock.peer.name
+        assertNull(span.getAttributes().get(NET_SOCK_PEER_PORT)); // net.sock.peer.port
+
+        // Server Attributes
+        assertEquals("http", span.getAttributes().get(HTTP_SCHEME)); // http.scheme
+        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_TARGET)); // http.target
+        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_ROUTE)); // http.route
+        assertNull(span.getAttributes().get(HTTP_CLIENT_IP)); // http.client_ip
+        assertEquals(url.getHost(), span.getAttributes().get(NET_HOST_NAME)); // net.host.name
+        assertEquals(url.getPort(), span.getAttributes().get(NET_HOST_PORT)); // net.host.port
+        assertNotNull(span.getAttributes().get(NET_SOCK_HOST_ADDR)); // net.sock.host.addr
+        assertNull(span.getAttributes().get(NET_SOCK_HOST_PORT)); // net.sock.host.port
     }
 
     @Path("/")
@@ -109,6 +160,12 @@ class RestSpanTest {
         @Path("/span/{name}")
         public Response spanName(@PathParam(value = "name") String name) {
             return Response.ok().build();
+        }
+
+        @POST
+        @Path("/span")
+        public Response spanPost(String payload) {
+            return Response.ok(payload).build();
         }
     }
 

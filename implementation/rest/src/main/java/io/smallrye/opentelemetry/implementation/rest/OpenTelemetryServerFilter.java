@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
 
@@ -29,7 +30,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -113,7 +115,8 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
     }
 
-    private static class NetServerAttributesExtractor implements NetServerAttributesGetter<ContainerRequestContext> {
+    private static class NetServerAttributesExtractor
+            extends InetSocketAddressNetServerAttributesGetter<ContainerRequestContext> {
         @Override
         public String transport(final ContainerRequestContext request) {
             return null;
@@ -128,13 +131,24 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         public Integer hostPort(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getPort();
         }
+
+        @Override
+        protected InetSocketAddress getPeerSocketAddress(final ContainerRequestContext request) {
+            return null;
+        }
+
+        @Override
+        protected InetSocketAddress getHostSocketAddress(final ContainerRequestContext request) {
+            URI requestUri = request.getUriInfo().getRequestUri();
+            return new InetSocketAddress(requestUri.getHost(), requestUri.getPort());
+        }
     }
 
     private static class HttpServerAttributesExtractor
             implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
         public String flavor(final ContainerRequestContext request) {
-            return null;
+            return (String) request.getProperty(SemanticAttributes.HTTP_FLAVOR.getKey());
         }
 
         @Override
