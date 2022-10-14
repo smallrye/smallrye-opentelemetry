@@ -15,6 +15,16 @@
             <groupId>io.smallrye.opentelemetry</groupId>
             <artifactId>smallrye-opentelemetry-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-cdi</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-rest</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -94,16 +104,6 @@
                     <groupId>${groupId.resteasy.client}</groupId>
                     <artifactId>${artifactId.resteasy.client}</artifactId>
                     <version>${version.resteasy.client}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>io.smallrye.opentelemetry</groupId>
-                    <artifactId>smallrye-opentelemetry-cdi</artifactId>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>io.smallrye.opentelemetry</groupId>
-                    <artifactId>smallrye-opentelemetry-rest</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
