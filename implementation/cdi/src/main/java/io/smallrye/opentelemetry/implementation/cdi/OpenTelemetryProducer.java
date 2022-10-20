@@ -46,6 +46,7 @@ public class OpenTelemetryProducer {
         return builder
                 .setResultAsGlobal(true)
                 .registerShutdownHook(false)
+                .setServiceClassLoader(Thread.currentThread().getContextClassLoader())
                 .addPropertiesSupplier(() -> oTelConfigs)
                 .build()
                 .getOpenTelemetrySdk();
