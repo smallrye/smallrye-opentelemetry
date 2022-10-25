@@ -57,9 +57,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
                 .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
-                        .create(serverAttributesExtractor))
-                .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor
-                        .create(new NetServerAttributesExtractor()))
+                        .create(serverAttributesExtractor, new NetServerAttributesExtractor()))
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
