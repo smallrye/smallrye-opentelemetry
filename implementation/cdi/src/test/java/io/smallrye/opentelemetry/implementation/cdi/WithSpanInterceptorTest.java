@@ -9,6 +9,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import org.jboss.weld.junit5.auto.AddBeanClasses;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +22,11 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.config.inject.ConfigExtension;
+import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
+@AddBeanClasses(OpenTelemetryConfigProducer.class)
 class WithSpanInterceptorTest {
     @Inject
     InMemorySpanExporter spanExporter;

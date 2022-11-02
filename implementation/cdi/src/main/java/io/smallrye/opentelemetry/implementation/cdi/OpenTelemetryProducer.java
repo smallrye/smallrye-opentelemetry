@@ -3,9 +3,7 @@ package io.smallrye.opentelemetry.implementation.cdi;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -15,8 +13,6 @@ import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.eclipse.microprofile.config.Config;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
@@ -25,29 +21,22 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 
 @Singleton
 public class OpenTelemetryProducer {
     @Inject
-    Config config;
+    OpenTelemetryConfig config;
 
     @Produces
     @Singleton
     public OpenTelemetry getOpenTelemetry() {
-        Map<String, String> oTelConfigs = new HashMap<>();
-        for (String propertyName : config.getPropertyNames()) {
-            if (propertyName.startsWith("otel.") || propertyName.startsWith("OTEL_")) {
-                config.getOptionalValue(propertyName, String.class).ifPresent(
-                        value -> oTelConfigs.put(propertyName, value));
-            }
-        }
-
         AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
         return builder
-                .setResultAsGlobal(true)
+                .setResultAsGlobal(false)
                 .registerShutdownHook(false)
                 .setServiceClassLoader(Thread.currentThread().getContextClassLoader())
-                .addPropertiesSupplier(() -> oTelConfigs)
+                .addPropertiesSupplier(() -> config.properties())
                 .build()
                 .getOpenTelemetrySdk();
     }
