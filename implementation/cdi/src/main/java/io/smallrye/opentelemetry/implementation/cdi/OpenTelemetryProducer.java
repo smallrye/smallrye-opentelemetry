@@ -33,7 +33,7 @@ public class OpenTelemetryProducer {
     public OpenTelemetry getOpenTelemetry() {
         AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
         return builder
-                .setResultAsGlobal(true)
+                .setResultAsGlobal(false)
                 .registerShutdownHook(false)
                 .setServiceClassLoader(Thread.currentThread().getContextClassLoader())
                 .addPropertiesSupplier(() -> config.properties())
