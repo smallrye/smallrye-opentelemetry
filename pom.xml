@@ -82,6 +82,11 @@
             </dependency>
             <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-cdi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -136,6 +141,7 @@
 
     <modules>
         <module>api</module>
+        <module>implementation/config</module>
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
         <module>testsuite</module>

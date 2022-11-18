@@ -1,5 +1,6 @@
 package io.smallrye.opentelemetry.api;
 
+import java.util.Map;
 import java.util.Optional;
 
 public interface OpenTelemetryConfig {
@@ -7,4 +8,6 @@ public interface OpenTelemetryConfig {
 
     String INSTRUMENTATION_VERSION = Optional.ofNullable(OpenTelemetryConfig.class.getPackage().getImplementationVersion())
             .orElse("SNAPSHOT");
+
+    Map<String, String> properties();
 }

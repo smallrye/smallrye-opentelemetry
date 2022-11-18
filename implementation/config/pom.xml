@@ -8,8 +8,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>smallrye-opentelemetry-cdi</artifactId>
-    <name>SmallRye OpenTelemetry: CDI</name>
+    <artifactId>smallrye-opentelemetry-config</artifactId>
+    <name>SmallRye OpenTelemetry: Config</name>
 
     <dependencies>
         <dependency>
@@ -21,6 +21,11 @@
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -45,11 +50,6 @@
         <dependency>
             <groupId>io.smallrye.config</groupId>
             <artifactId>smallrye-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-config</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
