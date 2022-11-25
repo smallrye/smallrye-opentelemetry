@@ -25,7 +25,7 @@
         <version.plugin.jetty>10.0.12</version.plugin.jetty>
 
         <version.resteasy>4.7.7.Final</version.resteasy>
-        <version.smallrye.config>2.12.1</version.smallrye.config>
+        <version.smallrye.config>2.13.0</version.smallrye.config>
 
         <version.opentelemetry>1.19.1</version.opentelemetry>
 
