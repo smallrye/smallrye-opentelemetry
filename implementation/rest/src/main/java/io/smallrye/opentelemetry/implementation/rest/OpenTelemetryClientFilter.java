@@ -52,32 +52,38 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
     @Override
     public void filter(final ClientRequestContext request) {
-        Context parentContext = Context.current();
-        if (instrumenter.shouldStart(parentContext, request)) {
-            Context spanContext = instrumenter.start(parentContext, request);
-            Scope scope = spanContext.makeCurrent();
-            request.setProperty("otel.span.client.context", spanContext);
-            request.setProperty("otel.span.client.parentContext", parentContext);
-            request.setProperty("otel.span.client.scope", scope);
+        // CDI is not available in some contexts even if this library is available on the CP
+        if (instrumenter != null) {
+            Context parentContext = Context.current();
+            if (instrumenter.shouldStart(parentContext, request)) {
+                Context spanContext = instrumenter.start(parentContext, request);
+                Scope scope = spanContext.makeCurrent();
+                request.setProperty("otel.span.client.context", spanContext);
+                request.setProperty("otel.span.client.parentContext", parentContext);
+                request.setProperty("otel.span.client.scope", scope);
+            }
         }
     }
 
     @Override
     public void filter(final ClientRequestContext request, final ClientResponseContext response) {
-        Scope scope = (Scope) request.getProperty("otel.span.client.scope");
-        if (scope == null) {
-            return;
-        }
+        // CDI is not available in some contexts even if this library is available on the CP
+        if (instrumenter != null) {
+            Scope scope = (Scope) request.getProperty("otel.span.client.scope");
+            if (scope == null) {
+                return;
+            }
 
-        Context spanContext = (Context) request.getProperty("otel.span.client.context");
-        try {
-            instrumenter.end(spanContext, request, response, null);
-        } finally {
-            scope.close();
+            Context spanContext = (Context) request.getProperty("otel.span.client.context");
+            try {
+                instrumenter.end(spanContext, request, response, null);
+            } finally {
+                scope.close();
 
-            request.removeProperty("otel.span.client.context");
-            request.removeProperty("otel.span.client.parentContext");
-            request.removeProperty("otel.span.client.scope");
+                request.removeProperty("otel.span.client.context");
+                request.removeProperty("otel.span.client.parentContext");
+                request.removeProperty("otel.span.client.scope");
+            }
         }
     }
 
