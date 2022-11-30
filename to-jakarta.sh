@@ -13,7 +13,11 @@ mvn versions:update-property -Dproperty=version.microprofile.config -DnewVersion
 mvn versions:set-property -Dproperty=artifactId.arquillian.jetty -DnewVersion=arquillian-jetty-embedded-11
 mvn versions:update-property -Dproperty=version.jetty -DnewVersion=[11.0.7]
 mvn versions:update-property -Dproperty=version.resteasy -DnewVersion=[6.0.0.Final]
-mvn versions:update-property -Dproperty=version.smallrye.config -DnewVersion=[3.0.0]
+mvn versions:update-property -Dproperty=version.smallrye.config -DnewVersion=[3.1.0]
 mvn versions:set-property -Dproperty=groupId.resteasy.client -DnewVersion=org.jboss.resteasy.microprofile
 mvn versions:set-property -Dproperty=artifactId.resteasy.client -DnewVersion=microprofile-rest-client
 mvn versions:set-property -Dproperty=version.resteasy.client -DnewVersion=2.0.0.Beta1
+
+git commit --all -m "Move to Jakarta"
+
+hub am -3 https://github.com/smallrye/smallrye-opentelemetry/pull/166
