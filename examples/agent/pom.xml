@@ -27,7 +27,7 @@
         <version.resteasy>4.7.7.Final</version.resteasy>
         <version.smallrye.config>2.13.0</version.smallrye.config>
 
-        <version.opentelemetry>1.19.1</version.opentelemetry>
+        <version.opentelemetry>1.20.2</version.opentelemetry>
     </properties>
 
     <build>
