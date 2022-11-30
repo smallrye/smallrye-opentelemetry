@@ -3,9 +3,9 @@ package io.smallrye.opentelemetry.implementation.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.eclipse.microprofile.config.Config;
 
