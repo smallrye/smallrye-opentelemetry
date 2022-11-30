@@ -21,7 +21,7 @@
 
         <version.plugin.compiler>3.7.0</version.plugin.compiler>
         <version.plugin.war>3.3.2</version.plugin.war>
-        <version.plugin.dependency>3.3.0</version.plugin.dependency>
+        <version.plugin.dependency>3.4.0</version.plugin.dependency>
         <version.plugin.jetty>10.0.12</version.plugin.jetty>
 
         <version.resteasy>4.7.7.Final</version.resteasy>
