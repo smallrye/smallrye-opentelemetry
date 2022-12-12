@@ -28,7 +28,7 @@
         <version.smallrye.config>2.13.0</version.smallrye.config>
 
         <version.opentelemetry>1.20.2</version.opentelemetry>
-        <version.opentelemetry.exporter>1.20.1</version.opentelemetry.exporter>
+        <version.opentelemetry.exporter>1.21.0</version.opentelemetry.exporter>
 
         <sonar.skip>true</sonar.skip>
     </properties>
