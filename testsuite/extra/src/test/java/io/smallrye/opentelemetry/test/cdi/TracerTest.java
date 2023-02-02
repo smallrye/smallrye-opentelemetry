@@ -2,8 +2,8 @@ package io.smallrye.opentelemetry.test.cdi;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
