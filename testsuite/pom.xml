@@ -13,6 +13,26 @@
 
     <name>SmallRye OpenTelemetry: Test Suite</name>
 
+    <properties>
+        <version.resteasy>4.7.7.Final</version.resteasy>
+        <!-- RESTEasy REST Client relocated to another GAV, so these props are for jakarta auto migration -->
+        <groupId.resteasy.client>org.jboss.resteasy</groupId.resteasy.client>
+        <artifactId.resteasy.client>resteasy-client-microprofile</artifactId.resteasy.client>
+        <version.resteasy.client>4.7.7.Final</version.resteasy.client>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.smallrye.testing</groupId>
+                <artifactId>smallrye-testing-bom-tck</artifactId>
+                <version>${version.smallrye.testing}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <modules>
         <module>extra</module>
     </modules>

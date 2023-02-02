@@ -3,7 +3,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-parent</artifactId>
-        <version>37</version>
+        <version>38</version>
     </parent>
 
     <groupId>io.smallrye.opentelemetry</groupId>
@@ -23,17 +23,8 @@
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
-        <!-- For jakarta auto migration -->
-        <artifactId.arquillian.jetty>arquillian-jetty-embedded-9</artifactId.arquillian.jetty>
-        <version.arquillian>1.7.0.Alpha13</version.arquillian>
-        <version.arquillian.jetty>1.0.0.Final</version.arquillian.jetty>
-        <version.jetty>9.4.49.v20220914</version.jetty>
+        <version.smallrye.testing>1.2.0</version.smallrye.testing>
         <version.smallrye.config>2.13.2</version.smallrye.config>
-        <version.resteasy>4.7.7.Final</version.resteasy>
-        <!-- RESTEasy REST Client relocated to another GAV, so these props are for jakarta auto migration -->
-        <groupId.resteasy.client>org.jboss.resteasy</groupId.resteasy.client>
-        <artifactId.resteasy.client>resteasy-client-microprofile</artifactId.resteasy.client>
-        <version.resteasy.client>4.7.7.Final</version.resteasy.client>
     </properties>
 
     <licenses>
@@ -98,37 +89,11 @@
 
             <!-- Test Dependencies -->
             <dependency>
-                <groupId>org.jboss.arquillian</groupId>
-                <artifactId>arquillian-bom</artifactId>
-                <version>${version.arquillian}</version>
-                <type>pom</type>
+                <groupId>io.smallrye.testing</groupId>
+                <artifactId>smallrye-testing-bom</artifactId>
+                <version>${version.smallrye.testing}</version>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.arquillian.container</groupId>
-                <artifactId>${artifactId.arquillian.jetty}</artifactId>
-                <version>${version.arquillian.jetty}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-bom</artifactId>
-                <version>${version.jetty}</version>
                 <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.weld.servlet</groupId>
-                <artifactId>weld-servlet-core</artifactId>
-                <version>${version.weld.core}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.resteasy</groupId>
-                <artifactId>resteasy-bom</artifactId>
-                <version>${version.resteasy}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.smallrye.config</groupId>

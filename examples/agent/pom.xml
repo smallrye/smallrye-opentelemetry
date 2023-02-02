@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-parent</artifactId>
-        <version>37</version>
+        <version>38</version>
     </parent>
 
     <groupId>io.smallrye.opentelemetry.examples</groupId>
@@ -24,6 +24,7 @@
         <version.plugin.dependency>3.5.0</version.plugin.dependency>
         <version.plugin.jetty>10.0.13</version.plugin.jetty>
 
+        <version.weld.core>3.1.9.Final</version.weld.core>
         <version.resteasy>4.7.7.Final</version.resteasy>
         <version.smallrye.config>2.13.2</version.smallrye.config>
 
