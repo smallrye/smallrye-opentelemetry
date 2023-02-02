@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.smallrye.opentelemetry</groupId>
+        <artifactId>smallrye-opentelemetry-testsuite</artifactId>
+        <version>2.2.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>smallrye-opentelemetry-tck</artifactId>
+    <name>SmallRye OpenTelemetry: MicroProfile Telemetry Tracing TCK</name>
+
+    <properties>
+        <version.microprofile.opentelemetry>1.0-RC7</version.microprofile.opentelemetry>
+        <version.testng>7.4.0</version.testng>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.microprofile.telemetry.tracing</groupId>
+            <artifactId>microprofile-telemetry-tracing-tck</artifactId>
+            <version>${version.microprofile.opentelemetry}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Override the TestNG version coming from the SmallRye Parent. Arquillian requires 7.4.0 -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${version.testng}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-config</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-cdi</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-rest</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Runtime -->
+        <dependency>
+            <groupId>org.jboss.arquillian.testng</groupId>
+            <artifactId>arquillian-testng-container</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.testing</groupId>
+            <artifactId>smallrye-testing-tck-jetty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.config</groupId>
+            <artifactId>smallrye-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${groupId.resteasy.client}</groupId>
+            <artifactId>${artifactId.resteasy.client}</artifactId>
+            <version>${version.resteasy.client}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <dependenciesToScan>
+                        <dependency>org.eclipse.microprofile.telemetry.tracing:microprofile-telemetry-tracing-tck</dependency>
+                    </dependenciesToScan>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-testng</artifactId>
+                        <version>${version.surefire.plugin}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>
