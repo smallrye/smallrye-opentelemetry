@@ -23,7 +23,7 @@
         <version.microprofile.config>2.0.1</version.microprofile.config>
 
         <!-- Test -->
-        <version.smallrye.testing>1.2.0</version.smallrye.testing>
+        <version.smallrye.testing>2.2.0</version.smallrye.testing>
         <version.smallrye.config>2.13.2</version.smallrye.config>
     </properties>
 
