@@ -23,7 +23,6 @@ import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -35,6 +34,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class TestApplication {
     @ArquillianResource
     private URL url;
+    @Inject
+    HelloBean helloBean;
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -42,7 +43,6 @@ class TestApplication {
     }
 
     @Test
-    @RunAsClient
     public void servlet() {
         String uri = url.toExternalForm() + "servlet";
         WebTarget echoEndpointTarget = ClientBuilder.newClient().target(uri);
@@ -51,7 +51,6 @@ class TestApplication {
     }
 
     @Test
-    @RunAsClient
     public void rest() {
         String uri = url.toExternalForm() + "rest";
         WebTarget echoEndpointTarget = ClientBuilder.newClient().target(uri);
