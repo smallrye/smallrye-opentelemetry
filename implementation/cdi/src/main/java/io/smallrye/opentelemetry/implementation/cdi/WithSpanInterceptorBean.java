@@ -58,11 +58,6 @@ public class WithSpanInterceptorBean implements Interceptor<WithSpanInterceptor>
     }
 
     @Override
-    public boolean isNullable() {
-        return false;
-    }
-
-    @Override
     public WithSpanInterceptor create(final CreationalContext<WithSpanInterceptor> creationalContext) {
         Bean<?> bean = beanManager.resolve(beanManager.getBeans(OpenTelemetry.class));
         OpenTelemetry openTelemetry = (OpenTelemetry) beanManager.getReference(bean, OpenTelemetry.class, creationalContext);
