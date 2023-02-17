@@ -12,7 +12,7 @@
 
     <properties>
         <version.microprofile.opentelemetry>1.0</version.microprofile.opentelemetry>
-        <version.testng>7.4.0</version.testng>
+        <version.testng>7.7.1</version.testng>
     </properties>
 
     <dependencies>
