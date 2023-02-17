@@ -11,7 +11,7 @@
     <name>SmallRye OpenTelemetry: MicroProfile Telemetry Tracing TCK</name>
 
     <properties>
-        <version.microprofile.opentelemetry>1.0-RC7</version.microprofile.opentelemetry>
+        <version.microprofile.opentelemetry>1.0</version.microprofile.opentelemetry>
         <version.testng>7.4.0</version.testng>
     </properties>
 
