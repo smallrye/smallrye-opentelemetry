@@ -26,7 +26,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -63,37 +62,42 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
     @Override
     public void filter(final ContainerRequestContext request) {
-        Context parentContext = Context.current();
-        if (instrumenter.shouldStart(parentContext, request)) {
-            request.setProperty("rest.resource.class", resourceInfo.getResourceClass());
-            request.setProperty("rest.resource.method", resourceInfo.getResourceMethod());
+        // CDI is not available in some contexts even if this library is available on the CP
+        if (instrumenter != null) {
+            Context parentContext = Context.current();
+            if (instrumenter.shouldStart(parentContext, request)) {
+                request.setProperty("rest.resource.class", resourceInfo.getResourceClass());
+                request.setProperty("rest.resource.method", resourceInfo.getResourceMethod());
 
-            Context spanContext = instrumenter.start(parentContext, request);
-            Scope scope = spanContext.makeCurrent();
-            request.setProperty("otel.span.server.context", spanContext);
-            request.setProperty("otel.span.server.parentContext", parentContext);
-            request.setProperty("otel.span.server.scope", scope);
+                Context spanContext = instrumenter.start(parentContext, request);
+                Scope scope = spanContext.makeCurrent();
+                request.setProperty("otel.span.server.context", spanContext);
+                request.setProperty("otel.span.server.parentContext", parentContext);
+                request.setProperty("otel.span.server.scope", scope);
+            }
         }
     }
 
     @Override
     public void filter(final ContainerRequestContext request, final ContainerResponseContext response) {
-        Scope scope = (Scope) request.getProperty("otel.span.server.scope");
-        if (scope == null) {
-            return;
-        }
+        if (instrumenter != null) {
+            Scope scope = (Scope) request.getProperty("otel.span.server.scope");
+            if (scope == null) {
+                return;
+            }
 
-        Context spanContext = (Context) request.getProperty("otel.span.server.context");
-        try {
-            instrumenter.end(spanContext, request, response, null);
-        } finally {
-            scope.close();
+            Context spanContext = (Context) request.getProperty("otel.span.server.context");
+            try {
+                instrumenter.end(spanContext, request, response, null);
+            } finally {
+                scope.close();
 
-            request.removeProperty("rest.resource.class");
-            request.removeProperty("rest.resource.method");
-            request.removeProperty("otel.span.server.context");
-            request.removeProperty("otel.span.server.parentContext");
-            request.removeProperty("otel.span.server.scope");
+                request.removeProperty("rest.resource.class");
+                request.removeProperty("rest.resource.method");
+                request.removeProperty("otel.span.server.context");
+                request.removeProperty("otel.span.server.parentContext");
+                request.removeProperty("otel.span.server.scope");
+            }
         }
     }
 
