@@ -6,12 +6,12 @@
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-build-parent</artifactId>
         <version>39</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>io.smallrye.opentelemetry.examples</groupId>
     <artifactId>library</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.3.0</version>
     <packaging>war</packaging>
     <name>SmallRye OpenTelemetry Examples: Library</name>
 
@@ -174,4 +174,8 @@
             </build>
         </profile>
     </profiles>
+
+  <scm>
+    <tag>2.3.0</tag>
+  </scm>
 </project>
