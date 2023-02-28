@@ -10,11 +10,6 @@
     <artifactId>smallrye-opentelemetry-tck</artifactId>
     <name>SmallRye OpenTelemetry: MicroProfile Telemetry Tracing TCK</name>
 
-    <properties>
-        <version.microprofile.opentelemetry>1.0</version.microprofile.opentelemetry>
-        <version.testng>7.4.0</version.testng>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
@@ -26,14 +21,6 @@
             <groupId>org.eclipse.microprofile.telemetry.tracing</groupId>
             <artifactId>microprofile-telemetry-tracing-tck</artifactId>
             <version>${version.microprofile.opentelemetry}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Override the TestNG version coming from the SmallRye Parent. Arquillian requires 7.4.0 -->
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${version.testng}</version>
             <scope>test</scope>
         </dependency>
 
@@ -67,10 +54,8 @@
             <artifactId>smallrye-config</artifactId>
         </dependency>
         <dependency>
-            <groupId>${groupId.resteasy.client}</groupId>
-            <artifactId>${artifactId.resteasy.client}</artifactId>
-            <version>${version.resteasy.client}</version>
-            <scope>test</scope>
+            <groupId>org.jboss.resteasy.microprofile</groupId>
+            <artifactId>microprofile-rest-client</artifactId>
         </dependency>
     </dependencies>
 

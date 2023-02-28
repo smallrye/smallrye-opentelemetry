@@ -14,10 +14,6 @@
     <name>SmallRye OpenTelemetry: Test Suite</name>
 
     <properties>
-        <version.resteasy>6.0.3.Final</version.resteasy>
-        <!-- RESTEasy REST Client relocated to another GAV, so these props are for jakarta auto migration -->
-        <groupId.resteasy.client>org.jboss.resteasy.microprofile</groupId.resteasy.client>
-        <artifactId.resteasy.client>microprofile-rest-client</artifactId.resteasy.client>
         <version.resteasy.client>2.0.0.Final</version.resteasy.client>
     </properties>
 
@@ -29,6 +25,13 @@
                 <version>${version.smallrye.testing}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.resteasy.microprofile</groupId>
+                <artifactId>microprofile-rest-client</artifactId>
+                <version>${version.resteasy.client}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

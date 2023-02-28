@@ -59,10 +59,8 @@
             <artifactId>smallrye-config</artifactId>
         </dependency>
         <dependency>
-            <groupId>${groupId.resteasy.client}</groupId>
-            <artifactId>${artifactId.resteasy.client}</artifactId>
-            <version>${version.resteasy.client}</version>
-            <scope>test</scope>
+            <groupId>org.jboss.resteasy.microprofile</groupId>
+            <artifactId>microprofile-rest-client</artifactId>
         </dependency>
     </dependencies>
 </project>
