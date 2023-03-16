@@ -80,7 +80,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -89,7 +89,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span", client.getAttributes().get(HTTP_URL));
@@ -107,7 +107,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/{name}", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -116,7 +116,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/1", client.getAttributes().get(HTTP_URL));
@@ -134,7 +134,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/{name}", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -143,7 +143,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/1?query=query", client.getAttributes().get(HTTP_URL));
@@ -163,7 +163,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/error", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/error", server.getName());
         assertEquals(HTTP_INTERNAL_ERROR, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -172,7 +172,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_INTERNAL_ERROR, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/error", client.getAttributes().get(HTTP_URL));
@@ -194,7 +194,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(1);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/child", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/child", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -203,7 +203,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(2);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/child", client.getAttributes().get(HTTP_URL));
@@ -223,7 +223,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/current", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/current", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -233,7 +233,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/current", client.getAttributes().get(HTTP_URL));
@@ -256,7 +256,7 @@ class RestClientSpanTest {
 
         SpanData server = spans.get(1);
         assertEquals(SERVER, server.getKind());
-        assertEquals(url.getPath() + "span/new", server.getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/new", server.getName());
         assertEquals(HTTP_OK, server.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, server.getAttributes().get(HTTP_METHOD));
         assertEquals("http", server.getAttributes().get(HTTP_SCHEME));
@@ -265,7 +265,7 @@ class RestClientSpanTest {
 
         SpanData client = spans.get(2);
         assertEquals(CLIENT, client.getKind());
-        assertEquals("HTTP GET", client.getName());
+        assertEquals("GET", client.getName());
         assertEquals(HTTP_OK, client.getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, client.getAttributes().get(HTTP_METHOD));
         assertEquals(url.toString() + "span/new", client.getAttributes().get(HTTP_URL));
