@@ -77,7 +77,7 @@ class RestSpanTest {
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(url.getPath() + "span", spanItems.get(0).getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
 
@@ -96,7 +96,7 @@ class RestSpanTest {
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
     }
@@ -108,7 +108,7 @@ class RestSpanTest {
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
         assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getName());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", spanItems.get(0).getName());
         assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
         assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
         assertEquals(url.getPath() + "span/1?id=1", spanItems.get(0).getAttributes().get(HTTP_TARGET));
@@ -123,7 +123,7 @@ class RestSpanTest {
         assertEquals(1, spanItems.size());
         SpanData span = spanItems.get(0);
         assertEquals(SERVER, span.getKind());
-        assertEquals(url.getPath() + "span", span.getName());
+        assertEquals(HttpMethod.POST + " " + url.getPath() + "span", span.getName());
 
         // Common Attributes
         assertEquals(HttpMethod.POST, span.getAttributes().get(HTTP_METHOD)); // http.method
