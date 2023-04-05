@@ -32,10 +32,15 @@ public class OpenTelemetryProducer {
     @Singleton
     public OpenTelemetry getOpenTelemetry() {
         AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
+
+        ClassLoader contextClassLoader = SecuritySupport.getContextClassLoader();
+        if (contextClassLoader != null) {
+            builder.setServiceClassLoader(contextClassLoader);
+        }
+
         return builder
                 .setResultAsGlobal(false)
                 .registerShutdownHook(false)
-                .setServiceClassLoader(Thread.currentThread().getContextClassLoader())
                 .addPropertiesSupplier(() -> config.properties())
                 .build()
                 .getOpenTelemetrySdk();
