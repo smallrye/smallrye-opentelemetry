@@ -120,17 +120,17 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     private static class NetServerAttributesExtractor
             extends InetSocketAddressNetServerAttributesGetter<ContainerRequestContext> {
         @Override
-        public String transport(final ContainerRequestContext request) {
+        public String getTransport(final ContainerRequestContext request) {
             return null;
         }
 
         @Override
-        public String hostName(final ContainerRequestContext request) {
+        public String getHostName(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getHost();
         }
 
         @Override
-        public Integer hostPort(final ContainerRequestContext request) {
+        public Integer getHostPort(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getPort();
         }
 
@@ -149,12 +149,12 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     private static class HttpServerAttributesExtractor
             implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
-        public String flavor(final ContainerRequestContext request) {
+        public String getFlavor(final ContainerRequestContext request) {
             return (String) request.getProperty(SemanticAttributes.HTTP_FLAVOR.getKey());
         }
 
         @Override
-        public String target(final ContainerRequestContext request) {
+        public String getTarget(final ContainerRequestContext request) {
             URI requestUri = request.getUriInfo().getRequestUri();
             String path = requestUri.getPath();
             String query = requestUri.getQuery();
@@ -165,7 +165,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        public String route(final ContainerRequestContext request) {
+        public String getRoute(final ContainerRequestContext request) {
             try {
                 // This can throw an IllegalArgumentException when determining the route for a subresource
                 Class<?> resourceClass = (Class<?>) request.getProperty("rest.resource.class");
@@ -188,28 +188,28 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        public String scheme(final ContainerRequestContext request) {
+        public String getScheme(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getScheme();
         }
 
         @Override
-        public String method(final ContainerRequestContext request) {
+        public String getMethod(final ContainerRequestContext request) {
             return request.getMethod();
         }
 
         @Override
-        public List<String> requestHeader(final ContainerRequestContext request, final String name) {
+        public List<String> getRequestHeader(final ContainerRequestContext request, final String name) {
             return request.getHeaders().getOrDefault(name, emptyList());
         }
 
         @Override
-        public Integer statusCode(final ContainerRequestContext request, final ContainerResponseContext response,
+        public Integer getStatusCode(final ContainerRequestContext request, final ContainerResponseContext response,
                 final Throwable throwable) {
             return response.getStatus();
         }
 
         @Override
-        public List<String> responseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
+        public List<String> getResponseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
                 final String name) {
             return response.getStringHeaders().getOrDefault(name, emptyList());
         }
