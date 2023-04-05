@@ -166,20 +166,25 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         @Override
         public String route(final ContainerRequestContext request) {
-            Class<?> resourceClass = (Class<?>) request.getProperty("rest.resource.class");
-            Method method = (Method) request.getProperty("rest.resource.method");
+            try {
+                // This can throw an IllegalArgumentException when determining the route for a subresource
+                Class<?> resourceClass = (Class<?>) request.getProperty("rest.resource.class");
+                Method method = (Method) request.getProperty("rest.resource.method");
 
-            UriBuilder template = UriBuilder.fromResource(resourceClass);
-            String contextRoot = request.getUriInfo().getBaseUri().getPath();
-            if (contextRoot != null) {
-                template.path(contextRoot);
+                UriBuilder template = UriBuilder.fromResource(resourceClass);
+                String contextRoot = request.getUriInfo().getBaseUri().getPath();
+                if (contextRoot != null) {
+                    template.path(contextRoot);
+                }
+
+                if (method.isAnnotationPresent(Path.class)) {
+                    template.path(method);
+                }
+
+                return template.toTemplate();
+            } catch (IllegalArgumentException e) {
+                return null;
             }
-
-            if (method.isAnnotationPresent(Path.class)) {
-                template.path(method);
-            }
-
-            return template.toTemplate();
         }
 
         @Override

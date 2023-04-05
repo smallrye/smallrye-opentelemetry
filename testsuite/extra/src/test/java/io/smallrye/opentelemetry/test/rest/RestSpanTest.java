@@ -148,6 +148,18 @@ class RestSpanTest {
         assertNull(span.getAttributes().get(NET_SOCK_HOST_PORT)); // net.sock.host.port
     }
 
+    @Test
+    void subResource() {
+        given().get("/sub/1").then().statusCode(HTTP_OK);
+
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        assertEquals(1, spanItems.size());
+        assertEquals(SERVER, spanItems.get(0).getKind());
+        assertEquals("HTTP " + HttpMethod.GET, spanItems.get(0).getName());
+        assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
+        assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
+    }
+
     @Path("/")
     public static class SpanResource {
         @GET
@@ -166,6 +178,24 @@ class RestSpanTest {
         @Path("/span")
         public Response spanPost(String payload) {
             return Response.ok(payload).build();
+        }
+
+        @Path("/sub/{id}")
+        public SubResource subResource(@PathParam("id") String id) {
+            return new SubResource(id);
+        }
+    }
+
+    public static class SubResource {
+        private final String id;
+
+        public SubResource(final String id) {
+            this.id = id;
+        }
+
+        @GET
+        public Response get() {
+            return Response.ok().build();
         }
     }
 
