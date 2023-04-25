@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.List;
 
@@ -131,7 +132,15 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         @Override
         public Integer getHostPort(final ContainerRequestContext request) {
-            return request.getUriInfo().getRequestUri().getPort();
+            URI uri = request.getUriInfo().getRequestUri();
+            if (uri.getPort() > 0) {
+                return uri.getPort();
+            }
+            try {
+                return uri.toURL().getDefaultPort();
+            } catch (MalformedURLException ex) {
+                return -1;
+            }
         }
 
         @Override
@@ -141,8 +150,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
         @Override
         protected InetSocketAddress getHostSocketAddress(final ContainerRequestContext request) {
-            URI requestUri = request.getUriInfo().getRequestUri();
-            return new InetSocketAddress(requestUri.getHost(), requestUri.getPort());
+            return new InetSocketAddress(getHostName(request), getHostPort(request));
         }
     }
 
