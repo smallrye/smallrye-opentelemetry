@@ -16,7 +16,7 @@
     <name>SmallRye OpenTelemetry Examples: Agent</name>
 
     <properties>
-        <version.plugin.war>3.3.2</version.plugin.war>
+        <version.plugin.war>3.4.0</version.plugin.war>
         <version.plugin.dependency>3.5.0</version.plugin.dependency>
         <version.plugin.jetty>11.0.13</version.plugin.jetty>
 
