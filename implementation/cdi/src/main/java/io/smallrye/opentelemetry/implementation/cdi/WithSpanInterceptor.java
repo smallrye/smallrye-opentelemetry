@@ -30,7 +30,7 @@ public class WithSpanInterceptor {
                 new MethodRequestSpanNameExtractor());
         builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
-        MethodSpanAttributesExtractor<MethodRequest, Void> attributesExtractor = MethodSpanAttributesExtractor.newInstance(
+        MethodSpanAttributesExtractor<MethodRequest, Void> attributesExtractor = MethodSpanAttributesExtractor.create(
                 MethodRequest::getMethod,
                 new WithSpanParameterAttributeNamesExtractor(),
                 MethodRequest::getArgs);

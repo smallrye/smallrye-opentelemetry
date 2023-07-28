@@ -107,11 +107,6 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         }
 
         @Override
-        public String getFlavor(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
         public String getMethod(final ClientRequestContext request) {
             return request.getMethod();
         }

@@ -4,14 +4,12 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_VERSION;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_CLIENT_IP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_FLAVOR;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_SCHEME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_PORT;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_FAMILY;
@@ -20,6 +18,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_S
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_ADDR;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_PORT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -128,8 +127,7 @@ class RestSpanTest {
         // Common Attributes
         assertEquals(HttpMethod.POST, span.getAttributes().get(HTTP_METHOD)); // http.method
         assertEquals(HTTP_OK, span.getAttributes().get(HTTP_STATUS_CODE)); // http.status_code
-        assertNotNull(span.getAttributes().get(HTTP_FLAVOR)); // http.flavor
-        assertNotNull(span.getAttributes().get(HTTP_USER_AGENT)); // http.user_agent
+        assertNotNull(span.getAttributes().get(USER_AGENT_ORIGINAL)); // http.user_agent
         assertNotNull(span.getAttributes().get(HTTP_REQUEST_CONTENT_LENGTH)); // http.request_content_length
         // assertNotNull(spanItems.get(0).getAttributes().get(HTTP_RESPONSE_CONTENT_LENGTH));       // http.response_content_length
         assertNull(span.getAttributes().get(NET_SOCK_FAMILY)); // net.sock.family
