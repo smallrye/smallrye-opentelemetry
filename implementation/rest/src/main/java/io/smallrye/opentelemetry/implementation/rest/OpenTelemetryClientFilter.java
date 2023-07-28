@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -132,47 +133,37 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
     private static class NetClientAttributesExtractor
             implements NetClientAttributesGetter<ClientRequestContext, ClientResponseContext> {
         @Override
-        public String getTransport(
-                final ClientRequestContext clientRequestContext,
-                final ClientResponseContext clientResponseContext) {
+        public String getTransport(final ClientRequestContext request, final ClientResponseContext response) {
+            return SemanticAttributes.NetTransportValues.IP_TCP;
+        }
+
+        @Override
+        public String getPeerName(final ClientRequestContext request) {
+            return request.getUri().getHost();
+        }
+
+        @Override
+        public Integer getPeerPort(final ClientRequestContext request) {
+            return request.getUri().getPort();
+        }
+
+        @Override
+        public String getSockFamily(final ClientRequestContext request, final ClientResponseContext response) {
             return null;
         }
 
         @Override
-        public String getPeerName(final ClientRequestContext clientRequestContext) {
+        public String getSockPeerAddr(final ClientRequestContext request, final ClientResponseContext response) {
             return null;
         }
 
         @Override
-        public Integer getPeerPort(final ClientRequestContext clientRequestContext) {
+        public String getSockPeerName(final ClientRequestContext request, final ClientResponseContext response) {
             return null;
         }
 
         @Override
-        public String getSockFamily(
-                final ClientRequestContext clientRequestContext,
-                final ClientResponseContext clientResponseContext) {
-            return null;
-        }
-
-        @Override
-        public String getSockPeerAddr(
-                final ClientRequestContext clientRequestContext,
-                final ClientResponseContext clientResponseContext) {
-            return null;
-        }
-
-        @Override
-        public String getSockPeerName(
-                final ClientRequestContext clientRequestContext,
-                final ClientResponseContext clientResponseContext) {
-            return null;
-        }
-
-        @Override
-        public Integer getSockPeerPort(
-                final ClientRequestContext clientRequestContext,
-                final ClientResponseContext clientResponseContext) {
+        public Integer getSockPeerPort(final ClientRequestContext request, final ClientResponseContext response) {
             return null;
         }
     }
