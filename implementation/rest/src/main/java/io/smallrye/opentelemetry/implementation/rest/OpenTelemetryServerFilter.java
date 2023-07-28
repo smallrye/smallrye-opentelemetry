@@ -32,6 +32,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -122,7 +123,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
             extends InetSocketAddressNetServerAttributesGetter<ContainerRequestContext> {
         @Override
         public String getTransport(final ContainerRequestContext request) {
-            return null;
+            return SemanticAttributes.NetTransportValues.IP_TCP;
         }
 
         @Override
