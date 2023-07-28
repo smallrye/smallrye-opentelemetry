@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -126,6 +126,16 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
+        public String getProtocolName(final ContainerRequestContext request) {
+            return (String) request.getProperty(NetAttributes.NET_PROTOCOL_NAME.getKey());
+        }
+
+        @Override
+        public String getProtocolVersion(final ContainerRequestContext request) {
+            return (String) request.getProperty(NetAttributes.NET_PROTOCOL_VERSION.getKey());
+        }
+
+        @Override
         public String getHostName(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getHost();
         }
@@ -156,10 +166,6 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
     private static class HttpServerAttributesExtractor
             implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
-        @Override
-        public String getFlavor(final ContainerRequestContext request) {
-            return (String) request.getProperty(SemanticAttributes.HTTP_FLAVOR.getKey());
-        }
 
         @Override
         public String getTarget(final ContainerRequestContext request) {
