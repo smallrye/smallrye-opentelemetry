@@ -14,7 +14,7 @@
     <name>SmallRye OpenTelemetry: Test Suite</name>
 
     <properties>
-        <version.resteasy.client>2.1.2.Final</version.resteasy.client>
+        <version.resteasy.client>2.1.3.Final</version.resteasy.client>
     </properties>
 
     <dependencyManagement>
