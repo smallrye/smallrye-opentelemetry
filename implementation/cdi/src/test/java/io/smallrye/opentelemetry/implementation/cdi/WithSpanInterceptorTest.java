@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -37,7 +36,6 @@ class WithSpanInterceptorTest {
     void setUp() {
         spanExporter.reset();
         GlobalOpenTelemetry.resetForTest();
-        GlobalLoggerProvider.resetForTest();
     }
 
     @Test

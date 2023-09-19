@@ -47,8 +47,7 @@ public class OpenTelemetryProducer {
         }
 
         return builder
-                .setResultAsGlobal(false)
-                .registerShutdownHook(false)
+                .disableShutdownHook()
                 .addPropertiesSupplier(() -> config.properties())
                 .build()
                 .getOpenTelemetrySdk();
