@@ -9,7 +9,7 @@ import jakarta.ws.rs.container.PreMatching;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.ext.Provider;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
 @PreMatching
@@ -20,8 +20,8 @@ public class HttpServerAttributesFilter implements ContainerRequestFilter, Conta
     @Override
     public void filter(final ContainerRequestContext request) {
         String[] nameAndVersion = httpServletRequest.getProtocol().split("/");
-        request.setProperty(NetAttributes.NET_PROTOCOL_NAME.getKey(), nameAndVersion[0]);
-        request.setProperty(NetAttributes.NET_PROTOCOL_VERSION.getKey(), nameAndVersion[1]);
+        request.setProperty(SemanticAttributes.NET_PROTOCOL_NAME.getKey(), nameAndVersion[0]);
+        request.setProperty(SemanticAttributes.NET_PROTOCOL_VERSION.getKey(), nameAndVersion[1]);
     }
 
     @Override

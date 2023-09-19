@@ -24,8 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -48,8 +46,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
-                .addAttributesExtractor(
-                        HttpClientAttributesExtractor.create(clientAttributesExtractor, new NetClientAttributesExtractor()))
+                .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
     }
 
@@ -103,68 +100,40 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
             implements HttpClientAttributesGetter<ClientRequestContext, ClientResponseContext> {
 
         @Override
-        public String getUrl(final ClientRequestContext request) {
+        public String getUrlFull(final ClientRequestContext request) {
             return request.getUri().toString();
         }
 
         @Override
-        public String getMethod(final ClientRequestContext request) {
+        public String getServerAddress(final ClientRequestContext request) {
+            return request.getUri().getHost();
+        }
+
+        @Override
+        public Integer getServerPort(final ClientRequestContext request) {
+            return request.getUri().getPort();
+        }
+
+        @Override
+        public String getHttpRequestMethod(final ClientRequestContext request) {
             return request.getMethod();
         }
 
         @Override
-        public List<String> getRequestHeader(final ClientRequestContext request, final String name) {
+        public List<String> getHttpRequestHeader(final ClientRequestContext request, final String name) {
             return request.getStringHeaders().getOrDefault(name, emptyList());
         }
 
         @Override
-        public Integer getStatusCode(final ClientRequestContext request, final ClientResponseContext response,
+        public Integer getHttpResponseStatusCode(final ClientRequestContext request, final ClientResponseContext response,
                 final Throwable throwable) {
             return response.getStatus();
         }
 
         @Override
-        public List<String> getResponseHeader(final ClientRequestContext request, final ClientResponseContext response,
+        public List<String> getHttpResponseHeader(final ClientRequestContext request, final ClientResponseContext response,
                 final String name) {
             return response.getHeaders().getOrDefault(name, emptyList());
-        }
-    }
-
-    private static class NetClientAttributesExtractor
-            implements NetClientAttributesGetter<ClientRequestContext, ClientResponseContext> {
-        @Override
-        public String getTransport(final ClientRequestContext request, final ClientResponseContext response) {
-            return SemanticAttributes.NetTransportValues.IP_TCP;
-        }
-
-        @Override
-        public String getPeerName(final ClientRequestContext request) {
-            return request.getUri().getHost();
-        }
-
-        @Override
-        public Integer getPeerPort(final ClientRequestContext request) {
-            return request.getUri().getPort();
-        }
-
-        @Override
-        public String getSockFamily(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public String getSockPeerAddr(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public String getSockPeerName(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
-        }
-
-        @Override
-        public Integer getSockPeerPort(final ClientRequestContext request, final ClientResponseContext response) {
-            return null;
         }
     }
 }

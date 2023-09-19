@@ -30,8 +30,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 @Provider
@@ -58,7 +56,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
                 .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
-                        .create(serverAttributesExtractor, new NetServerAttributesExtractor()))
+                        .create(serverAttributesExtractor, new NetServerAttributesGetter()))
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
@@ -119,30 +117,31 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
     }
 
-    private static class NetServerAttributesExtractor
-            extends InetSocketAddressNetServerAttributesGetter<ContainerRequestContext> {
+    private static class NetServerAttributesGetter implements
+            io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
         public String getTransport(final ContainerRequestContext request) {
             return SemanticAttributes.NetTransportValues.IP_TCP;
         }
 
         @Override
-        public String getProtocolName(final ContainerRequestContext request) {
-            return (String) request.getProperty(NetAttributes.NET_PROTOCOL_NAME.getKey());
+        public String getNetworkProtocolName(final ContainerRequestContext request, final ContainerResponseContext response) {
+            return (String) request.getProperty(SemanticAttributes.NET_PROTOCOL_NAME.getKey());
         }
 
         @Override
-        public String getProtocolVersion(final ContainerRequestContext request) {
-            return (String) request.getProperty(NetAttributes.NET_PROTOCOL_VERSION.getKey());
+        public String getNetworkProtocolVersion(final ContainerRequestContext request,
+                final ContainerResponseContext response) {
+            return (String) request.getProperty(SemanticAttributes.NET_PROTOCOL_VERSION.getKey());
         }
 
         @Override
-        public String getHostName(final ContainerRequestContext request) {
+        public String getServerAddress(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getHost();
         }
 
         @Override
-        public Integer getHostPort(final ContainerRequestContext request) {
+        public Integer getServerPort(final ContainerRequestContext request) {
             URI uri = request.getUriInfo().getRequestUri();
             if (uri.getPort() > 0) {
                 return uri.getPort();
@@ -155,13 +154,14 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        protected InetSocketAddress getPeerSocketAddress(final ContainerRequestContext request) {
+        public InetSocketAddress getServerInetSocketAddress(final ContainerRequestContext request,
+                final ContainerResponseContext response) {
+            String serverAddress = getServerAddress(request);
+            Integer serverPort = getServerPort(request);
+            if (serverAddress != null && serverPort != null) {
+                return new InetSocketAddress(serverAddress, serverPort);
+            }
             return null;
-        }
-
-        @Override
-        protected InetSocketAddress getHostSocketAddress(final ContainerRequestContext request) {
-            return new InetSocketAddress(getHostName(request), getHostPort(request));
         }
     }
 
@@ -169,18 +169,17 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
             implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
 
         @Override
-        public String getTarget(final ContainerRequestContext request) {
-            URI requestUri = request.getUriInfo().getRequestUri();
-            String path = requestUri.getPath();
-            String query = requestUri.getQuery();
-            if (path != null && query != null && !query.isEmpty()) {
-                return path + "?" + query;
-            }
-            return path;
+        public String getUrlPath(final ContainerRequestContext request) {
+            return request.getUriInfo().getRequestUri().getPath();
         }
 
         @Override
-        public String getRoute(final ContainerRequestContext request) {
+        public String getUrlQuery(final ContainerRequestContext request) {
+            return request.getUriInfo().getRequestUri().getQuery();
+        }
+
+        @Override
+        public String getHttpRoute(final ContainerRequestContext request) {
             try {
                 // This can throw an IllegalArgumentException when determining the route for a subresource
                 Class<?> resource = (Class<?>) request.getProperty("rest.resource.class");
@@ -203,28 +202,29 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
 
         @Override
-        public String getScheme(final ContainerRequestContext request) {
+        public String getUrlScheme(final ContainerRequestContext request) {
             return request.getUriInfo().getRequestUri().getScheme();
         }
 
         @Override
-        public String getMethod(final ContainerRequestContext request) {
+        public String getHttpRequestMethod(final ContainerRequestContext request) {
             return request.getMethod();
         }
 
         @Override
-        public List<String> getRequestHeader(final ContainerRequestContext request, final String name) {
+        public List<String> getHttpRequestHeader(final ContainerRequestContext request, final String name) {
             return request.getHeaders().getOrDefault(name, emptyList());
         }
 
         @Override
-        public Integer getStatusCode(final ContainerRequestContext request, final ContainerResponseContext response,
+        public Integer getHttpResponseStatusCode(final ContainerRequestContext request, final ContainerResponseContext response,
                 final Throwable throwable) {
             return response.getStatus();
         }
 
         @Override
-        public List<String> getResponseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
+        public List<String> getHttpResponseHeader(final ContainerRequestContext request,
+                final ContainerResponseContext response,
                 final String name) {
             return response.getStringHeaders().getOrDefault(name, emptyList());
         }
