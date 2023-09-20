@@ -26,6 +26,11 @@
 
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-propagation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
             <artifactId>smallrye-opentelemetry-config</artifactId>
             <scope>test</scope>
         </dependency>
@@ -68,6 +73,7 @@
                     <dependenciesToScan>
                         <dependency>org.eclipse.microprofile.telemetry.tracing:microprofile-telemetry-tracing-tck</dependency>
                     </dependenciesToScan>
+                    <excludesFile>src/test/resources/exclusions.txt</excludesFile>
                 </configuration>
                 <dependencies>
                     <dependency>
