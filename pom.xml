@@ -16,13 +16,21 @@
 
     <properties>
         <version.opentelemetry>1.29.0</version.opentelemetry>
-        <version.microprofile.opentelemetry>1.0</version.microprofile.opentelemetry>
+        <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
+        <version.resteasy>6.2.5.Final</version.resteasy>
 
         <!-- Test -->
         <version.smallrye.testing>2.3.0</version.smallrye.testing>
         <version.smallrye.config>3.3.4</version.smallrye.config>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>staging-microprofile-telemetry</id>
+            <url>https://oss.sonatype.org/content/repositories/orgeclipsemicroprofile-1631/</url>
+        </repository>
+    </repositories>
 
     <licenses>
         <license>
@@ -62,10 +70,22 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-core-spi</artifactId>
+                <version>${version.resteasy}</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- Internal -->
             <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-propagation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -103,6 +123,7 @@
 
     <modules>
         <module>api</module>
+        <module>implementation/propagation</module>
         <module>implementation/config</module>
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
