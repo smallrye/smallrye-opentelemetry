@@ -2,6 +2,8 @@ package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,11 @@ public class OpenTelemetryProducer {
             builder.setServiceClassLoader(contextClassLoader);
         }
 
+        return (System.getSecurityManager() == null) ? getOpenTelemetrySdk(builder)
+                : AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> getOpenTelemetrySdk(builder));
+    }
+
+    private OpenTelemetrySdk getOpenTelemetrySdk(AutoConfiguredOpenTelemetrySdkBuilder builder) {
         return builder
                 .disableShutdownHook()
                 .addPropertiesSupplier(() -> config.properties())
