@@ -19,7 +19,6 @@
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
         <version.resteasy>6.2.6.Final</version.resteasy>
-        <version.testcontainers>1.18.3</version.testcontainers>
         <version.vertx.grpc>4.4.6</version.vertx.grpc>
 
         <!-- Test -->
