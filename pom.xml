@@ -19,6 +19,8 @@
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
         <version.resteasy>6.2.6.Final</version.resteasy>
+        <version.testcontainers>1.18.3</version.testcontainers>
+        <version.vertx.grpc>4.4.6</version.vertx.grpc>
 
         <!-- Test -->
         <version.smallrye.testing>2.3.0</version.smallrye.testing>
@@ -100,8 +102,24 @@
             </dependency>
             <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-exporters</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-rest</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-core</artifactId>
+                <version>${version.vertx.grpc}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-grpc-client</artifactId>
+                <version>${version.vertx.grpc}</version>
             </dependency>
 
             <!-- Test Dependencies -->
@@ -125,6 +143,7 @@
         <module>api</module>
         <module>implementation/propagation</module>
         <module>implementation/config</module>
+        <module>implementation/exporters</module>
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
         <module>testsuite</module>
