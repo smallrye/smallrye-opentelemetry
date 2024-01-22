@@ -1,25 +1,24 @@
 package io.smallrye.opentelemetry.test.rest;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_VERSION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_CLIENT_IP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_SCHEME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_PORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_FAMILY;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_HOST_ADDR;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_HOST_PORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_PORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
+import static io.opentelemetry.semconv.SemanticAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_DOMAIN;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
+import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static io.restassured.RestAssured.given;
+import static io.smallrye.opentelemetry.test.AttributeKeysStability.get;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -75,15 +74,18 @@ class RestSpanTest {
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
-        assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(HttpMethod.GET + " " + url.getPath() + "span", spanItems.get(0).getName());
-        assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
-        assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span", span.getName());
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals("http", get(span, NETWORK_PROTOCOL_NAME));
+        assertEquals("1.1", get(span, NETWORK_PROTOCOL_VERSION));
 
-        assertEquals("tck", spanItems.get(0).getResource().getAttribute(SERVICE_NAME));
-        assertEquals("1.0", spanItems.get(0).getResource().getAttribute(SERVICE_VERSION));
+        assertEquals("tck", span.getResource().getAttribute(SERVICE_NAME));
+        assertEquals("1.0", span.getResource().getAttribute(SERVICE_VERSION));
 
-        InstrumentationScopeInfo libraryInfo = spanItems.get(0).getInstrumentationScopeInfo();
+        InstrumentationScopeInfo libraryInfo = span.getInstrumentationScopeInfo();
         assertEquals(OpenTelemetryConfig.INSTRUMENTATION_NAME, libraryInfo.getName());
         assertEquals(OpenTelemetryConfig.INSTRUMENTATION_VERSION, libraryInfo.getVersion());
     }
@@ -94,10 +96,11 @@ class RestSpanTest {
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
-        assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", spanItems.get(0).getName());
-        assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
-        assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", span.getName());
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
     }
 
     @Test
@@ -106,12 +109,13 @@ class RestSpanTest {
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
-        assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", spanItems.get(0).getName());
-        assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
-        assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
-        assertEquals(url.getPath() + "span/1?id=1", spanItems.get(0).getAttributes().get(HTTP_TARGET));
-        assertEquals(url.getPath() + "span/{name}", spanItems.get(0).getAttributes().get(HTTP_ROUTE));
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", span.getName());
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span/1?id=1", get(span, URL_PATH));
+        assertEquals(url.getPath() + "span/{name}", span.getAttributes().get(HTTP_ROUTE));
     }
 
     @Test
@@ -125,25 +129,20 @@ class RestSpanTest {
         assertEquals(HttpMethod.POST + " " + url.getPath() + "span", span.getName());
 
         // Common Attributes
-        assertEquals(HttpMethod.POST, span.getAttributes().get(HTTP_METHOD)); // http.method
-        assertEquals(HTTP_OK, span.getAttributes().get(HTTP_STATUS_CODE)); // http.status_code
-        assertNotNull(span.getAttributes().get(USER_AGENT_ORIGINAL)); // http.user_agent
-        assertNotNull(span.getAttributes().get(HTTP_REQUEST_CONTENT_LENGTH)); // http.request_content_length
-        // assertNotNull(spanItems.get(0).getAttributes().get(HTTP_RESPONSE_CONTENT_LENGTH));       // http.response_content_length
-        assertNull(span.getAttributes().get(NET_SOCK_FAMILY)); // net.sock.family
-        assertNull(span.getAttributes().get(NET_SOCK_PEER_ADDR)); // net.sock.peer.addr
-        assertNull(span.getAttributes().get(NET_SOCK_PEER_NAME)); // net.sock.peer.name
-        assertNull(span.getAttributes().get(NET_SOCK_PEER_PORT)); // net.sock.peer.port
+        assertEquals(HttpMethod.POST, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertNotNull(span.getAttributes().get(USER_AGENT_ORIGINAL));
+        assertNull(span.getAttributes().get(SERVER_SOCKET_ADDRESS));
+        assertNull(span.getAttributes().get(SERVER_SOCKET_PORT));
+        assertNull(span.getAttributes().get(SERVER_SOCKET_DOMAIN));
 
         // Server Attributes
-        assertEquals("http", span.getAttributes().get(HTTP_SCHEME)); // http.scheme
-        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_TARGET)); // http.target
-        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_ROUTE)); // http.route
-        assertNull(span.getAttributes().get(HTTP_CLIENT_IP)); // http.client_ip
-        assertEquals(url.getHost(), span.getAttributes().get(NET_HOST_NAME)); // net.host.name
-        assertEquals(url.getPort(), span.getAttributes().get(NET_HOST_PORT)); // net.host.port
-        assertNotNull(span.getAttributes().get(NET_SOCK_HOST_ADDR)); // net.sock.host.addr
-        assertNull(span.getAttributes().get(NET_SOCK_HOST_PORT)); // net.sock.host.port
+        assertEquals("http", get(span, URL_SCHEME));
+        assertEquals(url.getPath() + "span", get(span, URL_PATH));
+        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_ROUTE));
+        assertNull(get(span, CLIENT_ADDRESS));
+        assertEquals(url.getHost(), get(span, SERVER_ADDRESS));
+        assertEquals(url.getPort(), get(span, SERVER_PORT));
     }
 
     @Test
@@ -152,10 +151,11 @@ class RestSpanTest {
 
         List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
         assertEquals(1, spanItems.size());
-        assertEquals(SERVER, spanItems.get(0).getKind());
-        assertEquals(HttpMethod.GET, spanItems.get(0).getName());
-        assertEquals(HTTP_OK, spanItems.get(0).getAttributes().get(HTTP_STATUS_CODE));
-        assertEquals(HttpMethod.GET, spanItems.get(0).getAttributes().get(HTTP_METHOD));
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET, span.getName());
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
     }
 
     @Path("/")
