@@ -6,9 +6,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -27,10 +24,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -45,18 +43,18 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
 
     @Inject
     public OpenTelemetryServerFilter(final OpenTelemetry openTelemetry) {
-        HttpServerAttributesExtractor serverAttributesExtractor = new HttpServerAttributesExtractor();
+        HttpServerAttributesGetter serverAttributesGetter = new HttpServerAttributesGetter();
 
         InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(serverAttributesExtractor));
+                HttpSpanNameExtractor.create(serverAttributesGetter));
         builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
         this.instrumenter = builder
-                .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesExtractor))
-                .addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
-                        .create(serverAttributesExtractor, new NetServerAttributesGetter()))
+                .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
+                .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
+                .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesGetter))
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
 
@@ -117,56 +115,22 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         }
     }
 
-    private static class NetServerAttributesGetter implements
-            io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
-        @Override
-        public String getTransport(final ContainerRequestContext request) {
-            return SemanticAttributes.NetTransportValues.IP_TCP;
-        }
-
+    private static class NetworkAttributesGetter implements
+            io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
         public String getNetworkProtocolName(final ContainerRequestContext request, final ContainerResponseContext response) {
-            return (String) request.getProperty(SemanticAttributes.NET_PROTOCOL_NAME.getKey());
+            return (String) request.getProperty(SemanticAttributes.NETWORK_PROTOCOL_NAME.getKey());
         }
 
         @Override
         public String getNetworkProtocolVersion(final ContainerRequestContext request,
                 final ContainerResponseContext response) {
-            return (String) request.getProperty(SemanticAttributes.NET_PROTOCOL_VERSION.getKey());
-        }
-
-        @Override
-        public String getServerAddress(final ContainerRequestContext request) {
-            return request.getUriInfo().getRequestUri().getHost();
-        }
-
-        @Override
-        public Integer getServerPort(final ContainerRequestContext request) {
-            URI uri = request.getUriInfo().getRequestUri();
-            if (uri.getPort() > 0) {
-                return uri.getPort();
-            }
-            try {
-                return uri.toURL().getDefaultPort();
-            } catch (MalformedURLException ex) {
-                return -1;
-            }
-        }
-
-        @Override
-        public InetSocketAddress getServerInetSocketAddress(final ContainerRequestContext request,
-                final ContainerResponseContext response) {
-            String serverAddress = getServerAddress(request);
-            Integer serverPort = getServerPort(request);
-            if (serverAddress != null && serverPort != null) {
-                return new InetSocketAddress(serverAddress, serverPort);
-            }
-            return null;
+            return (String) request.getProperty(SemanticAttributes.NETWORK_PROTOCOL_VERSION.getKey());
         }
     }
 
-    private static class HttpServerAttributesExtractor
-            implements HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
+    private static class HttpServerAttributesGetter implements
+            io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
 
         @Override
         public String getUrlPath(final ContainerRequestContext request) {
