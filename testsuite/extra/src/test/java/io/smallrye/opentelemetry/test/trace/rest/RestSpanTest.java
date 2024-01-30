@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.test.rest;
+package io.smallrye.opentelemetry.test.trace.rest;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
@@ -49,7 +49,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.trace.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
 class RestSpanTest {

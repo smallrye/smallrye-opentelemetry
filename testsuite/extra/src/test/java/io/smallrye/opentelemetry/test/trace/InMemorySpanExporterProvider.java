@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.test;
+package io.smallrye.opentelemetry.test.trace;
 
 import jakarta.enterprise.inject.spi.CDI;
 

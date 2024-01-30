@@ -1,1 +1,1 @@
-io.smallrye.opentelemetry.test.InMemorySpanExporterProvider
+io.smallrye.opentelemetry.test.trace.InMemorySpanExporterProvider
