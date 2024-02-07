@@ -42,6 +42,7 @@ public class CountedInterceptor {
 
     private void record(Counted counted, Tags commonTags, Throwable throwable) {
         Counter.Builder builder = Counter.builder(counted.value())
+                .baseUnit("invocations")
                 .tags(commonTags)
                 .tags(counted.extraTags())
                 .tag("exception", getExceptionTag(throwable))
@@ -49,6 +50,8 @@ public class CountedInterceptor {
         String description = counted.description();
         if (!description.isEmpty()) {
             builder.description(description);
+        } else {
+            builder.description("Total number of invocations for method");
         }
         builder.register(meterRegistry).increment();
     }
