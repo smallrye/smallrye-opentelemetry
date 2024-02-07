@@ -1,0 +1,7 @@
+= Micrometer to OpenTelemetry bridge
+
+This is a PoC implementation of a CDI bridge between Micrometer and OpenTelemetry. It uses OpenTelemetry's Micrometer Instrumentation for Micrometer version 1.5 and higher.
+
+The code is instrumented using the Micrometer API and the assertions are performed on the results provided by the OpenTelemetry exporter.
+
+Provides support only for the `@Counted` annotation.

@@ -1,1 +1,0 @@
-io.smallrye.opentelemetry.implementation.cdi.InMemoryMetricExporterProvider

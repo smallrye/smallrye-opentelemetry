@@ -144,6 +144,12 @@
                 <version>${version.smallrye.config}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -157,6 +163,7 @@
         <module>implementation/micrometer-otel-bridge</module>
         <module>testsuite</module>
         <module>examples</module>
+        <module>test</module>
     </modules>
 
     <profiles>

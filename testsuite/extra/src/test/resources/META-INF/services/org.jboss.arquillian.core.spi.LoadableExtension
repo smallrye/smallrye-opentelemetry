@@ -1,1 +1,1 @@
-io.smallrye.opentelemetry.test.ArquillianExtension
+io.smallrye.opentelemetry.extra.test.ArquillianExtension

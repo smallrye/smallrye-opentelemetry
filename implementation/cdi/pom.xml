@@ -51,5 +51,10 @@
             <artifactId>smallrye-opentelemetry-config</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
