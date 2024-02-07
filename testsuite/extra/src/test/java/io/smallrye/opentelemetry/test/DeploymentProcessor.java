@@ -6,6 +6,9 @@ import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
+import io.smallrye.opentelemetry.test.metrics.InMemoryMetricExporter;
+import io.smallrye.opentelemetry.test.trace.InMemorySpanExporter;
+
 public class DeploymentProcessor implements ApplicationArchiveProcessor {
     @Override
     public void process(Archive<?> archive, TestClass testClass) {
@@ -14,6 +17,7 @@ public class DeploymentProcessor implements ApplicationArchiveProcessor {
             war.addAsServiceProvider(ConfigSource.class, TestConfigSource.class);
             war.addClass(HttpServerAttributesFilter.class);
             war.addClass(InMemorySpanExporter.class);
+            war.addClass(InMemoryMetricExporter.class);
         }
     }
 }

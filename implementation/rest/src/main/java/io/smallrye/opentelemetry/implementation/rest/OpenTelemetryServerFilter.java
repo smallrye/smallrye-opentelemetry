@@ -1,5 +1,10 @@
 package io.smallrye.opentelemetry.implementation.rest;
 
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 import static java.util.Collections.emptyList;
@@ -19,20 +24,28 @@ import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.ext.Provider;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
     private Instrumenter<ContainerRequestContext, ContainerResponseContext> instrumenter;
+    private LongHistogram durationHistogram;
 
     @jakarta.ws.rs.core.Context
     ResourceInfo resourceInfo;
@@ -55,7 +68,17 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesGetter))
+                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints?
+                .addOperationMetrics(HttpServerExperimentalMetrics.get())
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
+
+        final Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+        // fixme Use new: https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpserverrequestduration
+        durationHistogram = meter.histogramBuilder("http.server.duration")
+                .setDescription("The duration of the inbound HTTP request")
+                .ofLongs()
+                .setUnit("ms")
+                .build();
     }
 
     @Override
@@ -74,17 +97,20 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 request.setProperty("otel.span.server.scope", scope);
             }
         }
+        if (durationHistogram != null) {
+            request.setProperty("otel.metrics.client.start", System.currentTimeMillis());
+        }
     }
 
     @Override
     public void filter(final ContainerRequestContext request, final ContainerResponseContext response) {
+        Context spanContext = (Context) request.getProperty("otel.span.server.context");
         if (instrumenter != null) {
             Scope scope = (Scope) request.getProperty("otel.span.server.scope");
             if (scope == null) {
                 return;
             }
 
-            Context spanContext = (Context) request.getProperty("otel.span.server.context");
             try {
                 instrumenter.end(spanContext, request, response, null);
             } finally {
@@ -97,6 +123,31 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 request.removeProperty("otel.span.server.scope");
             }
         }
+        if (durationHistogram != null) {
+            Long start = (Long) request.getProperty("otel.metrics.client.start");
+            if (start != null) {
+                try {
+                    durationHistogram.record(System.currentTimeMillis() - start,
+                            getHistogramAttributes(request, response),
+                            spanContext);
+                } finally {
+                    request.removeProperty("otel.metrics.client.start");
+                }
+            }
+        }
+    }
+
+    private Attributes getHistogramAttributes(ContainerRequestContext request, ContainerResponseContext response) {
+        AttributesBuilder builder = Attributes.builder();
+        builder.put(HTTP_ROUTE.getKey(), request.getUriInfo().getPath().toString());// Fixme must contain a template /users/:userID?
+        if (SemconvStability.emitOldHttpSemconv()) {
+            builder.put(HTTP_METHOD, request.getMethod());// FIXME semantic conventions
+            builder.put(HTTP_STATUS_CODE, response.getStatus());
+        } else {
+            builder.put(HTTP_REQUEST_METHOD, request.getMethod());// FIXME semantic conventions
+            builder.put(HTTP_RESPONSE_STATUS_CODE, response.getStatus());
+        }
+        return builder.build();
     }
 
     private static class ContainerRequestContextTextMapGetter implements TextMapGetter<ContainerRequestContext> {

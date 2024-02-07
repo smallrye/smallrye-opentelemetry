@@ -1,16 +1,18 @@
-package io.smallrye.opentelemetry.test.rest;
+package io.smallrye.opentelemetry.test.trace.rest;
 
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.URL;
+import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Response;
 
@@ -23,11 +25,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.opentelemetry.api.baggage.Baggage;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.smallrye.opentelemetry.test.trace.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
-class BaggageTest {
+class ContextRootTest {
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class);
@@ -44,28 +46,26 @@ class BaggageTest {
     }
 
     @Test
-    void baggage() {
-        WebTarget target = ClientBuilder.newClient().target(url.toString() + "baggage");
-        Response response = target.request().header("baggage", "user=naruto").get();
-        assertEquals(HTTP_OK, response.getStatus());
+    void route() {
+        given().get("/application/resource/span").then().statusCode(HTTP_OK);
 
-        spanExporter.getFinishedSpanItems(2);
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        assertEquals(1, spanItems.size());
+        assertEquals(SERVER, spanItems.get(0).getKind());
+        assertEquals(url.getPath() + "application/resource/span", spanItems.get(0).getAttributes().get(HTTP_ROUTE));
     }
 
-    @Path("/baggage")
-    public static class BaggageResource {
-        @Inject
-        Baggage baggage;
-
-        @GET
-        public Response baggage() {
-            assertEquals("naruto", baggage.getEntryValue("user"));
-            return Response.ok().build();
-        }
-    }
-
-    @ApplicationPath("/")
+    @ApplicationPath("/application")
     public static class RestApplication extends Application {
 
+    }
+
+    @Path("/resource")
+    public static class Resource {
+        @GET
+        @Path("/span")
+        public Response span() {
+            return Response.ok().build();
+        }
     }
 }

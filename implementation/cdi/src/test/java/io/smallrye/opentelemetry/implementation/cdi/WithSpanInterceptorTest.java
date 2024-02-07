@@ -25,7 +25,7 @@ import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProduc
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
-@AddBeanClasses(OpenTelemetryConfigProducer.class)
+@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryMetricExporterProvider.class, InMemoryMetricExporter.class })
 class WithSpanInterceptorTest {
     @Inject
     InMemorySpanExporter spanExporter;

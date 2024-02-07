@@ -23,6 +23,7 @@ import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -64,6 +65,12 @@ public class OpenTelemetryProducer {
     @Singleton
     public Tracer getTracer() {
         return CDI.current().select(OpenTelemetry.class).get().getTracer(INSTRUMENTATION_NAME);
+    }
+
+    @Produces
+    @Singleton
+    public Meter getMeter() {
+        return CDI.current().select(OpenTelemetry.class).get().getMeter(INSTRUMENTATION_NAME);
     }
 
     @Produces

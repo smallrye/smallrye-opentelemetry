@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.test.rest;
+package io.smallrye.opentelemetry.test.trace.rest;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
@@ -49,7 +49,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.trace.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
 class RestClientSpanTest {
