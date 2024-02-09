@@ -1,0 +1,7 @@
+== OpenTelemetry Test Utilities
+
+Provides:
+
+* Tracing exporter using the OTel SPI
+* Metrics exporter using the OTel SPI
+* Configurations with reduced delays for testing
