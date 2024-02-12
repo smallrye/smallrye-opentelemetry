@@ -4,6 +4,8 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -14,10 +16,6 @@ import io.smallrye.opentelemetry.instrumentation.observation.handler.Propagating
 
 @Singleton
 public class ObservationRegistryProducer {
-    //
-    //    @Inject
-    //    MeterRegistry registry;
-
     @Inject
     Tracer tracer;
 
@@ -27,24 +25,26 @@ public class ObservationRegistryProducer {
     @Inject
     OpenTelemetryObservationHandler openTelemetryObservationHandler;
 
+    @Inject
+    MeterRegistry registry;
+
     @Produces
     @Singleton
     public ObservationRegistry registry() {
         ObservationRegistry observationRegistry = ObservationRegistry.create();
 
         observationRegistry.observationConfig()
-                //                .observationFilter(new CloudObservationFilter())
-                //                .observationConvention(new GlobalTaxObservationConvention())
+                //        .observationFilter(new CloudObservationFilter())  // Where global filters go
+                //        .observationConvention(new GlobalTaxObservationConvention())  Where global conventions go
                 .observationHandler(new ObservationHandler.FirstMatchingCompositeObservationHandler(
                         new PropagatingSenderTracingObservationHandler(tracer,
                                 openTelemetry.getPropagators().getTextMapPropagator()),
                         new PropagatingReceiverTracingObservationHandler(tracer,
                                 openTelemetry.getPropagators().getTextMapPropagator()),
                         //   new TracingAwareMeterObservationHandler(tracer) // For exemplars... Maybe not be needed
-                        openTelemetryObservationHandler));
-        //                .observationHandler(new PrintOutHandler())
-        //                .observationHandler(new DefaultMeterObservationHandler(registry));
-
+                        openTelemetryObservationHandler))
+                .observationHandler(new DefaultMeterObservationHandler(registry));
+        //      .observationHandler(new PrintOutHandler())  // Can be implemented for debugging. Other handlers for future frameworks can also be added.
         return observationRegistry;
     }
 }

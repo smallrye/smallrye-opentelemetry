@@ -9,8 +9,8 @@
         <version>2.6.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>smallrye-opentelemetry-observation-cdi-it</artifactId>
-    <name>SmallRye OpenTelemetry: Test Suite for Observation CDI</name>
+    <artifactId>smallrye-opentelemetry-observation-otel-bridge-it</artifactId>
+    <name>SmallRye OpenTelemetry: Test Suite for Observation to OpenTelemetry bridge</name>
 
     <dependencies>
         <dependency>

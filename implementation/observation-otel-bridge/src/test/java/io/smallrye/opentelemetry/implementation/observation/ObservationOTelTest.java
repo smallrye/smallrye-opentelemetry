@@ -3,6 +3,8 @@ package io.smallrye.opentelemetry.implementation.observation;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,17 +25,21 @@ import org.junit.jupiter.api.Test;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.annotation.Observed;
 import io.micrometer.observation.transport.ReceiverContext;
 import io.micrometer.observation.transport.SenderContext;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.config.inject.ConfigExtension;
 import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
 import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
+import io.smallrye.opentelemetry.implementation.micrometer.cdi.MicrometerExtension;
 import io.smallrye.opentelemetry.instrumentation.observation.ObservationRegistryProducer;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.ObservationExtension;
 import io.smallrye.opentelemetry.instrumentation.observation.handler.OpenTelemetryObservationHandler;
 import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
 import io.smallrye.opentelemetry.test.InMemoryMetricExporterProvider;
@@ -41,13 +47,15 @@ import io.smallrye.opentelemetry.test.InMemorySpanExporter;
 import io.smallrye.opentelemetry.test.InMemorySpanExporterProvider;
 
 @EnableAutoWeld
-@AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
+@AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class, ObservationExtension.class, MicrometerExtension.class })
 @AddBeanClasses({ OpenTelemetryConfigProducer.class, ObservationRegistryProducer.class, OpenTelemetryObservationHandler.class,
         InMemoryMetricExporter.class, InMemoryMetricExporterProvider.class,
         InMemorySpanExporter.class, InMemorySpanExporterProvider.class, })
 class ObservationOTelTest {
     @Inject
     InMemorySpanExporter spanExporter;
+    @Inject
+    InMemoryMetricExporter metricExporter;
     @Inject
     SpanBean spanBean;
     @Inject
@@ -58,6 +66,7 @@ class ObservationOTelTest {
     @BeforeEach
     void setUp() {
         spanExporter.reset();
+        metricExporter.reset();
         GlobalOpenTelemetry.resetForTest();
     }
 
@@ -145,6 +154,69 @@ class ObservationOTelTest {
         assertEquals(traceId, finishedSpanItems.get(0).getTraceId());
     }
 
+    @Test
+    void testObservationWithDefaults() {
+        observationSpan.observedWithDefultsMethod();
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(2);
+        assertEquals("SpanChildBean.spanChild", spanItems.get(0).getName());
+        assertEquals("ObservationSpan#observedWithDefultsMethod", spanItems.get(1).getName());
+        assertEquals(spanItems.get(0).getParentSpanId(), spanItems.get(1).getSpanId());
+
+        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.max", null);
+        assertThat(finishedMetricItems)
+                .isNotEmpty()
+                .anySatisfy(metricData -> assertThat(metricData)
+                        .hasUnit("ms")
+                        .hasDoubleGaugeSatisfying(gauge -> gauge.hasPointsSatisfying(points -> points.hasAttributes(
+                                attributeEntry("code.function",
+                                        "observedWithDefultsMethod"),
+                                attributeEntry("code.namespace",
+                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"),
+                                attributeEntry("error", "none")))));
+
+        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.active.active", null);
+        assertThat(finishedMetricItems)
+                .isNotEmpty()
+                .anySatisfy(metricData -> assertThat(metricData)
+                        .hasUnit("{tasks}")
+                        .hasLongSumSatisfying(sum -> sum.isCumulative()
+                                .hasPointsSatisfying(points -> points.hasValue(0)
+                                        .hasAttributes(
+                                                attributeEntry("code.function",
+                                                        "observedWithDefultsMethod"),
+                                                attributeEntry("code.namespace",
+                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan")))));
+
+        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed", null);
+        assertThat(finishedMetricItems)
+                .isNotEmpty()
+                .anySatisfy(metricData -> assertThat(metricData)
+                        .hasUnit("ms")
+                        .hasHistogramSatisfying(hist -> hist.isCumulative()
+                                .hasPointsSatisfying(points -> points.hasCount(1)
+                                        .hasSumGreaterThan(0)
+                                        .hasBucketCounts(1)
+                                        .hasAttributes(
+                                                attributeEntry("code.function",
+                                                        "observedWithDefultsMethod"),
+                                                attributeEntry("code.namespace",
+                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"),
+                                                attributeEntry("error", "none")))));
+
+        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.active.duration", null);
+        assertThat(finishedMetricItems)
+                .isNotEmpty()
+                .anySatisfy(metricData -> assertThat(metricData)
+                        .hasUnit("ms")
+                        .hasDoubleSumSatisfying(sum -> sum.isCumulative()
+                                .hasPointsSatisfying(points -> points.hasValue(0.0)
+                                        .hasAttributes(
+                                                attributeEntry("code.function",
+                                                        "observedWithDefultsMethod"),
+                                                attributeEntry("code.namespace",
+                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan")))));
+    }
+
     private List<SpanData> getSpanDataAndExpectCount(Integer spanCount) {
         List<SpanData> finishedSpanItems = spanExporter.getFinishedSpanItems(spanCount);
         return finishedSpanItems.stream()
@@ -217,6 +289,17 @@ class ObservationOTelTest {
                 obs.lowCardinalityKeyValue("lowTag", "lowTagValue");
                 spanChildBean.spanChild();
             });
+        }
+
+        @Observed
+        public void observedWithDefultsMethod() {
+            spanChildBean.spanChild();
+        }
+
+        @Observed(contextualName = "createObservationSpanWithChild", name = "theName", lowCardinalityKeyValues = {
+                "lowTag=lowTagValue" })
+        public void observedMethod() {
+            spanChildBean.spanChild();
         }
     }
 }
