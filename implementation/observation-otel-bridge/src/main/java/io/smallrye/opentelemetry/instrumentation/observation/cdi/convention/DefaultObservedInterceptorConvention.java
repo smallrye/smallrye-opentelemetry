@@ -6,24 +6,24 @@ import io.micrometer.common.KeyValues;
 import io.micrometer.observation.annotation.Observed;
 
 /**
- * Default implementation of the {@link ObservedInterceptorObservationConvention}, using the default names according
+ * Default implementation of the {@link ObservedInterceptorConvention}, using the default names according
  * to the ObservedInterceptorObservationDocumentation.
  */
-public class DefaultObservedInterceptorObservationConvention implements ObservedInterceptorObservationConvention {
+public class DefaultObservedInterceptorConvention implements ObservedInterceptorConvention {
     private final String name;
 
-    public DefaultObservedInterceptorObservationConvention(final String name) {
+    public DefaultObservedInterceptorConvention(final String name) {
         this.name = name;
     }
 
     @Override
-    public KeyValues getLowCardinalityKeyValues(ObservedInterceptorContext context) {
+    public KeyValues getLowCardinalityKeyValues(CdiInterceptorContext context) {
 
         KeyValues annotationKeyValues = getAnnotationKeyValues(context.getInvocationContext().getMethod());
         return annotationKeyValues
-                .and(ObservedInterceptorObservationDocumentation.ObservedKeyValues.CODE_NAMESPACE.withValue(
+                .and(ObservedInterceptorDocumentation.ObservedKeyValues.CODE_NAMESPACE.withValue(
                         context.getInvocationContext().getMethod().getDeclaringClass().getName()))
-                .and(ObservedInterceptorObservationDocumentation.ObservedKeyValues.CODE_FUNCTION.withValue(
+                .and(ObservedInterceptorDocumentation.ObservedKeyValues.CODE_FUNCTION.withValue(
                         context.getInvocationContext().getMethod().getName()));
     }
 
@@ -40,7 +40,7 @@ public class DefaultObservedInterceptorObservationConvention implements Observed
     }
 
     @Override
-    public String getContextualName(ObservedInterceptorContext context) {
+    public String getContextualName(CdiInterceptorContext context) {
         // this is for spans
         return contextualName(context.getInvocationContext().getMethod());
     }

@@ -7,27 +7,27 @@ import jakarta.interceptor.InvocationContext;
 
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.annotation.Observed;
-import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.DefaultObservedInterceptorObservationConvention;
-import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorContext;
-import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorObservationConvention;
-import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorObservationDocumentation;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.DefaultObservedInterceptorConvention;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.CdiInterceptorContext;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorConvention;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorDocumentation;
 
 public class ObservedInterceptor {
     private final ObservationRegistry registry;
-    private final ObservedInterceptorObservationConvention customUserConvention;
+    private final ObservedInterceptorConvention customUserConvention;
 
     public ObservedInterceptor(final ObservationRegistry registry,
-            final ObservedInterceptorObservationConvention convention) {
+            final ObservedInterceptorConvention convention) {
         this.registry = registry;
         this.customUserConvention = convention;
     }
 
     @AroundInvoke
     public Object span(final InvocationContext invocationContext) throws Exception {
-        return ObservedInterceptorObservationDocumentation.DEFAULT
+        return ObservedInterceptorDocumentation.DEFAULT
                 .observation(customUserConvention,
-                        new DefaultObservedInterceptorObservationConvention(getName(invocationContext.getMethod())),
-                        () -> new ObservedInterceptorContext(invocationContext),
+                        new DefaultObservedInterceptorConvention(getName(invocationContext.getMethod())),
+                        () -> new CdiInterceptorContext(invocationContext),
                         registry)
                 .observeChecked(() -> invocationContext.proceed());
     }

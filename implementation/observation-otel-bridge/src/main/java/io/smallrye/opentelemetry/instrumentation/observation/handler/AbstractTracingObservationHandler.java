@@ -135,7 +135,7 @@ abstract class AbstractTracingObservationHandler<T extends Observation.Context> 
             } catch (Exception ex) {
                 logger.warning("Exception [{}], occurred while trying to parse" +
                         " the uri [{}] to host and port." + remoteServiceAddress +
-                        ex); // FIXME log
+                        ex);
             }
         }
         return builder;

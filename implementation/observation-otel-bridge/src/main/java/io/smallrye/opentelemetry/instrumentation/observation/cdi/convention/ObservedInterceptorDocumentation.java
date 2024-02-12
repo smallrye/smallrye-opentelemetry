@@ -9,14 +9,14 @@ import io.micrometer.observation.docs.ObservationDocumentation;
  * Class that will provide the default names for the attributes.
  * Also used to generate documentation about those attributes
  */
-public enum ObservedInterceptorObservationDocumentation implements ObservationDocumentation {
+public enum ObservedInterceptorDocumentation implements ObservationDocumentation {
     /**
      * The observation used by the Observed interceptor.
      */
     DEFAULT {
         @Override
         public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
-            return DefaultObservedInterceptorObservationConvention.class;
+            return DefaultObservedInterceptorConvention.class;
         }
 
         @Override

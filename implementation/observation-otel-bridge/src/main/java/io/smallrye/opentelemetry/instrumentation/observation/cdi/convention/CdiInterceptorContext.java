@@ -9,10 +9,10 @@ import io.micrometer.observation.Observation;
  * This context will be used as the source for attributes values for the observation,
  * inside the Convention classes implementing ObservedInterceptorObservationConvention.
  */
-public class ObservedInterceptorContext extends Observation.Context {
+public class CdiInterceptorContext extends Observation.Context {
     private final InvocationContext invocationContext;
 
-    public ObservedInterceptorContext(final InvocationContext invocationContext) {
+    public CdiInterceptorContext(final InvocationContext invocationContext) {
         this.invocationContext = invocationContext;
     }
 

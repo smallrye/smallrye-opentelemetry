@@ -8,9 +8,9 @@ import io.micrometer.observation.ObservationConvention;
  * The user can override this class to provide a custom convention, if not,
  * the DefaultObservedInterceptorObservationConvention will be used.
  */
-public interface ObservedInterceptorObservationConvention extends ObservationConvention<ObservedInterceptorContext> {
+public interface ObservedInterceptorConvention extends ObservationConvention<CdiInterceptorContext> {
     @Override
     default boolean supportsContext(Observation.Context context) {
-        return context instanceof ObservedInterceptorContext;
+        return context instanceof CdiInterceptorContext;
     }
 }
