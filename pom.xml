@@ -21,7 +21,7 @@
         <version.microprofile.config>3.0.3</version.microprofile.config>
         <version.resteasy>6.2.7.Final</version.resteasy>
         <version.vertx.grpc>4.5.3</version.vertx.grpc>
-        <micrometer.version>1.12.2</micrometer.version>
+        <micrometer.version>1.12.3</micrometer.version>
 
         <!-- Test -->
         <version.smallrye.testing>2.3.0</version.smallrye.testing>
