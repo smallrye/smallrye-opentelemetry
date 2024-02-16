@@ -16,6 +16,7 @@
 
     <properties>
         <version.opentelemetry>1.32.0</version.opentelemetry>
+        <version.opentelemetry-semconv>1.21.0-alpha</version.opentelemetry-semconv> <!-- keep in sync with opentelemetry-java-instrumentation in the alpha bom-->
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
         <version.resteasy>6.2.7.Final</version.resteasy>
@@ -72,6 +73,20 @@
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-bom</artifactId>
+                <version>${micrometer.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.opentelemetry.semconv</groupId>
+                <artifactId>opentelemetry-semconv</artifactId>
+                <version>${version.opentelemetry-semconv}</version>
+            </dependency>
+
             <!-- MicroProfile -->
             <dependency>
                 <groupId>org.eclipse.microprofile.config</groupId>
@@ -118,6 +133,11 @@
                 <artifactId>smallrye-opentelemetry-rest</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-micrometer-otel-bridge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>io.vertx</groupId>
@@ -161,6 +181,7 @@
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
         <module>implementation/micrometer-otel-bridge</module>
+        <module>implementation/observation-otel-bridge</module>
         <module>testsuite</module>
         <module>examples</module>
         <module>test</module>

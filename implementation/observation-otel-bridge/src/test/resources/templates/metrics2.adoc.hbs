@@ -1,0 +1,70 @@
+{{!
+    This is a handlebars template file for metrics documentation.
+~}}
+[[observability-metrics]]
+=== Observability - Metrics
+
+Below you can find a list of all metrics declared by this project.
+
+{{#each entries~}}
+[[observability-metrics-{{anchor (slugify (lower (replace enumName "_" " ")))}}]]
+==== {{capitalize (lower (replace enumName "_" " "))}}
+
+____
+{{{description}}}
+____
+
+{{#each this.metricInfos}}
+**Metric name** {{{this.metricName}}}{{#if (isDynamic this.name)}} - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+{{~else}}.{{/if}} **Type** `{{replace (lower this.type) "_" " "}}`{{#if this.baseUnit}} and **base unit** `{{lower this.baseUnit}}`{{/if~}}.
+{{/each}}
+
+Fully qualified name of the enclosing class `{{enclosingClass}}`.
+
+{{#if prefix~}}
+IMPORTANT: All tags must be prefixed with `{{prefix}}` prefix!
+{{~/if}}
+
+{{#each lowCardinalityKeyNames~}}
+{{~#if @first~}}
+.Low cardinality Keys
+[cols="a,a"]
+|===
+|Name | Description
+{{~/if}}
+|`{{this.name}}`{{#if this.required}} _(required)_{{/if}}|{{{this.displayDescription}}}
+{{~#if @last}}
+|===
+{{~/if}}
+{{~/each}}
+
+{{#each highCardinalityKeyNames~}}
+{{~#if @first~}}
+.High cardinality Keys
+[cols="a,a"]
+|===
+|Name | Description
+{{~/if}}
+|`{{this.name}}`{{#if this.required}} _(required)_{{/if}}|{{{this.displayDescription}}}
+{{~#if @last}}
+|===
+{{~/if}}
+{{~/each}}
+
+{{#each events~}}
+{{~#if @first~}}
+Since, events were set on this documented entry, they will be converted to the following counters.
+{{/if}}
+[[observability-metrics-{{slugify (lower (replace @../enumName "_" " "))}}-{{replace this.name "." "-"}}]]
+===== {{capitalize (lower (replace @../enumName "_" " "))}} - {{replace this.name "." " "}}
+
+> {{{this.description}}}
+
+**Metric name** `{{{this.name}}}`{{#if (isDynamic this.name)~}}
+    - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+    {{~else~}}
+    .
+{{~/if}} **Type** `counter`.
+{{/each}}
+
+{{~/each}}

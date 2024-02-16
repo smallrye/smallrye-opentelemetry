@@ -27,7 +27,7 @@ public class MeterRegistryProducer {
                 .setBaseTimeUnit(TimeUnit.MILLISECONDS)
                 .setClock(Clock.SYSTEM)
                 .build();
-        Metrics.addRegistry(meterRegistry);// FIXME how will this play with the global registry?
+        Metrics.addRegistry(meterRegistry);
         return meterRegistry;
     }
 }
