@@ -16,7 +16,7 @@
 
     <properties>
         <version.opentelemetry>1.32.0</version.opentelemetry>
-        <version.opentelemetry-semconv>1.21.0-alpha</version.opentelemetry-semconv> <!-- keep in sync with opentelemetry-java-instrumentation in the alpha bom-->
+        <version.opentelemetry-semconv>1.23.1-alpha</version.opentelemetry-semconv> <!-- keep in sync with opentelemetry-java-instrumentation in the alpha bom-->
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
         <version.resteasy>6.2.7.Final</version.resteasy>
