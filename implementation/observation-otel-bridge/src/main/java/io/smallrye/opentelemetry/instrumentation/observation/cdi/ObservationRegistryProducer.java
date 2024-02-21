@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.instrumentation.observation;
+package io.smallrye.opentelemetry.instrumentation.observation.cdi;
 
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -23,15 +23,12 @@ public class ObservationRegistryProducer {
     OpenTelemetry openTelemetry;
 
     @Inject
-    OpenTelemetryObservationHandler openTelemetryObservationHandler;
-
-    @Inject
-    MeterRegistry registry;
+    MeterRegistry meterRegistry;
 
     @Produces
     @Singleton
     public ObservationRegistry registry() {
-        ObservationRegistry observationRegistry = ObservationRegistry.create();
+        final ObservationRegistry observationRegistry = ObservationRegistry.create();
 
         observationRegistry.observationConfig()
                 //        .observationFilter(new CloudObservationFilter())  // Where global filters go
@@ -41,9 +38,9 @@ public class ObservationRegistryProducer {
                                 openTelemetry.getPropagators().getTextMapPropagator()),
                         new PropagatingReceiverTracingObservationHandler(tracer,
                                 openTelemetry.getPropagators().getTextMapPropagator()),
-                        //   new TracingAwareMeterObservationHandler(tracer) // For exemplars... Maybe not be needed
-                        openTelemetryObservationHandler))
-                .observationHandler(new DefaultMeterObservationHandler(registry));
+                        //   new TracingAwareMeterObservationHandler(tracer) // For exemplars...
+                        new OpenTelemetryObservationHandler(tracer)))
+                .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
         //      .observationHandler(new PrintOutHandler())  // Can be implemented for debugging. Other handlers for future frameworks can also be added.
         return observationRegistry;
     }

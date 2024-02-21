@@ -3,6 +3,8 @@ package io.smallrye.opentelemetry.instrumentation.observation.handler;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
 import static io.opentelemetry.semconv.SemanticAttributes.PEER_SERVICE;
+import static io.smallrye.opentelemetry.instrumentation.observation.handler.HandlerUtil.HIGH_CARD_ATTRIBUTES;
+import static io.smallrye.opentelemetry.instrumentation.observation.handler.HandlerUtil.LOW_CARD_ATTRIBUTES;
 
 import java.net.URI;
 import java.util.logging.Logger;
@@ -108,13 +110,34 @@ abstract class AbstractTracingObservationHandler<T extends Observation.Context> 
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     protected void tagSpan(T context, Span span) {
+        final Attributes highCardAttributes = context.get(HIGH_CARD_ATTRIBUTES);
+        setOtelAttributes(span, highCardAttributes);
+
+        final Attributes lowCardAttributes = context.get(LOW_CARD_ATTRIBUTES);
+        setOtelAttributes(span, lowCardAttributes);
+
         for (KeyValue keyValue : context.getAllKeyValues()) {
             if (!keyValue.getKey().equalsIgnoreCase("ERROR")) {
                 span.setAttribute(keyValue.getKey(), keyValue.getValue());
+
             } else {
                 span.recordException(new RuntimeException(keyValue.getValue()));
             }
+        }
+    }
+
+    private void setOtelAttributes(Span span, Attributes contextAttributes) {
+        if (contextAttributes != null) {
+            contextAttributes.forEach((key, value) -> {
+                // FIXME this is a bit of a hack because KeyValue only allows String values
+                if (key.getKey().equalsIgnoreCase("ERROR")) {
+                    span.recordException(new RuntimeException(value.toString()));
+                } else {
+                    span.setAttribute((AttributeKey<Object>) key, value);
+                }
+            });
         }
     }
 
