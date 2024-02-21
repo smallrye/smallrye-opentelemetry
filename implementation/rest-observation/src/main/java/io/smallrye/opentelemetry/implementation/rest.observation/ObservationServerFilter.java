@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.rest;
+package io.smallrye.opentelemetry.implementation.rest.observation;
 
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
@@ -43,7 +43,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 @Provider
-public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
+public class ObservationServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
     private Instrumenter<ContainerRequestContext, ContainerResponseContext> instrumenter;
     private LongHistogram durationHistogram;
 
@@ -51,11 +51,11 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     ResourceInfo resourceInfo;
 
     // RESTEasy requires no-arg constructor for CDI injection: https://issues.redhat.com/browse/RESTEASY-1538
-    public OpenTelemetryServerFilter() {
+    public ObservationServerFilter() {
     }
 
     @Inject
-    public OpenTelemetryServerFilter(final OpenTelemetry openTelemetry) {
+    public ObservationServerFilter(final OpenTelemetry openTelemetry) {
         HttpServerAttributesGetter serverAttributesGetter = new HttpServerAttributesGetter();
 
         InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
@@ -68,7 +68,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesGetter))
-//                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints? // includes histogram from bellow
+                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints?
                 .addOperationMetrics(HttpServerExperimentalMetrics.get())
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
 

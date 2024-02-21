@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.rest;
+package io.smallrye.opentelemetry.implementation.rest.observation;
 
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
@@ -38,16 +38,16 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 @Provider
-public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
+public class ObservationClientFilter implements ClientRequestFilter, ClientResponseFilter {
     private Instrumenter<ClientRequestContext, ClientResponseContext> instrumenter;
     private LongHistogram durationHistogram;
 
     // RESTEasy requires no-arg constructor for CDI injection: https://issues.redhat.com/browse/RESTEASY-1538
-    public OpenTelemetryClientFilter() {
+    public ObservationClientFilter() {
     }
 
     @Inject
-    public OpenTelemetryClientFilter(final OpenTelemetry openTelemetry) {
+    public ObservationClientFilter(final OpenTelemetry openTelemetry) {
         ClientAttributesExtractor clientAttributesExtractor = new ClientAttributesExtractor();
 
         // TODO - The Client Span name is only "HTTP {METHOD_NAME}": https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
@@ -60,7 +60,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
-//                .addOperationMetrics(HttpClientMetrics.get()) // includes histogram from bellow
+//                .addOperationMetrics(HttpClientMetrics.get()) // This will include the duration histogram
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
 
