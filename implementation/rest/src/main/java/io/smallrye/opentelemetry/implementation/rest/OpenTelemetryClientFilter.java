@@ -53,7 +53,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
-                .addOperationMetrics(HttpClientMetrics.get())
+                .addOperationMetrics(HttpClientMetrics.get()) // includes histogram from bellow
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
     }
