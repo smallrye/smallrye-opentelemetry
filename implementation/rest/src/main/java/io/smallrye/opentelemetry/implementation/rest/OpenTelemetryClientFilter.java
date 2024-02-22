@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -60,7 +59,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
-//                .addOperationMetrics(HttpClientMetrics.get()) // includes histogram from bellow
+                //                .addOperationMetrics(HttpClientMetrics.get()) // includes histogram from bellow
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
 

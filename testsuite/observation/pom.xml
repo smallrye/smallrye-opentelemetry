@@ -19,7 +19,8 @@
         </dependency>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-cdi</artifactId>
+            <artifactId>smallrye-opentelemetry-observation-otel-bridge</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
@@ -28,7 +29,12 @@
         </dependency>
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-rest</artifactId>
+            <artifactId>smallrye-opentelemetry-rest-observation</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-test</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -64,4 +70,39 @@
             <artifactId>microprofile-rest-client</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+<!--                    <execution>-->
+<!--                        <id>legacy</id>-->
+<!--                        <goals>-->
+<!--                            <goal>test</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <skip>false</skip>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+                    <execution>
+                        <id>stable</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <systemPropertyVariables>
+                                <otel.semconv-stability.opt-in>http</otel.semconv-stability.opt-in>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
