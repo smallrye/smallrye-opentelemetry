@@ -7,8 +7,8 @@ import jakarta.interceptor.InvocationContext;
 
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.annotation.Observed;
-import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.DefaultObservedInterceptorConvention;
 import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.CdiInterceptorContext;
+import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.DefaultObservedInterceptorConvention;
 import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorConvention;
 import io.smallrye.opentelemetry.instrumentation.observation.cdi.convention.ObservedInterceptorDocumentation;
 
