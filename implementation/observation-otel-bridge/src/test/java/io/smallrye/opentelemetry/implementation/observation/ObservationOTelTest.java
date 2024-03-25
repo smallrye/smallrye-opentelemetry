@@ -38,9 +38,7 @@ import io.smallrye.config.inject.ConfigExtension;
 import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
 import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
 import io.smallrye.opentelemetry.implementation.micrometer.cdi.MicrometerExtension;
-import io.smallrye.opentelemetry.instrumentation.observation.ObservationRegistryProducer;
 import io.smallrye.opentelemetry.instrumentation.observation.cdi.ObservationExtension;
-import io.smallrye.opentelemetry.instrumentation.observation.handler.OpenTelemetryObservationHandler;
 import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
 import io.smallrye.opentelemetry.test.InMemoryMetricExporterProvider;
 import io.smallrye.opentelemetry.test.InMemorySpanExporter;
@@ -48,8 +46,7 @@ import io.smallrye.opentelemetry.test.InMemorySpanExporterProvider;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class, ObservationExtension.class, MicrometerExtension.class })
-@AddBeanClasses({ OpenTelemetryConfigProducer.class, ObservationRegistryProducer.class, OpenTelemetryObservationHandler.class,
-        InMemoryMetricExporter.class, InMemoryMetricExporterProvider.class,
+@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryMetricExporter.class, InMemoryMetricExporterProvider.class,
         InMemorySpanExporter.class, InMemorySpanExporterProvider.class, })
 class ObservationOTelTest {
     @Inject

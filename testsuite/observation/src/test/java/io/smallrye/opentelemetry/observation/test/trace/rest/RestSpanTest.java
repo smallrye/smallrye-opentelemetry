@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.extra.test.trace.rest;
+package io.smallrye.opentelemetry.observation.test.trace.rest;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
 import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static io.restassured.RestAssured.given;
+import static io.smallrye.opentelemetry.observation.test.AttributeKeysStability.get;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,7 +42,6 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +49,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
-import io.smallrye.opentelemetry.extra.test.AttributeKeysStability;
 import io.smallrye.opentelemetry.test.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -78,10 +77,10 @@ class RestSpanTest {
         SpanData span = spanItems.get(0);
         assertEquals(SERVER, span.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span", span.getName());
-        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(span, HTTP_RESPONSE_STATUS_CODE));
-        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(span, HTTP_REQUEST_METHOD));
-        Assertions.assertEquals("http", AttributeKeysStability.get(span, NETWORK_PROTOCOL_NAME));
-        Assertions.assertEquals("1.1", AttributeKeysStability.get(span, NETWORK_PROTOCOL_VERSION));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals("http", get(span, NETWORK_PROTOCOL_NAME));
+        assertEquals("1.1", get(span, NETWORK_PROTOCOL_VERSION));
 
         assertEquals("tck", span.getResource().getAttribute(SERVICE_NAME));
         assertEquals("1.0", span.getResource().getAttribute(SERVICE_VERSION));
@@ -100,8 +99,8 @@ class RestSpanTest {
         SpanData span = spanItems.get(0);
         assertEquals(SERVER, span.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", span.getName());
-        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(span, HTTP_RESPONSE_STATUS_CODE));
-        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(span, HTTP_REQUEST_METHOD));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
     }
 
     @Test
@@ -113,9 +112,9 @@ class RestSpanTest {
         SpanData span = spanItems.get(0);
         assertEquals(SERVER, span.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", span.getName());
-        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(span, HTTP_RESPONSE_STATUS_CODE));
-        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(span, HTTP_REQUEST_METHOD));
-        Assertions.assertEquals(url.getPath() + "span/1?id=1", AttributeKeysStability.get(span, URL_PATH));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span/1?id=1", get(span, URL_PATH));
         assertEquals(url.getPath() + "span/{name}", span.getAttributes().get(HTTP_ROUTE));
     }
 
@@ -130,20 +129,20 @@ class RestSpanTest {
         assertEquals(HttpMethod.POST + " " + url.getPath() + "span", span.getName());
 
         // Common Attributes
-        Assertions.assertEquals(HttpMethod.POST, AttributeKeysStability.get(span, HTTP_REQUEST_METHOD));
-        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.POST, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
         assertNotNull(span.getAttributes().get(USER_AGENT_ORIGINAL));
         assertNull(span.getAttributes().get(SERVER_SOCKET_ADDRESS));
         assertNull(span.getAttributes().get(SERVER_SOCKET_PORT));
         assertNull(span.getAttributes().get(SERVER_SOCKET_DOMAIN));
 
         // Server Attributes
-        Assertions.assertEquals("http", AttributeKeysStability.get(span, URL_SCHEME));
-        Assertions.assertEquals(url.getPath() + "span", AttributeKeysStability.get(span, URL_PATH));
+        assertEquals("http", get(span, URL_SCHEME));
+        assertEquals(url.getPath() + "span", get(span, URL_PATH));
         assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_ROUTE));
-        assertNull(AttributeKeysStability.get(span, CLIENT_ADDRESS));
-        Assertions.assertEquals(url.getHost(), AttributeKeysStability.get(span, SERVER_ADDRESS));
-        Assertions.assertEquals(url.getPort(), AttributeKeysStability.get(span, SERVER_PORT));
+        assertNull(get(span, CLIENT_ADDRESS));
+        assertEquals(url.getHost(), get(span, SERVER_ADDRESS));
+        assertEquals(url.getPort(), get(span, SERVER_PORT));
     }
 
     @Test
@@ -155,8 +154,8 @@ class RestSpanTest {
         SpanData span = spanItems.get(0);
         assertEquals(SERVER, span.getKind());
         assertEquals(HttpMethod.GET, span.getName());
-        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(span, HTTP_RESPONSE_STATUS_CODE));
-        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(span, HTTP_REQUEST_METHOD));
+        assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
     }
 
     @Path("/")

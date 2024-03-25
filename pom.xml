@@ -138,6 +138,16 @@
                 <artifactId>smallrye-opentelemetry-micrometer-otel-bridge</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-observation-otel-bridge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-rest-observation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>io.vertx</groupId>
@@ -180,6 +190,7 @@
         <module>implementation/exporters</module>
         <module>implementation/cdi</module>
         <module>implementation/rest</module>
+        <module>implementation/rest-observation</module>
         <module>implementation/micrometer-otel-bridge</module>
         <module>implementation/observation-otel-bridge</module>
         <module>testsuite</module>
