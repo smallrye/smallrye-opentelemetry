@@ -19,7 +19,7 @@
         <version.opentelemetry-semconv>1.21.0-alpha</version.opentelemetry-semconv> <!-- keep in sync with opentelemetry-java-instrumentation in the alpha bom-->
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.0.3</version.microprofile.config>
-        <version.resteasy>6.2.7.Final</version.resteasy>
+        <version.resteasy>6.2.8.Final</version.resteasy>
         <version.vertx.grpc>4.5.3</version.vertx.grpc>
         <micrometer.version>1.12.2</micrometer.version>
 
