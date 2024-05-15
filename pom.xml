@@ -28,13 +28,6 @@
         <version.smallrye.config>3.3.4</version.smallrye.config>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>staging-microprofile-telemetry</id>
-            <url>https://oss.sonatype.org/content/repositories/orgeclipsemicroprofile-1631/</url>
-        </repository>
-    </repositories>
-
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
