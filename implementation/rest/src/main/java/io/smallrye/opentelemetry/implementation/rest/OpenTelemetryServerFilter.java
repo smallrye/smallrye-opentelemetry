@@ -35,7 +35,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
@@ -68,7 +67,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesGetter))
-                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints?
+                //                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints? // includes histogram from bellow
                 .addOperationMetrics(HttpServerExperimentalMetrics.get())
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
 
