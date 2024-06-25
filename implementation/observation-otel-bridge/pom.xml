@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>smallrye-opentelemetry-observation-otel-bridge</artifactId>
-    <name>SmallRye OpenTelemetry: Observation to OPenTelemetry bridge</name>
+    <name>SmallRye OpenTelemetry: Observation to OpenTelemetry bridge</name>
 
     <properties>
         <micrometer-docs-generator.version>1.0.2</micrometer-docs-generator.version>
