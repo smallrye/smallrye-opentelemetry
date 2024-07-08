@@ -145,6 +145,7 @@ public class InMemoryMetricExporter implements MetricExporter {
     }
 
     public List<MetricData> getFinishedMetricItems(final String name, final String target) {
+        assertCountAtLeast(1);
         return Collections.unmodifiableList(new ArrayList<>(
                 finishedMetricItems.stream()
                         .filter(metricData -> metricData.getName().equals(name))
