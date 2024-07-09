@@ -2,12 +2,8 @@ package io.smallrye.opentelemetry.implementation.exporters;
 
 import static org.junit.Assume.assumeTrue;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 
-import org.jboss.weld.junit5.auto.AddBeanClasses;
-import org.jboss.weld.junit5.auto.AddExtensions;
-import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -19,10 +15,7 @@ import org.testcontainers.utility.MountableFile;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.smallrye.config.inject.ConfigExtension;
-import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
-import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryProducer;
-import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
+import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 
 /**
  * This test will exercise the configuration and use of the Vertx-based exporters defined in this module. The test will
@@ -32,9 +25,6 @@ import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProduc
  * an external aggregation system, the test will simply pull the logs from the container and verify that the trace was
  * received and logged correctly.
  */
-@EnableAutoWeld
-@AddExtensions({ ConfigExtension.class })
-@AddBeanClasses(OpenTelemetryConfigProducer.class)
 public class VertxExportersTest {
     private static OpenTelemetryCollectorContainer otelCollector;
 
@@ -83,7 +73,7 @@ public class VertxExportersTest {
         final String spanName = protocol + " test trace";
         final String eventName = protocol + " test event";
 
-        OpenTelemetry openTelemetry = getOpenTelemetry(config);
+        OpenTelemetry openTelemetry = new OpenTelemetryBuilderGetter().apply(() -> config).build().getOpenTelemetrySdk();
         Tracer tracer = openTelemetry.getTracer(tracerName);
         Span span = tracer.spanBuilder(spanName).startSpan();
         span.addEvent(eventName);
@@ -108,22 +98,6 @@ public class VertxExportersTest {
         }
 
         Assertions.assertTrue(found, "Trace data not found.");
-    }
-
-    private OpenTelemetry getOpenTelemetry(Map<String, String> config) {
-        try {
-            OpenTelemetryProducer producer = new OpenTelemetryProducer();
-            Class<? extends OpenTelemetryProducer> clazz = producer.getClass();
-            Field field = clazz.getDeclaredField("config");
-
-            field.setAccessible(true);
-            field.set(producer, (OpenTelemetryConfig) () -> config);
-
-            return producer.getOpenTelemetry();
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static boolean isDockerAvailable() {
