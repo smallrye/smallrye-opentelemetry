@@ -1,14 +1,14 @@
-package io.smallrye.opentelemetry.implementation.cdi;
+package io.smallrye.opentelemetry.api;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-class SecuritySupport {
+public class SecuritySupport {
     private SecuritySupport() {
         throw new UnsupportedOperationException();
     }
 
-    static ClassLoader getContextClassLoader() {
+    public static ClassLoader getContextClassLoader() {
         if (System.getSecurityManager() == null) {
             return Thread.currentThread().getContextClassLoader();
         } else {

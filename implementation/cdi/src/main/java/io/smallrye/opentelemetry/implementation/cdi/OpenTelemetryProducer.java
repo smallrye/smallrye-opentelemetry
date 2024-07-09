@@ -2,8 +2,6 @@ package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +12,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.CDI;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -29,36 +26,16 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 
 @Singleton
 public class OpenTelemetryProducer {
-    @Inject
-    OpenTelemetryConfig config;
-
     @Produces
     @Singleton
-    public OpenTelemetry getOpenTelemetry() {
-        AutoConfiguredOpenTelemetrySdkBuilder builder = AutoConfiguredOpenTelemetrySdk.builder();
-
-        ClassLoader contextClassLoader = SecuritySupport.getContextClassLoader();
-        if (contextClassLoader != null) {
-            builder.setServiceClassLoader(contextClassLoader);
-        }
-
-        return (System.getSecurityManager() == null) ? getOpenTelemetrySdk(builder)
-                : AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> getOpenTelemetrySdk(builder));
-    }
-
-    private OpenTelemetrySdk getOpenTelemetrySdk(AutoConfiguredOpenTelemetrySdkBuilder builder) {
-        return builder
-                .disableShutdownHook()
-                .addPropertiesSupplier(() -> config.properties())
-                .build()
-                .getOpenTelemetrySdk();
+    public OpenTelemetry getOpenTelemetry(final OpenTelemetryConfig config) {
+        return new OpenTelemetryBuilderGetter().apply(config).disableShutdownHook().build().getOpenTelemetrySdk();
     }
 
     @Produces
