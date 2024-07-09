@@ -75,6 +75,7 @@ public class OpenTelemetryProducer {
 
     @Produces
     @RequestScoped
+    @SuppressWarnings("NullableProblems")
     public Span getSpan() {
         return new Span() {
             @Override
@@ -136,6 +137,7 @@ public class OpenTelemetryProducer {
 
     @Produces
     @RequestScoped
+    @SuppressWarnings("NullableProblems")
     public Baggage getBaggage() {
         return new Baggage() {
             @Override

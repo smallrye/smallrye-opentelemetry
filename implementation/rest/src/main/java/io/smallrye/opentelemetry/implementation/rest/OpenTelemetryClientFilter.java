@@ -1,10 +1,5 @@
 package io.smallrye.opentelemetry.implementation.rest;
 
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 import static java.util.Collections.emptyList;
@@ -20,27 +15,21 @@ import jakarta.ws.rs.client.ClientResponseFilter;
 import jakarta.ws.rs.ext.Provider;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 
 @Provider
 public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
     private Instrumenter<ClientRequestContext, ClientResponseContext> instrumenter;
-    private LongHistogram durationHistogram;
 
     // RESTEasy requires no-arg constructor for CDI injection: https://issues.redhat.com/browse/RESTEASY-1538
     public OpenTelemetryClientFilter() {
@@ -63,14 +52,6 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 .addOperationMetrics(HttpClientMetrics.get())
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
-
-        final Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
-        //fixme use new https://opentelemetry.io/docs/specs/semconv/http/http-metrics/#metric-httpclientrequestduration
-        durationHistogram = meter.histogramBuilder("http.client.duration")
-                .setDescription("The duration of an outbound HTTP request")
-                .ofLongs()
-                .setUnit("ms")
-                .build();
     }
 
     @Override
@@ -85,9 +66,6 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 request.setProperty("otel.span.client.parentContext", parentContext);
                 request.setProperty("otel.span.client.scope", scope);
             }
-        }
-        if (durationHistogram != null) {
-            request.setProperty("otel.metrics.client.start", System.currentTimeMillis());
         }
     }
 
@@ -111,33 +89,9 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 request.removeProperty("otel.span.client.scope");
             }
         }
-        if (durationHistogram != null) {
-            Long start = (Long) request.getProperty("otel.metrics.client.start");
-            if (start != null) {
-                try {
-                    durationHistogram.record(System.currentTimeMillis() - start,
-                            getHistogramAttributes(request, response),
-                            spanContext);
-                } finally {
-                    request.removeProperty("otel.metrics.client.start");
-                }
-            }
-        }
     }
 
-    private Attributes getHistogramAttributes(ClientRequestContext request, ClientResponseContext response) {
-        AttributesBuilder builder = Attributes.builder();
-        builder.put(HTTP_ROUTE.getKey(), request.getUri().getPath().toString());// Fixme must contain a template /users/:userID?
-        if (SemconvStability.emitOldHttpSemconv()) {
-            builder.put(HTTP_METHOD, request.getMethod());// FIXME semantic conventions
-            builder.put(HTTP_STATUS_CODE, response.getStatus());
-        } else {
-            builder.put(HTTP_REQUEST_METHOD, request.getMethod());// FIXME semantic conventions
-            builder.put(HTTP_RESPONSE_STATUS_CODE, response.getStatus());
-        }
-        return builder.build();
-    }
-
+    @SuppressWarnings("NullableProblems")
     private static class ClientRequestContextTextMapSetter implements TextMapSetter<ClientRequestContext> {
         @Override
         public void set(final ClientRequestContext carrier, final String key, final String value) {
@@ -147,6 +101,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         }
     }
 
+    @SuppressWarnings("NullableProblems")
     private static class ClientAttributesExtractor
             implements HttpClientAttributesGetter<ClientRequestContext, ClientResponseContext> {
 

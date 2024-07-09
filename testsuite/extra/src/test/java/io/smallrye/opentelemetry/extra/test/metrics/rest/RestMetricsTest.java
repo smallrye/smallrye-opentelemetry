@@ -62,36 +62,22 @@ public class RestMetricsTest {
         given().get("/span/2").then().statusCode(HTTP_OK);
         given().get("/span/2").then().statusCode(HTTP_OK);
 
-        metricExporter.assertCountAtLeast("http.server.duration", "/span", 1);
-        metricExporter.assertCountAtLeast("http.server.duration", "/span/1", 1);
-        metricExporter.assertCountAtLeast("http.server.duration", "/span/2", 2);
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("http.server.duration", null);
+        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span", 1);
+        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span/{name}", 3);
+        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("http.server.request.duration", null);
+        System.out.println(finishedMetricItems.size());
 
         assertThat(finishedMetricItems, allOf(
-                everyItem(hasProperty("name", equalTo("http.server.duration"))),
+                everyItem(hasProperty("name", equalTo("http.server.request.duration"))),
                 everyItem(hasProperty("type", equalTo(HISTOGRAM)))));
 
         /*
-         * Flaky test
+         * TODO - Fix this - Flaky test
          * Map<String, PointData> pointDataMap = getMostRecentPointsMap(finishedMetricItems);
-         * if (SemconvStability.emitOldHttpSemconv()) {
-         * assertEquals(1, getCount(pointDataMap, "http.method:GET,http.route:/span,http.status_code:200"),
-         * finishedMetricItems.toString());
-         * assertEquals(1, getCount(pointDataMap, "http.method:GET,http.route:/span/1,http.status_code:200"),
-         * finishedMetricItems.toString());
-         * assertEquals(2, getCount(pointDataMap, "http.method:GET,http.route:/span/2,http.status_code:200"),
-         * finishedMetricItems.toString());
-         * } else {
-         * assertEquals(1, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,http.route:/span"),
-         * pointDataMap.keySet().stream()
-         * .collect(Collectors.joining("**")));
-         * assertEquals(1, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,http.route:/span/1"),
-         * pointDataMap.keySet().stream()
-         * .collect(Collectors.joining("**")));
-         * assertEquals(2, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,http.route:/span/2"),
-         * pointDataMap.keySet().stream()
-         * .collect(Collectors.joining("**")));
-         * }
+         * assertEquals(1, getCount(pointDataMap,
+         * "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath() + "span"));
+         * assertEquals(3, getCount(pointDataMap,
+         * "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath() + "span/{name}"));
          */
     }
 
@@ -107,7 +93,7 @@ public class RestMetricsTest {
     void metrics() {
         given().get("/span/12").then().statusCode(HTTP_OK);
         metricExporter.assertCountAtLeast("queueSize", null, 1);
-        metricExporter.assertCountAtLeast("http.server.duration", "/span/12", 1);
+        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span/{name}", 1);
         metricExporter.assertCountAtLeast("http.server.active_requests", null, 1);
         metricExporter.assertCountAtLeast("processedSpans", null, 1);
     }

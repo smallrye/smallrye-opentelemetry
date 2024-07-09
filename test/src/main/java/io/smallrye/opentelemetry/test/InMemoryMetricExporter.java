@@ -3,9 +3,6 @@ package io.smallrye.opentelemetry.test;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
-import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,24 +21,20 @@ import org.junit.jupiter.api.Assertions;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 
 @ApplicationScoped
 public class InMemoryMetricExporter implements MetricExporter {
 
-    private static final List<String> LEGACY_KEY_COMPONENTS = List.of(SemanticAttributes.HTTP_METHOD.getKey(),
-            SemanticAttributes.HTTP_ROUTE.getKey(),
-            SemanticAttributes.HTTP_STATUS_CODE.getKey());
-    private static final List<String> KEY_COMPONENTS = List.of(SemanticAttributes.HTTP_REQUEST_METHOD.getKey(),
-            SemanticAttributes.HTTP_ROUTE.getKey(),
-            SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.getKey());
+    private static final List<String> KEY_COMPONENTS = List.of(HttpAttributes.HTTP_REQUEST_METHOD.getKey(),
+            HttpAttributes.HTTP_ROUTE.getKey(),
+            HttpAttributes.HTTP_RESPONSE_STATUS_CODE.getKey());
 
     private final Queue<MetricData> finishedMetricItems = new ConcurrentLinkedQueue<>();
     private final AggregationTemporality aggregationTemporality = AggregationTemporality.CUMULATIVE;
@@ -71,20 +64,12 @@ public class InMemoryMetricExporter implements MetricExporter {
     public static Map<String, PointData> getMostRecentPointsMap(List<MetricData> finishedMetricItems) {
         return finishedMetricItems.stream()
                 .flatMap(metricData -> metricData.getData().getPoints().stream())
-                // exclude data from /export endpoint
-                .filter(InMemoryMetricExporter::notExporterPointData)
                 // newer first
                 .sorted(Comparator.comparingLong(PointData::getEpochNanos).reversed())
                 .collect(toMap(
                         pointData -> pointData.getAttributes().asMap().entrySet().stream()
                                 //valid attributes for the resulting map key
-                                .filter(entry -> {
-                                    if (SemconvStability.emitOldHttpSemconv()) {
-                                        return LEGACY_KEY_COMPONENTS.contains(entry.getKey().getKey());
-                                    } else {
-                                        return KEY_COMPONENTS.contains(entry.getKey().getKey());
-                                    }
-                                })
+                                .filter(entry -> KEY_COMPONENTS.contains(entry.getKey().getKey()))
                                 // ensure order
                                 .sorted(Comparator.comparing(o -> o.getKey().getKey()))
                                 // build key
@@ -95,20 +80,11 @@ public class InMemoryMetricExporter implements MetricExporter {
                         (older, newer) -> newer));
     }
 
-    /*
-     * ignore points with /export in the route
-     */
-    private static boolean notExporterPointData(PointData pointData) {
-        return pointData.getAttributes().asMap().entrySet().stream()
-                .noneMatch(entry -> entry.getKey().getKey().equals(SemanticAttributes.HTTP_ROUTE.getKey()) &&
-                        entry.getValue().toString().contains("/export"));
-    }
-
     private static boolean isPathFound(String path, Attributes attributes) {
         if (path == null) {
             return true;// any match
         }
-        Object value = attributes.asMap().get(AttributeKey.stringKey(SemanticAttributes.HTTP_ROUTE.getKey()));
+        Object value = attributes.asMap().get(AttributeKey.stringKey(HttpAttributes.HTTP_ROUTE.getKey()));
         if (value == null) {
             return false;
         }

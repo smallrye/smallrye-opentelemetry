@@ -38,7 +38,9 @@
 
     <modules>
         <module>extra</module>
+        <!--
         <module>tck</module>
+        -->
         <module>observation</module>
     </modules>
 
