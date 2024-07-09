@@ -8,6 +8,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -32,6 +34,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.semconv.NetworkAttributes;
 
 @Provider
 public class OpenTelemetryServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -124,6 +128,11 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
     private static class NetworkAttributesGetter implements
             io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter<ContainerRequestContext, ContainerResponseContext> {
         @Override
+        public String getNetworkTransport(final ContainerRequestContext request, final ContainerResponseContext response) {
+            return NetworkAttributes.NetworkTransportValues.TCP;
+        }
+
+        @Override
         public String getNetworkProtocolName(final ContainerRequestContext request, final ContainerResponseContext response) {
             return (String) request.getProperty(NETWORK_PROTOCOL_NAME.getKey());
         }
@@ -132,6 +141,18 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
         public String getNetworkProtocolVersion(final ContainerRequestContext request,
                 final ContainerResponseContext response) {
             return (String) request.getProperty(NETWORK_PROTOCOL_VERSION.getKey());
+        }
+
+        @Override
+        public InetSocketAddress getNetworkPeerInetSocketAddress(final ContainerRequestContext request,
+                final ContainerResponseContext response) {
+            URI uri = request.getUriInfo().getRequestUri();
+            String serverAddress = uri.getHost();
+            Integer serverPort = uri.getPort() > 0 ? uri.getPort() : null;
+            if (serverAddress != null && serverPort != null) {
+                return new InetSocketAddress(serverAddress, serverPort);
+            }
+            return null;
         }
     }
 

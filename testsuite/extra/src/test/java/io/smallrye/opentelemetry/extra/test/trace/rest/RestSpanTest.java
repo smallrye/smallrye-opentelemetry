@@ -7,8 +7,11 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
@@ -19,6 +22,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.restassured.RestAssured.given;
 import static io.smallrye.opentelemetry.extra.test.AttributeKeysStability.get;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -48,6 +52,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 import io.smallrye.opentelemetry.test.InMemorySpanExporter;
 
@@ -79,8 +84,19 @@ class RestSpanTest {
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span", span.getName());
         assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
         assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals("tcp", get(span, NETWORK_TRANSPORT));
         assertEquals("http", get(span, NETWORK_PROTOCOL_NAME));
         assertEquals("1.1", get(span, NETWORK_PROTOCOL_VERSION));
+        assertNotNull(get(span, NETWORK_PEER_ADDRESS));
+        assertNotNull(get(span, NETWORK_PEER_PORT));
+
+        assertEquals("http", get(span, URL_SCHEME));
+        assertEquals(url.getPath() + "span", get(span, URL_PATH));
+        assertNull(get(span, URL_QUERY));
+        assertEquals(url.getPath() + "span", span.getAttributes().get(HTTP_ROUTE));
+        assertEquals(url.getHost(), get(span, SERVER_ADDRESS));
+        assertEquals(url.getPort(), get(span, SERVER_PORT));
+        assertNotNull(get(span, USER_AGENT_ORIGINAL));
 
         assertEquals("tck", span.getResource().getAttribute(SERVICE_NAME));
         assertEquals("1.0", span.getResource().getAttribute(SERVICE_VERSION));
@@ -117,6 +133,38 @@ class RestSpanTest {
         assertEquals(url.getPath() + "span/1", get(span, URL_PATH));
         assertEquals("id=1", get(span, URL_QUERY));
         assertEquals(url.getPath() + "span/{name}", span.getAttributes().get(HTTP_ROUTE));
+    }
+
+    @Test
+    void spanError() {
+        given().get("/span/error").then().statusCode(HTTP_INTERNAL_ERROR);
+
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        assertEquals(1, spanItems.size());
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/error", span.getName());
+        assertEquals(HTTP_INTERNAL_ERROR, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span/error", get(span, URL_PATH));
+        assertEquals(url.getPath() + "span/error", span.getAttributes().get(HTTP_ROUTE));
+        assertEquals("500", span.getAttributes().get(ErrorAttributes.ERROR_TYPE));
+    }
+
+    @Test
+    void spanException() {
+        given().get("/span/exception").then().statusCode(HTTP_INTERNAL_ERROR);
+
+        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        assertEquals(1, spanItems.size());
+        SpanData span = spanItems.get(0);
+        assertEquals(SERVER, span.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span/exception", span.getName());
+        assertEquals(HTTP_INTERNAL_ERROR, get(span, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span/exception", get(span, URL_PATH));
+        assertEquals(url.getPath() + "span/exception", span.getAttributes().get(HTTP_ROUTE));
+        assertEquals("500", span.getAttributes().get(ErrorAttributes.ERROR_TYPE));
     }
 
     @Test
@@ -170,6 +218,18 @@ class RestSpanTest {
         @Path("/span/{name}")
         public Response spanName(@PathParam(value = "name") String name) {
             return Response.ok().build();
+        }
+
+        @GET
+        @Path("/span/error")
+        public Response spanError() {
+            return Response.serverError().build();
+        }
+
+        @GET
+        @Path("/span/exception")
+        public Response spanException() {
+            throw new RuntimeException();
         }
 
         @POST

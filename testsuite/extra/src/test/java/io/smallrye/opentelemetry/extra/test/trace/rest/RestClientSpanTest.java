@@ -6,7 +6,13 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
@@ -15,6 +21,8 @@ import static io.smallrye.opentelemetry.extra.test.AttributeKeysStability.get;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URL;
 import java.util.List;
@@ -50,6 +58,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.smallrye.opentelemetry.test.InMemorySpanExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -88,6 +97,7 @@ class RestClientSpanTest {
         assertEquals("http", get(server, URL_SCHEME));
         assertEquals(url.getPath() + "span", get(server, URL_PATH));
         assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        assertEquals(url.getPort(), get(server, SERVER_PORT));
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
@@ -172,6 +182,12 @@ class RestClientSpanTest {
         assertEquals("http", get(server, URL_SCHEME));
         assertEquals(url.getPath() + "span/error", get(server, URL_PATH));
         assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        assertEquals("500", get(server, ErrorAttributes.ERROR_TYPE));
+        assertEquals("tcp", get(server, NETWORK_TRANSPORT));
+        assertEquals("http", get(server, NETWORK_PROTOCOL_NAME));
+        assertEquals("1.1", get(server, NETWORK_PROTOCOL_VERSION));
+        assertNotNull(get(server, NETWORK_PEER_ADDRESS));
+        assertNotNull(get(server, NETWORK_PEER_PORT));
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
@@ -179,6 +195,11 @@ class RestClientSpanTest {
         assertEquals(HTTP_INTERNAL_ERROR, get(client, HTTP_RESPONSE_STATUS_CODE));
         assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
         assertEquals(url.toString() + "span/error", get(client, URL_FULL));
+        assertEquals("tcp", get(client, NETWORK_TRANSPORT));
+        assertNull(get(client, NETWORK_PROTOCOL_NAME));
+        assertNull(get(client, NETWORK_PROTOCOL_VERSION));
+        assertNotNull(get(client, NETWORK_PEER_ADDRESS));
+        assertNotNull(get(client, NETWORK_PEER_PORT));
 
         assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
