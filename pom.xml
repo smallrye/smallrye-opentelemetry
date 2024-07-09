@@ -15,17 +15,18 @@
     <url>http://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.32.0</version.opentelemetry>
-        <version.opentelemetry-semconv>1.21.0-alpha</version.opentelemetry-semconv> <!-- keep in sync with opentelemetry-java-instrumentation in the alpha bom-->
+        <version.opentelemetry>1.39.0</version.opentelemetry>
+        <version.opentelemetry-instrumentation>2.5.0</version.opentelemetry-instrumentation>
+        <version.opentelemetry-semconv>1.25.0-alpha</version.opentelemetry-semconv>
         <version.microprofile.opentelemetry>1.1</version.microprofile.opentelemetry>
-        <version.microprofile.config>3.0.3</version.microprofile.config>
+        <version.microprofile.config>3.1</version.microprofile.config>
         <version.resteasy>6.2.9.Final</version.resteasy>
         <version.vertx.grpc>4.5.8</version.vertx.grpc>
         <micrometer.version>1.12.2</micrometer.version>
 
         <!-- Test -->
         <version.smallrye.testing>2.3.0</version.smallrye.testing>
-        <version.smallrye.config>3.3.4</version.smallrye.config>
+        <version.smallrye.config>3.8.3</version.smallrye.config>
     </properties>
 
     <licenses>
@@ -49,14 +50,34 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- This BOM includes the opentelemetry-bom and the opentelemetry-bom-alpha -->
+            <!-- OpenTelemetry -->
             <dependency>
-                <groupId>io.opentelemetry.instrumentation</groupId>
-                <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
-                <version>${version.opentelemetry}-alpha</version>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${version.opentelemetry}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${version.opentelemetry-instrumentation}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+                <version>${version.opentelemetry-instrumentation}-alpha</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.semconv</groupId>
+                <artifactId>opentelemetry-semconv</artifactId>
+                <version>${version.opentelemetry-semconv}</version>
+            </dependency>
+
             <!-- Micrometer Core and Registries, imported as BOM -->
             <dependency>
                 <groupId>io.micrometer</groupId>
@@ -64,20 +85,6 @@
                 <version>${micrometer.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-bom</artifactId>
-                <version>${micrometer.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.opentelemetry.semconv</groupId>
-                <artifactId>opentelemetry-semconv</artifactId>
-                <version>${version.opentelemetry-semconv}</version>
             </dependency>
 
             <!-- MicroProfile -->

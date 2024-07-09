@@ -1,22 +1,22 @@
 package io.smallrye.opentelemetry.extra.test.trace.rest;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
-import static io.opentelemetry.semconv.SemanticAttributes.CLIENT_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_DOMAIN;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_SOCKET_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
-import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.restassured.RestAssured.given;
 import static io.smallrye.opentelemetry.extra.test.AttributeKeysStability.get;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -114,7 +114,8 @@ class RestSpanTest {
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", span.getName());
         assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
         assertEquals(HttpMethod.GET, get(span, HTTP_REQUEST_METHOD));
-        assertEquals(url.getPath() + "span/1?id=1", get(span, URL_PATH));
+        assertEquals(url.getPath() + "span/1", get(span, URL_PATH));
+        assertEquals("id=1", get(span, URL_QUERY));
         assertEquals(url.getPath() + "span/{name}", span.getAttributes().get(HTTP_ROUTE));
     }
 
@@ -132,9 +133,8 @@ class RestSpanTest {
         assertEquals(HttpMethod.POST, get(span, HTTP_REQUEST_METHOD));
         assertEquals(HTTP_OK, get(span, HTTP_RESPONSE_STATUS_CODE));
         assertNotNull(span.getAttributes().get(USER_AGENT_ORIGINAL));
-        assertNull(span.getAttributes().get(SERVER_SOCKET_ADDRESS));
-        assertNull(span.getAttributes().get(SERVER_SOCKET_PORT));
-        assertNull(span.getAttributes().get(SERVER_SOCKET_DOMAIN));
+        assertNull(span.getAttributes().get(NETWORK_LOCAL_ADDRESS));
+        assertNull(span.getAttributes().get(NETWORK_LOCAL_PORT));
 
         // Server Attributes
         assertEquals("http", get(span, URL_SCHEME));

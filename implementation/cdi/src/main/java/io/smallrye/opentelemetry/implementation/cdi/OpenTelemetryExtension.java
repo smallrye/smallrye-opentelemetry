@@ -45,7 +45,7 @@ public class OpenTelemetryExtension implements Extension {
             this.methods = new HashSet<>();
 
             for (AnnotatedMethod<? super WithSpan> method : delegate.getMethods()) {
-                methods.add(new AnnotatedMethod<WithSpan>() {
+                methods.add(new AnnotatedMethod<>() {
                     private final AnnotatedMethod<WithSpan> delegate = (AnnotatedMethod<WithSpan>) method;
                     private final Set<Annotation> annotations = Collections.singleton(Nonbinding.Literal.INSTANCE);
 
