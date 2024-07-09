@@ -13,7 +13,7 @@
     <name>SmallRye OpenTelemetry: Observation to OpenTelemetry bridge</name>
 
     <properties>
-        <micrometer-docs-generator.version>1.0.2</micrometer-docs-generator.version>
+        <micrometer-docs-generator.version>1.0.3</micrometer-docs-generator.version>
         <micrometer-docs-generator.inputPath>${project.build.sourceDirectory}</micrometer-docs-generator.inputPath>
         <micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
         <micrometer-docs-generator.outputPath>${project.build.directory}/observation-docs/
