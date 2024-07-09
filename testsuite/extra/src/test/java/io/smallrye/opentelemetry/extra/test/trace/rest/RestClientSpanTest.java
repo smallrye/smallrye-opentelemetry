@@ -41,6 +41,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Response;
 
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -297,6 +298,34 @@ class RestClientSpanTest {
         assertEquals(client.getTraceId(), internal.getTraceId());
         assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(internal.getParentSpanId(), server.getSpanId());
+        assertEquals(server.getParentSpanId(), client.getSpanId());
+    }
+
+    @Test
+    void clientBuilder() {
+        Response response = RestClientBuilder.newBuilder().baseUrl(url).build(SpanResourceClient.class).span();
+        assertEquals(response.getStatus(), HTTP_OK);
+
+        List<SpanData> spans = spanExporter.getFinishedSpanItems(2);
+
+        SpanData server = spans.get(0);
+        assertEquals(SERVER, server.getKind());
+        assertEquals(HttpMethod.GET + " " + url.getPath() + "span", server.getName());
+        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(server, HTTP_REQUEST_METHOD));
+        assertEquals("http", get(server, URL_SCHEME));
+        assertEquals(url.getPath() + "span", get(server, URL_PATH));
+        assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        assertEquals(url.getPort(), get(server, SERVER_PORT));
+
+        SpanData client = spans.get(1);
+        assertEquals(CLIENT, client.getKind());
+        assertEquals("GET", client.getName());
+        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
+        assertEquals(url.toString() + "span", get(client, URL_FULL));
+
+        assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
     }
 

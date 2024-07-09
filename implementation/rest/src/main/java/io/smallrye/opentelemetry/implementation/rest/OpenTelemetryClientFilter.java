@@ -43,7 +43,6 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
     public OpenTelemetryClientFilter(final OpenTelemetry openTelemetry) {
         ClientAttributesExtractor clientAttributesExtractor = new ClientAttributesExtractor();
 
-        // TODO - The Client Span name is only "HTTP {METHOD_NAME}": https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
         final InstrumenterBuilder<ClientRequestContext, ClientResponseContext> builder = Instrumenter.builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
