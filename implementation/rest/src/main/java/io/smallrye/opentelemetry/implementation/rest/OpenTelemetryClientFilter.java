@@ -5,6 +5,8 @@ import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -26,6 +28,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGet
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.semconv.NetworkAttributes;
 
 @Provider
 public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -48,6 +52,7 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
 
         this.instrumenter = builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
+                .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
                 .addOperationMetrics(HttpClientMetrics.get())
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
@@ -101,12 +106,43 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
         }
     }
 
+    private static class NetworkAttributesGetter implements
+            io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter<ClientRequestContext, ClientResponseContext> {
+        @Override
+        public String getNetworkTransport(final ClientRequestContext request, final ClientResponseContext response) {
+            return NetworkAttributes.NetworkTransportValues.TCP;
+        }
+
+        @Override
+        public String getNetworkProtocolName(final ClientRequestContext request, final ClientResponseContext response) {
+            return null;
+        }
+
+        @Override
+        public String getNetworkProtocolVersion(final ClientRequestContext request, final ClientResponseContext response) {
+            return null;
+        }
+
+        @Override
+        public InetSocketAddress getNetworkPeerInetSocketAddress(final ClientRequestContext request,
+                final ClientResponseContext response) {
+            URI uri = request.getUri();
+            String serverAddress = uri.getHost();
+            Integer serverPort = uri.getPort() > 0 ? uri.getPort() : null;
+            if (serverAddress != null && serverPort != null) {
+                return new InetSocketAddress(serverAddress, serverPort);
+            }
+            return null;
+        }
+    }
+
     @SuppressWarnings("NullableProblems")
     private static class ClientAttributesExtractor
             implements HttpClientAttributesGetter<ClientRequestContext, ClientResponseContext> {
 
         @Override
         public String getUrlFull(final ClientRequestContext request) {
+            // TODO - Make sure this does not contain authentication information
             return request.getUri().toString();
         }
 
