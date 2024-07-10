@@ -25,6 +25,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
@@ -32,10 +37,23 @@ import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 
 @Singleton
 public class OpenTelemetryProducer {
+    private final List<AutoCloseable> closeables = new ArrayList<>();
+
     @Produces
     @Singleton
     public OpenTelemetry getOpenTelemetry(final OpenTelemetryConfig config) {
-        return new OpenTelemetryBuilderGetter().apply(config).disableShutdownHook().build().getOpenTelemetrySdk();
+        OpenTelemetry openTelemetry = new OpenTelemetryBuilderGetter().apply(config)
+                .disableShutdownHook()
+                .build()
+                .getOpenTelemetrySdk();
+
+        closeables.addAll(Classes.registerObservers(openTelemetry));
+        closeables.addAll(Cpu.registerObservers(openTelemetry));
+        closeables.addAll(MemoryPools.registerObservers(openTelemetry));
+        closeables.addAll(Threads.registerObservers(openTelemetry));
+        closeables.addAll(GarbageCollector.registerObservers(openTelemetry));
+
+        return openTelemetry;
     }
 
     @Produces
@@ -144,7 +162,11 @@ public class OpenTelemetryProducer {
         };
     }
 
-    void close(@Disposes final OpenTelemetry openTelemetry) {
+    void close(@Disposes final OpenTelemetry openTelemetry) throws Exception {
+        for (AutoCloseable closeable : closeables) {
+            closeable.close();
+        }
+
         OpenTelemetrySdk openTelemetrySdk = (OpenTelemetrySdk) openTelemetry;
         List<CompletableResultCode> shutdown = new ArrayList<>();
         shutdown.add(openTelemetrySdk.getSdkTracerProvider().shutdown());
