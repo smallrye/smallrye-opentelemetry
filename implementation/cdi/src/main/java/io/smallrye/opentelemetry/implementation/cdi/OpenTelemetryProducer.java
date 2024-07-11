@@ -34,6 +34,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
+import io.smallrye.opentelemetry.api.OpenTelemetryHandler;
 
 @Singleton
 public class OpenTelemetryProducer {
@@ -52,6 +53,8 @@ public class OpenTelemetryProducer {
         closeables.addAll(MemoryPools.registerObservers(openTelemetry));
         closeables.addAll(Threads.registerObservers(openTelemetry));
         closeables.addAll(GarbageCollector.registerObservers(openTelemetry));
+
+        OpenTelemetryHandler.install(openTelemetry);
 
         return openTelemetry;
     }
