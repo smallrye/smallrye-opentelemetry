@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.api.baggage.Baggage;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
 
 @ExtendWith(ArquillianExtension.class)
 class BaggageTest {
@@ -36,7 +36,7 @@ class BaggageTest {
     @ArquillianResource
     URL url;
     @Inject
-    InMemorySpanExporter spanExporter;
+    InMemoryExporter spanExporter;
 
     @BeforeEach
     void setUp() {

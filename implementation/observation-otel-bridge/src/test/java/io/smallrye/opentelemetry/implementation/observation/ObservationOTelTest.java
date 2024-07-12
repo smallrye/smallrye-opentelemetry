@@ -41,21 +41,16 @@ import io.smallrye.opentelemetry.implementation.micrometer.cdi.MicrometerExtensi
 import io.smallrye.opentelemetry.instrumentation.observation.ObservationRegistryProducer;
 import io.smallrye.opentelemetry.instrumentation.observation.cdi.ObservationExtension;
 import io.smallrye.opentelemetry.instrumentation.observation.handler.OpenTelemetryObservationHandler;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporterProvider;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
-import io.smallrye.opentelemetry.test.InMemorySpanExporterProvider;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporterProducer;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class, ObservationExtension.class, MicrometerExtension.class })
 @AddBeanClasses({ OpenTelemetryConfigProducer.class, ObservationRegistryProducer.class, OpenTelemetryObservationHandler.class,
-        InMemoryMetricExporter.class, InMemoryMetricExporterProvider.class,
-        InMemorySpanExporter.class, InMemorySpanExporterProvider.class, })
+        InMemoryExporter.class, InMemoryExporterProducer.class })
 class ObservationOTelTest {
     @Inject
-    InMemorySpanExporter spanExporter;
-    @Inject
-    InMemoryMetricExporter metricExporter;
+    InMemoryExporter exporter;
     @Inject
     SpanBean spanBean;
     @Inject
@@ -65,21 +60,20 @@ class ObservationOTelTest {
 
     @BeforeEach
     void setUp() {
-        spanExporter.reset();
-        metricExporter.reset();
+        exporter.reset();
         GlobalOpenTelemetry.resetForTest();
     }
 
     @Test
     void observationSpan() {
         observationSpan.createObservationSpan();
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        List<SpanData> spanItems = exporter.getFinishedSpanItems(1);
         assertEquals("createObservationSpan", spanItems.get(0).getName());
         assertEquals("lowTagValue", spanItems.get(0).getAttributes().asMap().get(AttributeKey.stringKey("lowTag")));
     }
 
     @Test
-    void OtelParentAndObservationChildSpan() {
+    void otelParentAndObservationChildSpan() {
         spanBean.observationSpanChild();
         List<SpanData> spanData = getSpanDataAndExpectCount(2);
         SpanData parentSpan = spanData.get(0);
@@ -92,7 +86,7 @@ class ObservationOTelTest {
     }
 
     @Test
-    void ObservationParentAndOTelChildSpan() {
+    void observationParentAndOTelChildSpan() {
         observationSpan.spanChild();
         List<SpanData> spanData = getSpanDataAndExpectCount(2);
         SpanData parentSpan = spanData.get(0);
@@ -107,7 +101,7 @@ class ObservationOTelTest {
     @Test
     void otelSpan() {
         spanBean.span();
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(1);
+        List<SpanData> spanItems = exporter.getFinishedSpanItems(1);
         assertEquals("SpanBean.span", spanItems.get(0).getName());
         assertEquals(INTERNAL, spanItems.get(0).getKind());
     }
@@ -115,7 +109,7 @@ class ObservationOTelTest {
     @Test
     void otelSpanChild() {
         spanBean.spanChild();
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(2);
+        List<SpanData> spanItems = exporter.getFinishedSpanItems(2);
         assertEquals("SpanChildBean.spanChild", spanItems.get(0).getName());
         assertEquals("SpanBean.spanChild", spanItems.get(1).getName());
         assertEquals(spanItems.get(0).getParentSpanId(), spanItems.get(1).getSpanId());
@@ -125,8 +119,7 @@ class ObservationOTelTest {
     void testSenderContextPropagation() {
         Map<String, String> outboundCarrier = new HashMap<>();
 
-        SenderContext senderContext = new SenderContext<Map<String, String>>(
-                (carrier1, key, value) -> carrier1.put(key, value));
+        SenderContext<Map<String, String>> senderContext = new SenderContext<>(Map::put);
         senderContext.setCarrier(outboundCarrier);
 
         Observation observation = Observation.start("test", () -> senderContext, observationRegistry);
@@ -144,81 +137,67 @@ class ObservationOTelTest {
         String traceId = "0af7651916cd43dd8448eb211c80319c";
         Map<String, String> inboundCarrier = Map.of("traceparent", "00-" + traceId + "-b7ad6b7169203331-01");
 
-        ReceiverContext receiverContext = new ReceiverContext<Map<String, String>>((carrier, key) -> carrier.get(key));
+        ReceiverContext<Map<String, String>> receiverContext = new ReceiverContext<>(Map::get);
         receiverContext.setCarrier(inboundCarrier);
 
         Observation observation = Observation.start("test", () -> receiverContext, observationRegistry);
         observation.stop();
 
-        List<SpanData> finishedSpanItems = spanExporter.getFinishedSpanItems(1);
+        List<SpanData> finishedSpanItems = exporter.getFinishedSpanItems(1);
         assertEquals(traceId, finishedSpanItems.get(0).getTraceId());
     }
 
     @Test
     void testObservationWithDefaults() {
         observationSpan.observedWithDefultsMethod();
-        List<SpanData> spanItems = spanExporter.getFinishedSpanItems(2);
+        List<SpanData> spanItems = exporter.getFinishedSpanItems(2);
         assertEquals("SpanChildBean.spanChild", spanItems.get(0).getName());
         assertEquals("ObservationSpan#observedWithDefultsMethod", spanItems.get(1).getName());
         assertEquals(spanItems.get(0).getParentSpanId(), spanItems.get(1).getSpanId());
 
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.max", null);
-        assertThat(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .hasUnit("ms")
-                        .hasDoubleGaugeSatisfying(gauge -> gauge.hasPointsSatisfying(points -> points.hasAttributes(
-                                attributeEntry("code.function",
-                                        "observedWithDefultsMethod"),
+        MetricData methodObservedMax = exporter.getFinishedMetricItem("method.observed.max");
+        assertThat(methodObservedMax)
+                .hasUnit("ms")
+                .hasDoubleGaugeSatisfying(gauge -> gauge.hasPointsSatisfying(points -> points
+                        .hasAttributes(
+                                attributeEntry("code.function", "observedWithDefultsMethod"),
                                 attributeEntry("code.namespace",
                                         "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"),
-                                attributeEntry("error", "none")))));
+                                attributeEntry("error", "none"))));
 
-        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.active.active", null);
-        assertThat(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .hasUnit("{tasks}")
-                        .hasLongSumSatisfying(sum -> sum.isCumulative()
-                                .hasPointsSatisfying(points -> points.hasValue(0)
-                                        .hasAttributes(
-                                                attributeEntry("code.function",
-                                                        "observedWithDefultsMethod"),
-                                                attributeEntry("code.namespace",
-                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan")))));
+        MetricData methodObservedActive = exporter.getFinishedMetricItem("method.observed.active.active");
+        assertThat(methodObservedActive)
+                .hasUnit("{tasks}")
+                .hasLongSumSatisfying(sum -> sum.isCumulative().hasPointsSatisfying(points -> points.hasValue(0)
+                        .hasAttributes(
+                                attributeEntry("code.function", "observedWithDefultsMethod"),
+                                attributeEntry("code.namespace",
+                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"))));
 
-        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed", null);
-        assertThat(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .hasUnit("ms")
-                        .hasHistogramSatisfying(hist -> hist.isCumulative()
-                                .hasPointsSatisfying(points -> points.hasCount(1)
-                                        .hasSumGreaterThan(0)
-                                        .hasBucketCounts(1)
-                                        .hasAttributes(
-                                                attributeEntry("code.function",
-                                                        "observedWithDefultsMethod"),
-                                                attributeEntry("code.namespace",
-                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"),
-                                                attributeEntry("error", "none")))));
+        MetricData methodObserved = exporter.getFinishedHistogramItem("method.observed", 1);
+        assertThat(methodObserved)
+                .hasUnit("ms")
+                .hasHistogramSatisfying(hist -> hist.isCumulative().hasPointsSatisfying(points -> points.hasCount(1)
+                        .hasSumGreaterThan(0)
+                        .hasBucketCounts(1)
+                        .hasAttributes(
+                                attributeEntry("code.function", "observedWithDefultsMethod"),
+                                attributeEntry("code.namespace",
+                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"),
+                                attributeEntry("error", "none"))));
 
-        finishedMetricItems = metricExporter.getFinishedMetricItems("method.observed.active.duration", null);
-        assertThat(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .hasUnit("ms")
-                        .hasDoubleSumSatisfying(sum -> sum.isCumulative()
-                                .hasPointsSatisfying(points -> points.hasValue(0.0)
-                                        .hasAttributes(
-                                                attributeEntry("code.function",
-                                                        "observedWithDefultsMethod"),
-                                                attributeEntry("code.namespace",
-                                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan")))));
+        MetricData methodObservedDuration = exporter.getFinishedMetricItem("method.observed.active.duration");
+        assertThat(methodObservedDuration)
+                .hasUnit("ms")
+                .hasDoubleSumSatisfying(sum -> sum.isCumulative().hasPointsSatisfying(points -> points.hasValue(0.0)
+                        .hasAttributes(
+                                attributeEntry("code.function", "observedWithDefultsMethod"),
+                                attributeEntry("code.namespace",
+                                        "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"))));
     }
 
     private List<SpanData> getSpanDataAndExpectCount(Integer spanCount) {
-        List<SpanData> finishedSpanItems = spanExporter.getFinishedSpanItems(spanCount);
+        List<SpanData> finishedSpanItems = exporter.getFinishedSpanItems(spanCount);
         return finishedSpanItems.stream()
                 .sorted((o1, o2) -> (int) (o1.getStartEpochNanos() - o2.getStartEpochNanos()))
                 .collect(Collectors.toList());

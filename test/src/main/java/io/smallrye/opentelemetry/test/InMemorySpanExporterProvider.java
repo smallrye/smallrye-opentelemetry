@@ -4,6 +4,7 @@ import jakarta.enterprise.inject.spi.CDI;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.traces.ConfigurableSpanExporterProvider;
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class InMemorySpanExporterProvider implements ConfigurableSpanExporterProvider {
