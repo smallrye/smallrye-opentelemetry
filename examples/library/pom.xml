@@ -25,7 +25,7 @@
         <version.smallrye.config>3.8.3</version.smallrye.config>
 
         <version.opentelemetry.agent>2.5.0</version.opentelemetry.agent>
-        <version.opentelemetry.exporter>1.39.0</version.opentelemetry.exporter>
+        <version.opentelemetry.exporter>1.40.0</version.opentelemetry.exporter>
     </properties>
 
     <build>
