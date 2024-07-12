@@ -1,5 +1,10 @@
-# Optional tests
+# Tracing - Optional tests
 org.eclipse.microprofile.telemetry.tracing.tck.rest.JaegerPropagationTest
 org.eclipse.microprofile.telemetry.tracing.tck.rest.B3MultiPropagationTest
 org.eclipse.microprofile.telemetry.tracing.tck.rest.B3PropagationTest
 org.eclipse.microprofile.telemetry.tracing.tck.async.JaxRsServerAsyncTest
+
+# Metrics
+# Asserting a 200 on the ArquillianServlet. We don't use it.
+# Requires https://github.com/eclipse/microprofile-telemetry/pull/220
+org.eclipse.microprofile.telemetry.metrics.tck.application.http.HttpHistogramTest

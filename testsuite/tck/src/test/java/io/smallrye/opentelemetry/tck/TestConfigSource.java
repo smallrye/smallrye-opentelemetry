@@ -7,9 +7,9 @@ import io.smallrye.config.common.MapBackedConfigSource;
 public class TestConfigSource extends MapBackedConfigSource {
     public TestConfigSource() {
         super("TestConfigSource",
-                Map.of("otel.sdk.disabled", "true",
-                        "otel.traces.exporter", "none",
-                        "otel.metrics.exporter", "none"),
+                Map.of("otel.traces.exporter", "none",
+                        "otel.metrics.exporter", "none",
+                        "otel.logs.exporter", "none"),
                 Integer.MIN_VALUE);
     }
 }
