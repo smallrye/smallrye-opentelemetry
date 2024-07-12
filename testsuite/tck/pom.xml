@@ -18,10 +18,27 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.microprofile.telemetry.tracing</groupId>
+            <groupId>org.eclipse.microprofile.telemetry</groupId>
             <artifactId>microprofile-telemetry-tracing-tck</artifactId>
             <version>${version.microprofile.opentelemetry}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.telemetry</groupId>
+            <artifactId>microprofile-telemetry-metrics-tck</artifactId>
+            <version>${version.microprofile.opentelemetry}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.telemetry</groupId>
+            <artifactId>microprofile-telemetry-logs-tck</artifactId>
+            <version>${version.microprofile.opentelemetry}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging</artifactId>
         </dependency>
 
         <dependency>
@@ -54,6 +71,19 @@
             <groupId>io.smallrye.testing</groupId>
             <artifactId>smallrye-testing-tck-jetty</artifactId>
         </dependency>
+        <!-- TODO - Move this to TCK-Jetty -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.13</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.13</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.smallrye.config</groupId>
             <artifactId>smallrye-config</artifactId>
@@ -70,11 +100,84 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <dependenciesToScan>
-                        <dependency>org.eclipse.microprofile.telemetry.tracing:microprofile-telemetry-tracing-tck</dependency>
-                    </dependenciesToScan>
+                    <skip>true</skip>
+                    <systemPropertyVariables>
+                        <java.util.logging.config.file>${project.basedir}/src/test/resources/logging.properties</java.util.logging.config.file>
+                    </systemPropertyVariables>
                     <excludesFile>src/test/resources/exclusions.txt</excludesFile>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>tracing</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-tracing</reportsDirectory>
+                            <dependenciesToScan>
+                                <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-tracing-tck</dependency>
+                            </dependenciesToScan>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>metrics</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-metrics</reportsDirectory>
+                            <dependenciesToScan>
+                                <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-metrics-tck</dependency>
+                            </dependenciesToScan>
+                            <includes>
+                                <include>**/application/**/*Test.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>metrics-jvm</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-metrics-jvm</reportsDirectory>
+                            <systemPropertyVariables>
+                                <otel.sdk.disabled>false</otel.sdk.disabled>
+                                <otel.metrics.exporter>logging</otel.metrics.exporter>
+                                <otel.traces.exporter>none</otel.traces.exporter>
+                                <otel.logs.exporter>none</otel.logs.exporter>
+                                <otel.metric.export.interval>1000</otel.metric.export.interval>
+                                <mptelemetry.tck.log.file.path>${project.build.directory}/tck.log</mptelemetry.tck.log.file.path>
+                            </systemPropertyVariables>
+                            <dependenciesToScan>
+                                <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-metrics-tck</dependency>
+                            </dependenciesToScan>
+                            <includes>
+                                <include>**/jvm/*Test.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>logs</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-logs</reportsDirectory>
+                            <systemPropertyVariables>
+                                <otel.sdk.disabled>false</otel.sdk.disabled>
+                                <mptelemetry.tck.log.file.path>${project.build.directory}/out.log</mptelemetry.tck.log.file.path>
+                            </systemPropertyVariables>
+                            <dependenciesToScan>
+                                <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-logs-tck</dependency>
+                            </dependenciesToScan>
+                        </configuration>
+                    </execution>
+                </executions>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.surefire</groupId>
