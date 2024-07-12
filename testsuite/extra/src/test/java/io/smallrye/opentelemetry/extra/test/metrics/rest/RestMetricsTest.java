@@ -1,21 +1,22 @@
 package io.smallrye.opentelemetry.extra.test.metrics.rest;
 
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.HISTOGRAM;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.hasProperty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -27,14 +28,13 @@ import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.PointData;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
 
 @ExtendWith(ArquillianExtension.class)
 public class RestMetricsTest {
@@ -47,12 +47,12 @@ public class RestMetricsTest {
     @ArquillianResource
     URL url;
     @Inject
-    InMemoryMetricExporter metricExporter;
+    InMemoryExporter exporter;
 
-    @AfterEach
-    void reset() {
-        // important, metrics continue to arrive after reset.
-        metricExporter.reset();
+    @BeforeEach
+    void setUp() {
+        // The Metrics statistics will not reset (counters, histograms, etc.)
+        exporter.reset();
     }
 
     @Test
@@ -62,40 +62,45 @@ public class RestMetricsTest {
         given().get("/span/2").then().statusCode(HTTP_OK);
         given().get("/span/2").then().statusCode(HTTP_OK);
 
-        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span", 1);
-        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span/{name}", 3);
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("http.server.request.duration", null);
-        System.out.println(finishedMetricItems.size());
+        MetricData metricsSpan = exporter.getFinishedHistogramItem("http.server.request.duration", url.getPath() + "span", 1);
+        assertEquals("Duration of HTTP server requests.", metricsSpan.getDescription());
+        assertEquals(HISTOGRAM, metricsSpan.getType());
+        assertEquals(1, metricsSpan.getData().getPoints().size());
+        assertTrue(metricsSpan.getData().getPoints().iterator().next() instanceof HistogramPointData);
+        HistogramPointData pointSpan = (HistogramPointData) metricsSpan.getData().getPoints().iterator().next();
+        assertNotNull(pointSpan.getAttributes());
+        assertFalse(pointSpan.getAttributes().isEmpty());
+        assertEquals(HTTP_OK, pointSpan.getAttributes().get(HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, pointSpan.getAttributes().get(HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span", pointSpan.getAttributes().get(HTTP_ROUTE));
+        assertTrue(pointSpan.getStartEpochNanos() > 0);
+        assertTrue(pointSpan.getEpochNanos() > 0);
+        assertEquals(1, pointSpan.getCount());
 
-        assertThat(finishedMetricItems, allOf(
-                everyItem(hasProperty("name", equalTo("http.server.request.duration"))),
-                everyItem(hasProperty("type", equalTo(HISTOGRAM)))));
-
-        /*
-         * TODO - Fix this - Flaky test
-         * Map<String, PointData> pointDataMap = getMostRecentPointsMap(finishedMetricItems);
-         * assertEquals(1, getCount(pointDataMap,
-         * "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath() + "span"));
-         * assertEquals(3, getCount(pointDataMap,
-         * "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath() + "span/{name}"));
-         */
-    }
-
-    private long getCount(final Map<String, PointData> pointDataMap, final String key) {
-        HistogramPointData histogramPointData = (HistogramPointData) pointDataMap.get(key);
-        if (histogramPointData == null) {
-            return 0;
-        }
-        return histogramPointData.getCount();
+        MetricData metricsSpanName = exporter.getFinishedHistogramItem("http.server.request.duration",
+                url.getPath() + "span/{name}", 3);
+        assertEquals("Duration of HTTP server requests.", metricsSpanName.getDescription());
+        assertEquals(HISTOGRAM, metricsSpanName.getType());
+        assertEquals(1, metricsSpanName.getData().getPoints().size());
+        assertTrue(metricsSpanName.getData().getPoints().iterator().next() instanceof HistogramPointData);
+        HistogramPointData pointSpanName = (HistogramPointData) metricsSpanName.getData().getPoints().iterator().next();
+        assertNotNull(pointSpanName.getAttributes());
+        assertFalse(pointSpanName.getAttributes().isEmpty());
+        assertEquals(HTTP_OK, pointSpanName.getAttributes().get(HTTP_RESPONSE_STATUS_CODE));
+        assertEquals(HttpMethod.GET, pointSpanName.getAttributes().get(HTTP_REQUEST_METHOD));
+        assertEquals(url.getPath() + "span/{name}", pointSpanName.getAttributes().get(HTTP_ROUTE));
+        assertTrue(pointSpanName.getStartEpochNanos() > 0);
+        assertTrue(pointSpanName.getEpochNanos() > 0);
+        assertEquals(3, pointSpanName.getCount());
     }
 
     @Test
     void metrics() {
-        given().get("/span/12").then().statusCode(HTTP_OK);
-        metricExporter.assertCountAtLeast("queueSize", null, 1);
-        metricExporter.assertCountAtLeast("http.server.request.duration", url.getPath() + "span/{name}", 1);
-        metricExporter.assertCountAtLeast("http.server.active_requests", null, 1);
-        metricExporter.assertCountAtLeast("processedSpans", null, 1);
+        given().get("/sub/12").then().statusCode(HTTP_OK);
+        assertNotNull(exporter.getFinishedMetricItem("queueSize"));
+        assertNotNull(exporter.getFinishedMetricItem("http.server.request.duration"));
+        assertNotNull(exporter.getFinishedMetricItem("http.server.active_requests"));
+        assertNotNull(exporter.getFinishedMetricItem("processedSpans"));
     }
 
     @Path("/")

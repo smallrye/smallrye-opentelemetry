@@ -54,7 +54,7 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
 
 @ExtendWith(ArquillianExtension.class)
 class RestSpanTest {
@@ -66,7 +66,7 @@ class RestSpanTest {
     @ArquillianResource
     URL url;
     @Inject
-    InMemorySpanExporter spanExporter;
+    InMemoryExporter spanExporter;
 
     @BeforeEach
     void setUp() {

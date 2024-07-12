@@ -2,9 +2,7 @@ package io.smallrye.opentelemetry.implementation.micrometer.cdi;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
-import static org.assertj.core.api.ListAssert.assertThatList;
-
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import jakarta.inject.Inject;
 
@@ -21,30 +19,24 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.smallrye.config.inject.ConfigExtension;
 import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryExtension;
 import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporterProvider;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
-import io.smallrye.opentelemetry.test.InMemorySpanExporterProvider;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporterProducer;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class, MicrometerExtension.class })
-@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryMetricExporter.class, InMemoryMetricExporterProvider.class,
-        InMemorySpanExporter.class, InMemorySpanExporterProvider.class,
-        CountedBean.class, TestValueResolver.class })
+@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryExporterProducer.class, TestValueResolver.class })
 public class MicrometerCounterInterceptorTest {
 
     @Inject
     CountedBean countedBean;
-
     @Inject
     MeterRegistry registry;
-
     @Inject
-    InMemoryMetricExporter metricExporter;
+    InMemoryExporter exporter;
 
     @BeforeEach
     void setup() {
-        metricExporter.reset();
+        exporter.reset();
     }
 
     @Test
@@ -57,25 +49,22 @@ public class MicrometerCounterInterceptorTest {
                 .tag("extra", "tag")
                 //                .tag("do_fail", "prefix_true") // FIXME @MeterTag not implemented yet
                 .tag("result", "success").counter();
-        Assertions.assertNotNull(counter);
+        assertNotNull(counter);
 
-        metricExporter.assertCountAtLeast(1);
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("metric.all", null);
-        assertThatList(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .isNotNull()
-                        .hasName("metric.all")
-                        .hasDescription("Total number of invocations for method")
-                        .hasUnit("invocations")
-                        .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)
-                                .hasAttributes(attributeEntry(
-                                        "class",
-                                        "io.smallrye.opentelemetry.implementation.micrometer.cdi.CountedBean"),
-                                        attributeEntry("method", "countAllInvocations"),
-                                        attributeEntry("extra", "tag"),
-                                        attributeEntry("exception", "none"),
-                                        attributeEntry("result", "success")))));
+        MetricData metricAll = exporter.getFinishedMetricItem("metric.all");
+        assertThat(metricAll)
+                .isNotNull()
+                .hasName("metric.all")
+                .hasDescription("Total number of invocations for method")
+                .hasUnit("invocations")
+                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)
+                        .hasAttributes(attributeEntry(
+                                "class",
+                                "io.smallrye.opentelemetry.implementation.micrometer.cdi.CountedBean"),
+                                attributeEntry("method", "countAllInvocations"),
+                                attributeEntry("extra", "tag"),
+                                attributeEntry("exception", "none"),
+                                attributeEntry("result", "success"))));
     }
 
     @Test
@@ -89,24 +78,21 @@ public class MicrometerCounterInterceptorTest {
                 //                .tag("do_fail", "prefix_true") // FIXME @MeterTag not implemented yet
                 .tag("exception", "NullPointerException")
                 .tag("result", "failure").counter();
-        Assertions.assertNotNull(counter);
+        assertNotNull(counter);
 
-        metricExporter.assertCountAtLeast(1);
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItems("metric.all", null);
-        assertThatList(finishedMetricItems)
-                .isNotEmpty()
-                .anySatisfy(metricData -> assertThat(metricData)
-                        .isNotNull()
-                        .hasName("metric.all")
-                        .hasDescription("Total number of invocations for method")
-                        .hasUnit("invocations")
-                        .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)
-                                .hasAttributes(attributeEntry(
-                                        "class",
-                                        "io.smallrye.opentelemetry.implementation.micrometer.cdi.CountedBean"),
-                                        attributeEntry("method", "countAllInvocations"),
-                                        attributeEntry("extra", "tag"),
-                                        attributeEntry("exception", "NullPointerException"),
-                                        attributeEntry("result", "failure")))));
+        MetricData metricAll = exporter.getFinishedMetricItem("metric.all");
+        assertThat(metricAll)
+                .isNotNull()
+                .hasName("metric.all")
+                .hasDescription("Total number of invocations for method")
+                .hasUnit("invocations")
+                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)
+                        .hasAttributes(attributeEntry(
+                                "class",
+                                "io.smallrye.opentelemetry.implementation.micrometer.cdi.CountedBean"),
+                                attributeEntry("method", "countAllInvocations"),
+                                attributeEntry("extra", "tag"),
+                                attributeEntry("exception", "NullPointerException"),
+                                attributeEntry("result", "failure"))));
     }
 }

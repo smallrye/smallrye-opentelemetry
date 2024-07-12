@@ -22,16 +22,15 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.smallrye.config.inject.ConfigExtension;
 import io.smallrye.opentelemetry.implementation.config.OpenTelemetryConfigProducer;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporter;
-import io.smallrye.opentelemetry.test.InMemoryMetricExporterProvider;
-import io.smallrye.opentelemetry.test.InMemorySpanExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporter;
+import io.smallrye.opentelemetry.test.InMemoryExporterProducer;
 
 @EnableAutoWeld
 @AddExtensions({ OpenTelemetryExtension.class, ConfigExtension.class })
-@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryMetricExporterProvider.class, InMemoryMetricExporter.class })
+@AddBeanClasses({ OpenTelemetryConfigProducer.class, InMemoryExporterProducer.class })
 class WithSpanInterceptorTest {
     @Inject
-    InMemorySpanExporter spanExporter;
+    InMemoryExporter spanExporter;
     @Inject
     SpanBean spanBean;
 
