@@ -114,6 +114,7 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-tracing</reportsDirectory>
                             <dependenciesToScan>
                                 <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-tracing-tck</dependency>
                             </dependenciesToScan>
@@ -126,6 +127,7 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-metrics</reportsDirectory>
                             <dependenciesToScan>
                                 <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-metrics-tck</dependency>
                             </dependenciesToScan>
@@ -140,14 +142,15 @@
                             <goal>test</goal>
                         </goals>
                         <configuration>
-                            <skip>true</skip>
+                            <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-metrics-jvm</reportsDirectory>
                             <systemPropertyVariables>
                                 <otel.sdk.disabled>false</otel.sdk.disabled>
                                 <otel.metrics.exporter>logging</otel.metrics.exporter>
                                 <otel.traces.exporter>none</otel.traces.exporter>
                                 <otel.logs.exporter>none</otel.logs.exporter>
-                                <otel.metric.export.interval>3000</otel.metric.export.interval>
-                                <log.file.path>${project.build.directory}/tck.log</log.file.path>
+                                <otel.metric.export.interval>1000</otel.metric.export.interval>
+                                <mptelemetry.tck.log.file.path>${project.build.directory}/tck.log</mptelemetry.tck.log.file.path>
                             </systemPropertyVariables>
                             <dependenciesToScan>
                                 <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-metrics-tck</dependency>
@@ -164,9 +167,10 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-logs</reportsDirectory>
                             <systemPropertyVariables>
                                 <otel.sdk.disabled>false</otel.sdk.disabled>
-                                <log.file.path>${project.build.directory}/out.log</log.file.path>
+                                <mptelemetry.tck.log.file.path>${project.build.directory}/out.log</mptelemetry.tck.log.file.path>
                             </systemPropertyVariables>
                             <dependenciesToScan>
                                 <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-logs-tck</dependency>
