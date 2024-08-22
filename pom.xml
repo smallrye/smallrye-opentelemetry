@@ -17,7 +17,7 @@
     <properties>
         <version.opentelemetry>1.39.0</version.opentelemetry>
         <version.opentelemetry.instrumentation>2.5.0</version.opentelemetry.instrumentation>
-        <version.opentelemetry.semconv>1.25.0-alpha</version.opentelemetry.semconv>
+        <version.opentelemetry.semconv>1.27.0-alpha</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.0</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
         <version.resteasy>6.2.10.Final</version.resteasy>
