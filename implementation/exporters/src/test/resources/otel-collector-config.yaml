@@ -1,6 +1,3 @@
-extensions:
-  health_check:
-
 receivers:
   otlp:
     protocols:
@@ -12,13 +9,22 @@ processors:
 
 exporters:
   logging:
-    verbosity: detailed
+    loglevel: debug
+
+extensions:
+  health_check:
 
 service:
+  extensions: [ health_check ]
   pipelines:
     traces:
       receivers: [otlp]
       processors: []
-      exporters: [logging]
-
-  extensions: [health_check]
+      exporters: [ logging ]
+    metrics:
+      receivers: [otlp]
+      processors: []
+      exporters: [ logging ]
+    logs:
+      receivers: [otlp]
+      exporters: [ logging ]

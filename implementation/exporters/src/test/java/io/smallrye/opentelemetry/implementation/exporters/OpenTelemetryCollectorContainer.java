@@ -11,27 +11,35 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.shaded.com.google.common.collect.Lists;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 public class OpenTelemetryCollectorContainer extends GenericContainer<OpenTelemetryCollectorContainer> {
-    public static final int HEALTH_CHECK_PORT = 13133;
-    public static final int OTLP_GRPC_PORT = 4317;
-    public static final int OTLP_HTTP_PORT = 4318;
-    public static final String OTEL_COLLECTOR_CONFIG_YAML = "/etc/otel-collector-config.yaml";
     private static final String imageName = "otel/opentelemetry-collector";
-    private static final String imageVersion = "0.89.0";
+    private static final String imageVersion = "0.103.1";
 
-    private String otlpGrpcEndpoint;
-    private String otlpHttpEndpoint;
+    private static final int HEALTH_CHECK_PORT = 13133;
+    private static final int OTLP_GRPC_PORT = 4317;
+    private static final int OTLP_HTTP_PORT = 4318;
+    private static final String OTEL_COLLECTOR_CONFIG_YAML = "/etc/otel-collector-config.yaml";
 
     public OpenTelemetryCollectorContainer() {
         super(DockerImageName.parse(imageName + ":" + imageVersion));
+
         setExposedPorts(Lists.newArrayList(OTLP_HTTP_PORT, OTLP_GRPC_PORT, HEALTH_CHECK_PORT));
         setWaitStrategy(
                 new WaitAllStrategy()
                         .withStrategy(Wait.forHttp("/").forPort(HEALTH_CHECK_PORT))
-                        //                        .withStrategy(Wait.forHttp("/v1/metrics").forPort(HTTP_OTLP_PORT).forStatusCode(405))
                         .withStartupTimeout(Duration.ofSeconds(5)));
         setStartupAttempts(5);
+        withCopyToContainer(
+                MountableFile.forClasspathResource("/otel-collector-config.yaml"), OTEL_COLLECTOR_CONFIG_YAML);
+        withCommand("--config " + OTEL_COLLECTOR_CONFIG_YAML);
+
+    }
+
+    @Override
+    public void start() {
+        super.start();
     }
 
     @Override
@@ -40,18 +48,11 @@ public class OpenTelemetryCollectorContainer extends GenericContainer<OpenTeleme
         return this;
     }
 
-    @Override
-    public void start() {
-        super.start();
-        otlpGrpcEndpoint = "http://localhost:" + getMappedPort(OTLP_GRPC_PORT);
-        otlpHttpEndpoint = "http://localhost:" + getMappedPort(OTLP_HTTP_PORT);
-    }
-
     public String getOtlpGrpcEndpoint() {
-        return otlpGrpcEndpoint;
+        return "http://localhost:" + getMappedPort(OTLP_GRPC_PORT);
     }
 
     public String getOtlpHttpEndpoint() {
-        return otlpHttpEndpoint;
+        return "http://localhost:" + getMappedPort(OTLP_HTTP_PORT);
     }
 }

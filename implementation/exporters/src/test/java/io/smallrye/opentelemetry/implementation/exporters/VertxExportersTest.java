@@ -1,7 +1,5 @@
 package io.smallrye.opentelemetry.implementation.exporters;
 
-import static org.junit.Assume.assumeTrue;
-
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterAll;
@@ -10,7 +8,6 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.DockerClientFactory;
-import org.testcontainers.utility.MountableFile;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -33,10 +30,7 @@ public class VertxExportersTest {
         Assumptions.assumeTrue(isDockerAvailable(), "Docker is not available.");
 
         if (otelCollector == null) {
-            otelCollector = new OpenTelemetryCollectorContainer()
-                    .withCopyFileToContainer(MountableFile.forClasspathResource("otel-collector-config.yaml"),
-                            OpenTelemetryCollectorContainer.OTEL_COLLECTOR_CONFIG_YAML)
-                    .withCommand("--config " + OpenTelemetryCollectorContainer.OTEL_COLLECTOR_CONFIG_YAML);
+            otelCollector = new OpenTelemetryCollectorContainer();
 
             otelCollector.start();
         }
@@ -61,14 +55,13 @@ public class VertxExportersTest {
     }
 
     private void testExporterByProtocol(String protocol) {
+        String endpoint = OtlpExporterUtil.PROTOCOL_GRPC.equals(protocol) ? otelCollector.getOtlpGrpcEndpoint()
+                : otelCollector.getOtlpHttpEndpoint();
         Map<String, String> config = Map.of(
                 "otel.traces.exporter", "otlp",
                 OtlpExporterUtil.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, protocol,
                 "otel.bsp.schedule.delay", "1",
-                "otel.bsp.max.queue.size", "1",
-                OtlpExporterUtil.OTEL_EXPORTER_OTLP_ENDPOINT,
-                (OtlpExporterUtil.PROTOCOL_GRPC.equals(protocol) ? otelCollector.getOtlpGrpcEndpoint()
-                        : otelCollector.getOtlpHttpEndpoint()));
+                OtlpExporterUtil.OTEL_EXPORTER_OTLP_ENDPOINT, endpoint);
         final String tracerName = "smallrye.opentelemetry.test." + protocol;
         final String spanName = protocol + " test trace";
         final String eventName = protocol + " test event";
