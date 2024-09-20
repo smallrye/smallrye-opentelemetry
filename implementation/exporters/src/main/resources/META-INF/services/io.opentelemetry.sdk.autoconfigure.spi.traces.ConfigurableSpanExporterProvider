@@ -1,1 +1,1 @@
-io.smallrye.opentelemetry.implementation.exporters.VertxExporterProvider
+io.smallrye.opentelemetry.implementation.exporters.traces.VertxSpanExporterProvider

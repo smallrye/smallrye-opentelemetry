@@ -5,7 +5,7 @@ import java.io.OutputStream;
 
 import io.vertx.core.buffer.Buffer;
 
-final class BufferOutputStream extends OutputStream {
+public final class BufferOutputStream extends OutputStream {
 
     private final Buffer buffer;
 
