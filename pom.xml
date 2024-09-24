@@ -26,10 +26,9 @@
         <micrometer.version>1.13.4</micrometer.version>
 
         <!-- Test -->
-        <version.smallrye.testing>2.3.0</version.smallrye.testing>
-        <version.smallrye.config>3.8.3</version.smallrye.config>
+        <version.smallrye.testing>2.3.1</version.smallrye.testing>
+        <version.smallrye.config>3.9.1</version.smallrye.config>
         <version.resteasy.client>3.0.0.Final</version.resteasy.client>
-        <verison.testcontainers>1.20.1</verison.testcontainers>
     </properties>
 
     <licenses>
@@ -177,13 +176,6 @@
                 <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-test</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers</artifactId>
-                <version>${verison.testcontainers}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
