@@ -23,7 +23,7 @@
         <version.mutiny>2.6.0</version.mutiny>
         <version.resteasy>6.2.10.Final</version.resteasy>
         <version.vertx.grpc>4.5.10</version.vertx.grpc>
-        <micrometer.version>1.13.3</micrometer.version>
+        <micrometer.version>1.13.4</micrometer.version>
 
         <!-- Test -->
         <version.smallrye.testing>2.3.0</version.smallrye.testing>
