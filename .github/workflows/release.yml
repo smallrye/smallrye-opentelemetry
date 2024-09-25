@@ -17,6 +17,14 @@ jobs:
     uses: smallrye/.github/.github/workflows/prepare-release.yml@main
     secrets: inherit
 
+  publish-tck:
+    name: Publish TCK Report
+    needs: prepare-release
+    uses: ./.github/workflows/publish-tck.yml
+    secrets: inherit
+    with:
+      version: ${{needs.prepare-release.outputs.release-version}}
+
   perform-release:
     name: Perform Release
     needs: prepare-release
