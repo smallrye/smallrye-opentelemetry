@@ -1,0 +1,28 @@
+name: SmallRye Retry Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: Tag version to perform release
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-tck:
+    name: Publish TCK Report
+    uses: ./.github/workflows/publish-tck.yml
+    secrets: inherit
+    with:
+      version: ${{ github.event.inputs.version }}
+
+  perform-release:
+    name: Perform Release
+    uses: smallrye/.github/.github/workflows/perform-release.yml@main
+    secrets: inherit
+    with:
+      version: ${{ github.event.inputs.version }}
