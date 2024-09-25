@@ -1,0 +1,43 @@
+name: Publish TCK
+
+on:
+  workflow_call:
+
+jobs:
+  publish-tck:
+    name: Publish TCK
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 11, 17, 21 ]
+
+    steps:
+      - uses: radcortez/project-metadata-action@main
+        name: retrieve project metadata
+        id: metadata
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          metadata-file-path: '.github/project.yml'
+
+      - uses: actions/checkout@v4
+        name: checkout ${{steps.metadata.outputs.current-version}}
+        with:
+          ref: ${{steps.metadata.outputs.current-version}}
+
+      - uses: actions/setup-java@v4
+        name: set up jdk ${{matrix.java}}
+        with:
+          distribution: 'temurin'
+          java-version: ${{matrix.java}}
+          cache: 'maven'
+          cache-dependency-path: '**/pom.xml'
+
+      - name: generate tck report for jdk ${{matrix.java}}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZIP_NAME: smallrye-opentelemetry-${{steps.metadata.outputs.current-version}}-tck-results-java-${{matrix.java}}.zip
+        run: | 
+          mvn -B formatter:validate verify --file pom.xml
+          cd testsuite/tck/target
+          zip -r $ZIP_NAME surefire-reports-logs/ surefire-reports-metrics/ surefire-reports-metrics-jvm/ surefire-reports-tracing/
+          gh release upload ${{steps.metadata.outputs.current-version}} smallrye-opentelemetry-tck-results.zip
