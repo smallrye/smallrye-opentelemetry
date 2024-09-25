@@ -190,12 +190,23 @@
         <module>implementation/rest</module>
         <module>implementation/micrometer-otel-bridge</module>
         <module>implementation/observation-otel-bridge</module>
-        <module>testsuite</module>
-        <module>examples</module>
         <module>test</module>
     </modules>
 
     <profiles>
+        <profile>
+            <id>unpublished</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>testsuite</module>
+                <module>examples</module>
+            </modules>
+        </profile>        
         <profile>
             <id>release</id>
             <activation>
