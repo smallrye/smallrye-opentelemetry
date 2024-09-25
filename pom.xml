@@ -195,7 +195,7 @@
 
     <profiles>
         <profile>
-            <id>performRelease</id>
+            <id>unpublished</id>
             <activation>
                 <property>
                     <name>performRelease</name>
