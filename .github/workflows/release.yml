@@ -1,5 +1,5 @@
 name: SmallRye Release
-run-name: Perform ${{github.event.inputs.tag || github.ref_name}} Release
+run-name: Release ${{github.event.inputs.tag || github.ref_name}}
 on:
   push:
     tags:
