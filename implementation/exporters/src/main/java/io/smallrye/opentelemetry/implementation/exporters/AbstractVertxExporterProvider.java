@@ -8,12 +8,18 @@ import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUti
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
 
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.exporter.internal.grpc.GrpcExporter;
 import io.opentelemetry.exporter.internal.http.HttpExporter;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.smallrye.common.annotation.Identifier;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
 import io.vertx.core.Vertx;
@@ -31,6 +37,10 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
     private static final String OTEL_EXPORTER_OTLP_SIGNAL_COMPRESSION = "otel.exporter.otlp.%s.compression";
 
     private static final String MIMETYPE_PROTOBUF = "application/x-protobuf";
+
+    private static final String OTEL_EXPORTER_VERTX_CDI_QUALIFIER = "otel.exporter.vertx.cdi.identifier";
+
+    private static final Logger logger = Logger.getLogger(AbstractVertxExporterProvider.class.getName());
 
     private final String signalType;
     private final String exporterName;
@@ -57,6 +67,26 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
                 false);//TODO: this will be enhanced in the future
     }
 
+    /**
+     * If the CDI qualifier is specified in the config, it tries to get it from CDI, and if CDI does not provide such
+     * an instance on the specified qualifier, it will log some WARNING messages and return a new Vertx instance.
+     * If the CDI qualifier is not specified in the config, it creates a new Vertx instance.
+     */
+    private Vertx getVertx(ConfigProperties config) {
+        String cdiQualifier = config.getString(OTEL_EXPORTER_VERTX_CDI_QUALIFIER);
+        if (cdiQualifier != null && !cdiQualifier.isEmpty()) {
+            Instance<Vertx> vertxCDI = CDI.current().select(Vertx.class, Identifier.Literal.of(cdiQualifier));
+            if (vertxCDI != null && vertxCDI.isResolvable()) {
+                return vertxCDI.get();
+            } else {
+                logger.log(Level.WARNING, "The Vertx instance with CDI qualifier @Identifier(\"{0}\") is not resolvable.",
+                        cdiQualifier);
+            }
+        }
+        logger.log(Level.INFO, "Create a new Vertx instance");
+        return Vertx.vertx();
+    }
+
     protected VertxGrpcSender<T> createGrpcSender(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
         return new VertxGrpcSender<>(
                 new URI(getOtlpEndpoint(config, OTLP_GRPC_ENDPOINT)),
@@ -64,7 +94,7 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
                 getCompression(config),
                 getTimeout(config),
                 OtlpExporterUtil.populateTracingExportHttpHeaders(),
-                Vertx.vertx());
+                getVertx(config));
     }
 
     protected VertxHttpSender createHttpSender(ConfigProperties config, String httpEndpointPath) throws URISyntaxException {
@@ -75,7 +105,7 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
                 getTimeout(config),
                 OtlpExporterUtil.populateTracingExportHttpHeaders(),
                 MIMETYPE_PROTOBUF,
-                Vertx.vertx());
+                getVertx(config));
     }
 
     protected IllegalArgumentException buildUnsupportedProtocolException(String protocol) {
