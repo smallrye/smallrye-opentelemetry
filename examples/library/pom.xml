@@ -17,7 +17,7 @@
 
     <properties>
         <version.plugin.war>3.4.0</version.plugin.war>
-        <version.plugin.dependency>3.8.0</version.plugin.dependency>
+        <version.plugin.dependency>3.8.1</version.plugin.dependency>
         <version.plugin.jetty>11.0.13</version.plugin.jetty>
 
         <version.weld.core>5.1.0.Final</version.weld.core>
