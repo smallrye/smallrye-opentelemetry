@@ -1,5 +1,9 @@
 package io.smallrye.opentelemetry.implementation.exporters;
 
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.OTEL_EXPORTER_OTLP_ENDPOINT;
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL;
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_GRPC;
+
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterAll;
@@ -55,13 +59,13 @@ public class VertxExportersTest {
     }
 
     private void testExporterByProtocol(String protocol) {
-        String endpoint = OtlpExporterUtil.PROTOCOL_GRPC.equals(protocol) ? otelCollector.getOtlpGrpcEndpoint()
+        String endpoint = PROTOCOL_GRPC.equals(protocol) ? otelCollector.getOtlpGrpcEndpoint()
                 : otelCollector.getOtlpHttpEndpoint();
         Map<String, String> config = Map.of(
                 "otel.traces.exporter", "otlp",
-                OtlpExporterUtil.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, protocol,
+                OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, protocol,
                 "otel.bsp.schedule.delay", "1",
-                OtlpExporterUtil.OTEL_EXPORTER_OTLP_ENDPOINT, endpoint);
+                OTEL_EXPORTER_OTLP_ENDPOINT, endpoint);
         final String tracerName = "smallrye.opentelemetry.test." + protocol;
         final String spanName = protocol + " test trace";
         final String eventName = protocol + " test event";
