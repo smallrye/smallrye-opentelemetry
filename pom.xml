@@ -15,15 +15,15 @@
     <url>http://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.39.0</version.opentelemetry>
-        <version.opentelemetry.instrumentation>2.5.0</version.opentelemetry.instrumentation>
+        <version.opentelemetry>1.42.1</version.opentelemetry>
+        <version.opentelemetry.instrumentation>2.8.0</version.opentelemetry.instrumentation>
         <version.opentelemetry.semconv>1.25.0-alpha</version.opentelemetry.semconv>
-        <version.microprofile.opentelemetry>2.0</version.microprofile.opentelemetry>
+        <version.microprofile.opentelemetry>2.0.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
         <version.mutiny>2.6.2</version.mutiny>
         <version.smallrye.common>2.8.0</version.smallrye.common>
         <version.resteasy>6.2.10.Final</version.resteasy>
-        <version.vertx.grpc>4.5.10</version.vertx.grpc>
+        <version.vertx.grpc>4.5.11</version.vertx.grpc>
         <micrometer.version>1.13.4</micrometer.version>
 
         <!-- Test -->
@@ -212,7 +212,7 @@
                 <module>testsuite</module>
                 <module>examples</module>
             </modules>
-        </profile>        
+        </profile>
         <profile>
             <id>release</id>
             <activation>
