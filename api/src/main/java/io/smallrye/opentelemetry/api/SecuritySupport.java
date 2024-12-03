@@ -3,12 +3,18 @@ package io.smallrye.opentelemetry.api;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-public class SecuritySupport {
+/**
+ * SecuritySupport for the io.smallrye.opentelemetry.api package.
+ * <p>
+ * Do not move. Do not change class and method visibility to avoid being called from other
+ * {@link java.security.CodeSource}s, thus granting privilege escalation to external code.
+ */
+class SecuritySupport {
     private SecuritySupport() {
-        throw new UnsupportedOperationException();
+        // Forbid inheritance!
     }
 
-    public static ClassLoader getContextClassLoader() {
+    static ClassLoader getContextClassLoader() {
         if (System.getSecurityManager() == null) {
             return Thread.currentThread().getContextClassLoader();
         } else {
