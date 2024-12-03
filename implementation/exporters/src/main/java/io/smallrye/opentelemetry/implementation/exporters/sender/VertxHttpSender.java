@@ -59,6 +59,7 @@ public final class VertxHttpSender implements HttpSender {
             Duration timeout,
             Map<String, String> headersMap,
             String contentType,
+            Consumer<HttpClientOptions> clientOptionsCustomizer,
             Vertx vertx) {
         this.basePath = determineBasePath(baseUri);
         this.signalPath = signalPath;
@@ -70,6 +71,7 @@ public final class VertxHttpSender implements HttpSender {
                 .setDefaultHost(baseUri.getHost())
                 .setDefaultPort(getPort(baseUri))
                 .setTracingPolicy(TracingPolicy.IGNORE); // needed to avoid tracing the calls from this http client
+        clientOptionsCustomizer.accept(httpClientOptions);
         this.client = vertx.createHttpClient(httpClientOptions);
     }
 

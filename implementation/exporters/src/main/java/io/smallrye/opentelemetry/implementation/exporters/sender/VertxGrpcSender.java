@@ -57,17 +57,21 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
     private final SocketAddress server;
     private final boolean compressionEnabled;
     private final Map<String, String> headers;
+    private final String signalType;
     private final String grpcEndpointPath;
 
     private final GrpcClient client;
 
     public VertxGrpcSender(
+            String signalType,
             URI grpcBaseUri,
             String grpcEndpointPath,
             boolean compressionEnabled,
             Duration timeout,
             Map<String, String> headersMap,
+            Consumer<HttpClientOptions> clientOptionsCustomizer,
             Vertx vertx) {
+        this.signalType = signalType;
         this.grpcEndpointPath = grpcEndpointPath;
         this.server = SocketAddress.inetSocketAddress(OtlpExporterUtil.getPort(grpcBaseUri), grpcBaseUri.getHost());
         this.compressionEnabled = compressionEnabled;
@@ -76,6 +80,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                 .setHttp2ClearTextUpgrade(false) // needed otherwise connections get closed immediately
                 .setReadIdleTimeout((int) timeout.getSeconds())
                 .setTracingPolicy(TracingPolicy.IGNORE); // needed to avoid tracing the calls from this gRPC client
+        clientOptionsCustomizer.accept(httpClientOptions);
         this.client = GrpcClient.client(vertx, httpClientOptions);
     }
 
@@ -163,48 +168,6 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
         logger.log(Level.WARNING, message);
         onError.accept(t);
     }
-
-    /*
-     * private static final MethodDescriptor.Marshaller<Marshaler> REQUEST_MARSHALLER = new MethodDescriptor.Marshaller<>() {
-     *
-     * @Override
-     * public InputStream stream(Marshaler value) {
-     * return new MarshalerInputStream(value);
-     * }
-     *
-     * @Override
-     * public Marshaler parse(InputStream stream) {
-     * throw new UnsupportedOperationException("Only for serializing");
-     * }
-     * };
-     *
-     * private static final MethodDescriptor.Marshaller<ServiceResponse> RESPONSE_MARSHALER = new
-     * MethodDescriptor.Marshaller<>() {
-     *
-     * @Override
-     * public InputStream stream(ServiceResponse value) {
-     * throw new UnsupportedOperationException("Only for parsing");
-     * }
-     *
-     * @Override
-     * public ServiceResponse parse(InputStream stream) {
-     * return ServiceResponse.INSTANCE;
-     * }
-     * };
-     *
-     * private MethodDescriptor<Marshaler, ServiceResponse> getExportMethod() {
-     * return MethodDescriptor.<Marshaler, ServiceResponse> newBuilder()
-     * .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-     * .setFullMethodName(generateFullMethodName(grpcEndpointPath, "Export"))
-     * .setRequestMarshaller(REQUEST_MARSHALLER)
-     * .setResponseMarshaller(RESPONSE_MARSHALER)
-     * .build();
-     * }
-     *
-     * private enum ServiceResponse {
-     * INSTANCE;
-     * }
-     */
 
     private final class ClientRequestOnSuccessHandler implements Handler<GrpcClientRequest<Buffer, Buffer>> {
 

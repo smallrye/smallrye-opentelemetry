@@ -1,7 +1,8 @@
 package io.smallrye.opentelemetry.implementation.exporters.logs;
 
-import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.PROTOCOL_GRPC;
-import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.PROTOCOL_HTTP_PROTOBUF;
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_GRPC;
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_HTTP_PROTOBUF;
+import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.getProtocol;
 
 import java.net.URISyntaxException;
 
@@ -22,7 +23,7 @@ public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<Log
     @Override
     public LogRecordExporter createExporter(ConfigProperties config) {
         try {
-            final String protocol = getProtocol(config);
+            final String protocol = getProtocol(config, getSignalType());
 
             if (PROTOCOL_GRPC.equals(protocol)) {
                 return new VertxGrpcLogsExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
