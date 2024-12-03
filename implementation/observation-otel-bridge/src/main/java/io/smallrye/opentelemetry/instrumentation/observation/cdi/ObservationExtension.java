@@ -20,7 +20,6 @@ import jakarta.enterprise.inject.spi.BeforeBeanDiscovery;
 import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.util.Nonbinding;
 
-import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.annotation.Observed;
 
 public class ObservationExtension implements Extension {
@@ -28,7 +27,9 @@ public class ObservationExtension implements Extension {
         beforeBeanDiscovery.addInterceptorBinding(
                 new ObservedAnnotatedType(beanManager.createAnnotatedType(Observed.class)));
 
-        beforeBeanDiscovery.addAnnotatedType(ObservationRegistry.class, ObservationRegistry.class.getName());
+        //        beforeBeanDiscovery.addAnnotatedType(OpenTelemetryObservationHandler.class,
+        //                OpenTelemetryObservationHandler.class.getName());
+        beforeBeanDiscovery.addAnnotatedType(ObservationRegistryProducer.class, ObservationRegistryProducer.class.getName());
     }
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {

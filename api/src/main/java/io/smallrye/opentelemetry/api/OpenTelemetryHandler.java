@@ -56,7 +56,10 @@ public class OpenTelemetryHandler extends Handler {
     }
 
     public static void install(final OpenTelemetry openTelemetry) {
-        Logger logger = openTelemetry.getLogsBridge().loggerBuilder(OpenTelemetryConfig.INSTRUMENTATION_NAME).build();
+        Logger logger = openTelemetry.getLogsBridge()
+                .loggerBuilder(OpenTelemetryConfig.INSTRUMENTATION_NAME)
+                .setInstrumentationVersion(OpenTelemetryConfig.INSTRUMENTATION_VERSION)
+                .build();
         LogManager.getLogManager().getLogger("").addHandler(new OpenTelemetryHandler(logger));
     }
 }
