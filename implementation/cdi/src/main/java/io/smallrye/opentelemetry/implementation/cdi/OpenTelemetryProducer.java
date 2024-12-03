@@ -2,6 +2,8 @@ package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,8 @@ import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
@@ -38,23 +42,60 @@ import io.smallrye.opentelemetry.api.OpenTelemetryHandler;
 
 @Singleton
 public class OpenTelemetryProducer {
+
+    // n.b. while the security manager is supported by this project, take extra caution when evolving this class
+    // since otel initialization does require a lot of different file/logging/runtime/management security permissions
+
     private final List<AutoCloseable> closeables = new ArrayList<>();
 
     @Produces
     @Singleton
     public OpenTelemetry getOpenTelemetry(final OpenTelemetryConfig config) {
-        OpenTelemetry openTelemetry = new OpenTelemetryBuilderGetter().apply(config)
-                .disableShutdownHook()
-                .build()
-                .getOpenTelemetrySdk();
+        AutoConfiguredOpenTelemetrySdkBuilder autoConfiguredOpenTelemetrySdkBuilder = new OpenTelemetryBuilderGetter()
+                .apply(config).disableShutdownHook();
+
+        AutoConfiguredOpenTelemetrySdk otelSdk;
+        if (System.getSecurityManager() == null) {
+            otelSdk = autoConfiguredOpenTelemetrySdkBuilder.build();
+        } else {
+            // Requires FilePermission/RuntimePermission
+            otelSdk = AccessController.doPrivileged(
+                    (PrivilegedAction<AutoConfiguredOpenTelemetrySdk>) autoConfiguredOpenTelemetrySdkBuilder::build);
+        }
+
+        OpenTelemetry openTelemetry = otelSdk.getOpenTelemetrySdk();
 
         closeables.addAll(Classes.registerObservers(openTelemetry));
-        closeables.addAll(Cpu.registerObservers(openTelemetry));
+
+        List<AutoCloseable> cpuObservers;
+        List<AutoCloseable> garbageCollectorObservers;
+
+        if (System.getSecurityManager() == null) {
+            cpuObservers = Cpu.registerObservers(openTelemetry);
+            garbageCollectorObservers = GarbageCollector.registerObservers(openTelemetry);
+        } else {
+            // Requires FilePermission/RuntimePermission/ManagementPermission
+            cpuObservers = AccessController.doPrivileged(
+                    (PrivilegedAction<List<AutoCloseable>>) () -> Cpu.registerObservers(openTelemetry));
+            // Requires FilePermission/RuntimePermission
+            garbageCollectorObservers = AccessController.doPrivileged(
+                    (PrivilegedAction<List<AutoCloseable>>) () -> GarbageCollector.registerObservers(openTelemetry));
+        }
+
+        closeables.addAll(cpuObservers);
+        closeables.addAll(garbageCollectorObservers);
         closeables.addAll(MemoryPools.registerObservers(openTelemetry));
         closeables.addAll(Threads.registerObservers(openTelemetry));
-        closeables.addAll(GarbageCollector.registerObservers(openTelemetry));
 
-        OpenTelemetryHandler.install(openTelemetry);
+        if (System.getSecurityManager() == null) {
+            OpenTelemetryHandler.install(openTelemetry);
+        } else {
+            // Requires LoggingPermission
+            AccessController.doPrivileged((PrivilegedAction<List<AutoCloseable>>) () -> {
+                OpenTelemetryHandler.install(openTelemetry);
+                return null;
+            });
+        }
 
         return openTelemetry;
     }
@@ -87,12 +128,7 @@ public class OpenTelemetryProducer {
             }
 
             @Override
-
-            public Span addEvent(
-                    final String name,
-                    final Attributes attributes,
-                    final long timestamp,
-                    final TimeUnit unit) {
+            public Span addEvent(final String name, final Attributes attributes, final long timestamp, final TimeUnit unit) {
                 return Span.current().addEvent(name, attributes, timestamp, unit);
             }
 
