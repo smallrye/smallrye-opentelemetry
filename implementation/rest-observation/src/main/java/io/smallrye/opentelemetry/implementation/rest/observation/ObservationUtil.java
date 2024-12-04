@@ -20,8 +20,8 @@ public class ObservationUtil {
 
     // FIXME this is a hack because KeyValue does not support non-string values
     public static KeyValue collectAttribute(final AttributesBuilder attributesBuilder,
-                                            final KeyName keyName,
-                                            final Object value) {
+            final KeyName keyName,
+            final Object value) {
         if (value == null) {
             return keyName.withValue(UNKNOWN);
         } else if (value instanceof String) {

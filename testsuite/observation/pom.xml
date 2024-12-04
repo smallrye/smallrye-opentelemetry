@@ -17,11 +17,6 @@
             <groupId>io.smallrye.opentelemetry</groupId>
             <artifactId>smallrye-opentelemetry-api</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.smallrye.opentelemetry</groupId>-->
-<!--            <artifactId>smallrye-opentelemetry-observation-otel-bridge</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
             <artifactId>smallrye-opentelemetry-config</artifactId>
@@ -80,15 +75,6 @@
                     <skip>true</skip>
                 </configuration>
                 <executions>
-<!--                    <execution>-->
-<!--                        <id>legacy</id>-->
-<!--                        <goals>-->
-<!--                            <goal>test</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <skip>false</skip>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                     <execution>
                         <id>stable</id>
                         <goals>

@@ -74,21 +74,35 @@ public class InMemoryExporter {
     }
 
     public void assertMetricsAtLeast(final int count, final String name) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(metrics(name).count() >= count));
+        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(metrics(name).countDataPoints() >= count));
     }
 
     public void assertMetricsAtLeast(final int count, final String name, final String route) {
-        await().atMost(10, SECONDS).untilAsserted(() -> assertTrue(metrics(name).route(route).count() >= count));
+        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(metrics(name).route(route).countDataPoints() >= count,
+                "Metrics count: " + metrics(name).route(route).countDataPoints() +
+                        ". Found metrics " + metrics(name).route(route).metricData
+                                .map(md -> md.getData().getPoints().stream()
+                                        .map(pointData -> md.getName() + " : " + pointData.getAttributes().get(HTTP_ROUTE))
+                                        .collect(toList()))
+                                .collect(toList())));
     }
 
-    public MetricData getFinishedHistogramItem(final String name, final int count) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).count()));
+    public MetricData getFinishedHistogramItemByPoints(final String name, final int count) {
+        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).countDataPoints()));
         return histogram(name).get(count);
     }
 
-    public MetricData getFinishedHistogramItem(final String name, final String route, final int count) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).route(route).count()));
-        return histogram(name).route(route).get(count);
+    public MetricData getLastFinishedHistogramItem(final String name, final int count) {
+        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(histogram(name).getAll().stream().count() >= count));
+        List<MetricData> metricDataList = histogram(name).metricData.collect(toList());
+        return metricDataList.get(metricDataList.size() - 1); // last added entry
+    }
+
+    public MetricData getLastFinishedHistogramItem(final String name, final String route, final int count) {
+        await().atMost(5, SECONDS)
+                .untilAsserted(() -> assertTrue(histogram(name).route(route).getAll().stream().count() >= count));
+        List<MetricData> metricDataList = histogram(name).route(route).metricData.collect(toList());
+        return metricDataList.get(metricDataList.size() - 1); // last added entry
     }
 
     public void reset() {
@@ -97,22 +111,11 @@ public class InMemoryExporter {
         logRecordExporter.reset();
     }
 
-    /*
-     * ignore points with /export in the route
-     */
-    private static boolean notExporterPointData(PointData pointData) {
-        return pointData.getAttributes().asMap().entrySet().stream()
-                .noneMatch(entry -> entry.getKey().getKey().equals(HTTP_ROUTE.getKey()) &&
-                        entry.getValue().toString().contains("/export"));
-    }
-
-    public Map<String, PointData> getMostRecentPointsMap(List<MetricData> finishedMetricItems) {
-        return finishedMetricItems.stream()
-                .flatMap(metricData -> metricData.getData().getPoints().stream())
-                // exclude data from /export endpoint
-                .filter(InMemoryExporter::notExporterPointData)
-                // newer first
-                .sorted(Comparator.comparingLong(PointData::getEpochNanos).reversed())
+    // Not for
+    public Map<String, HistogramPointData> getMostRecentPointsMap(List<MetricData> finishedMetricItems) {
+        // get last metric item
+        Map<String, HistogramPointData> collect = finishedMetricItems.get(finishedMetricItems.size() - 1).getHistogramData()
+                .getPoints().stream()
                 .collect(toMap(
                         pointData -> pointData.getAttributes().asMap().entrySet().stream()
                                 //valid attributes for the resulting map key
@@ -122,9 +125,8 @@ public class InMemoryExporter {
                                 // build key
                                 .map(entry -> entry.getKey().getKey() + ":" + entry.getValue().toString())
                                 .collect(joining(",")),
-                        pointData -> pointData,
-                        // most recent points will surface
-                        (older, newer) -> newer));
+                        pointData -> pointData));
+        return collect;
     }
 
     private class MetricDataFilter {
@@ -248,15 +250,14 @@ public class InMemoryExporter {
             return this;
         }
 
-        int count() {
-            return metricData.map(this::count)
+        int countDataPoints() {
+            return metricData.map(metricData1 -> countPoints(metricData1))
                     .mapToInt(Integer::intValue)
-                    .max()
-                    .orElse(0);
+                    .sum();
         }
 
         MetricData get(final int count) {
-            return metricData.filter(metricData -> count(metricData) >= count)
+            return metricData.filter(metricData -> countPoints(metricData) >= count)
                     .max(comparingLong(metricData -> metricData.getData().getPoints()
                             .stream()
                             .map(PointData::getEpochNanos)
@@ -265,7 +266,11 @@ public class InMemoryExporter {
                     .orElseThrow();
         }
 
-        int count(final MetricData metricData) {
+        List<MetricData> getAll() {
+            return metricData.collect(Collectors.toList());
+        }
+
+        int countPoints(final MetricData metricData) {
             return metricData.getData().getPoints().size();
         }
     }
@@ -277,7 +282,7 @@ public class InMemoryExporter {
     private MetricDataFilter histogram(final String name) {
         return new MetricDataFilter(name) {
             @Override
-            int count(final MetricData metricData) {
+            int countPoints(final MetricData metricData) {
                 return metricData.getData().getPoints().stream()
                         .map((o -> ((HistogramPointData) o).getCount()))
                         .mapToInt(Long::intValue)

@@ -9,7 +9,6 @@ import io.micrometer.observation.transport.RequestReplyReceiverContext;
 public class ObservationServerContext extends RequestReplyReceiverContext<ContainerRequestContext, ContainerResponseContext> {
     private final ContainerRequestContext requestContext;
     private final ResourceInfo resourceInfo;
-    private ContainerResponseContext responseContext;
 
     public ObservationServerContext(final ContainerRequestContext requestContext, final ResourceInfo resourceInfo) {
         super((carrier, key) -> {
@@ -25,19 +24,7 @@ public class ObservationServerContext extends RequestReplyReceiverContext<Contai
         this.resourceInfo = resourceInfo;
     }
 
-    //    public ContainerRequestContext getRequestContext() {
-    //        return requestContext;
-    //    }
-
     public ResourceInfo getResourceInfo() {
         return resourceInfo;
     }
-
-    //    public ContainerResponseContext getResponseContext() {
-    //        return responseContext;
-    //    }
-    //
-    //    public void setResponseContext(ContainerResponseContext responseContext) {
-    //        this.responseContext = responseContext;
-    //    }
 }
