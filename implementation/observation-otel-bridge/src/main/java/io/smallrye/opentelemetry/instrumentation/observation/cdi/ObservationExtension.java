@@ -27,8 +27,6 @@ public class ObservationExtension implements Extension {
         beforeBeanDiscovery.addInterceptorBinding(
                 new ObservedAnnotatedType(beanManager.createAnnotatedType(Observed.class)));
 
-        //        beforeBeanDiscovery.addAnnotatedType(OpenTelemetryObservationHandler.class,
-        //                OpenTelemetryObservationHandler.class.getName());
         beforeBeanDiscovery.addAnnotatedType(ObservationRegistryProducer.class, ObservationRegistryProducer.class.getName());
     }
 

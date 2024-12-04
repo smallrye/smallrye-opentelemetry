@@ -172,7 +172,7 @@ class ObservationOTelTest {
                                 attributeEntry("code.namespace",
                                         "io.smallrye.opentelemetry.implementation.observation.ObservationOTelTest$ObservationSpan"))));
 
-        MetricData methodObserved = exporter.getFinishedHistogramItem("method.observed", 1);
+        MetricData methodObserved = exporter.getLastFinishedHistogramItem("method.observed", 1);
         assertThat(methodObserved)
                 .hasUnit("ms")
                 .hasHistogramSatisfying(hist -> hist.isCumulative().hasPointsSatisfying(points -> points.hasCount(1)

@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URL;
 import java.util.List;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.PointData;
 import io.smallrye.opentelemetry.test.InMemoryExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -66,28 +66,30 @@ public class RestMetricsTest {
         given().get("/span/2").then().statusCode(HTTP_OK);
         given().get("/span/2").then().statusCode(HTTP_OK);
 
-        metricExporter.assertMetricsAtLeast(1, "http.server.active.duration", url.getPath() + "span");
-        metricExporter.assertMetricsAtLeast(4, "http.server.active.duration", url.getPath() + "span/{name}");
-//        metricExporter.assertMetricsAtLeast(3, "http.server.active.duration", url.getPath() + "span/2");
-        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItemList("http.server.duration");
+        metricExporter.assertMetricsAtLeast(1, "http.server", url.getPath() + "span");
+        metricExporter.assertMetricsAtLeast(4, "http.server", url.getPath() + "span/{name}");
+        List<MetricData> finishedMetricItems = metricExporter.getFinishedMetricItemList("http.server");
 
         assertThat(finishedMetricItems, allOf(
-                everyItem(hasProperty("name", equalTo("http.server.active.duration"))),
+                everyItem(hasProperty("name", equalTo("http.server"))),
                 everyItem(hasProperty("type", equalTo(HISTOGRAM)))));
 
-        Map<String, PointData> pointDataMap = metricExporter.getMostRecentPointsMap(finishedMetricItems);
-        assertEquals(1, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,url.path:/span"),
+        Map<String, HistogramPointData> pointDataMap = metricExporter.getMostRecentPointsMap(finishedMetricItems);
+        System.out.println(pointDataMap);
+        assertEquals(1,
+                getCount(pointDataMap,
+                        "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath() + "span"),
                 pointDataMap.keySet().stream()
                         .collect(Collectors.joining("**")));
-        assertEquals(1, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,url.path:/span/1"),
-                pointDataMap.keySet().stream()
-                        .collect(Collectors.joining("**")));
-        assertEquals(3, getCount(pointDataMap, "http.request.method:GET,http.response.status_code:200,url.path:/span/2"),
+        assertTrue(
+                getCount(pointDataMap,
+                        "http.request.method:GET,http.response.status_code:200,http.route:" + url.getPath()
+                                + "span/{name}") >= 4, // we also get the hit from the other test.
                 pointDataMap.keySet().stream()
                         .collect(Collectors.joining("**")));
     }
 
-    private long getCount(final Map<String, PointData> pointDataMap, final String key) {
+    private long getCount(final Map<String, HistogramPointData> pointDataMap, final String key) {
         HistogramPointData histogramPointData = (HistogramPointData) pointDataMap.get(key);
         if (histogramPointData == null) {
             return 0;

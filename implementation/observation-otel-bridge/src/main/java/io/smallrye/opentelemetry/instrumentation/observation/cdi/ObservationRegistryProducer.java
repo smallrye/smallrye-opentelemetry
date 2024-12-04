@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.smallrye.opentelemetry.instrumentation.observation.handler.OpenTelemetryObservationHandler;
 import io.smallrye.opentelemetry.instrumentation.observation.handler.PropagatingReceiverTracingObservationHandler;
 import io.smallrye.opentelemetry.instrumentation.observation.handler.PropagatingSenderTracingObservationHandler;
+import io.smallrye.opentelemetry.instrumentation.observation.handler.TracingAwareMeterObservationHandler;
 
 @Singleton
 public class ObservationRegistryProducer {
@@ -38,9 +39,16 @@ public class ObservationRegistryProducer {
                                 openTelemetry.getPropagators().getTextMapPropagator()),
                         new PropagatingReceiverTracingObservationHandler(tracer,
                                 openTelemetry.getPropagators().getTextMapPropagator()),
-                        //   new TracingAwareMeterObservationHandler(tracer) // For exemplars...
                         new OpenTelemetryObservationHandler(tracer)))
-                .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
+                // todo duplicate the tracer strategy for baggage, adding a condition to bypass when no baggage is present
+                // todo just implement the receiver and sender handlers
+                // todo. Alternatively we can split in 2 the tracing handlers, one to create spans (in the current .observationHandler(new ObservationHandler.FirstMatchingCompositeObservationHandler )
+                // todo. A new .observationHandler bloc to process the baggage on the receiver side.
+                // todo. Another to propagate the context in a new .observationHandler )
+                // todo. We assume on the receiver side we open and close the baggage once because it should have just 1 scope app wide and the
+                // todo. user will use the baggage api itself. We are just making sure we don't break the propagation to the user.
+                .observationHandler(
+                        new TracingAwareMeterObservationHandler(new DefaultMeterObservationHandler(meterRegistry), tracer));
         //      .observationHandler(new PrintOutHandler())  // Can be implemented for debugging. Other handlers for future frameworks can also be added.
         return observationRegistry;
     }

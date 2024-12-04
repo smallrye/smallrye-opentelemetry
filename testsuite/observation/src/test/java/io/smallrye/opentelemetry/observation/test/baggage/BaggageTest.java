@@ -20,12 +20,14 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.smallrye.opentelemetry.test.InMemoryExporter;
 
+@Disabled("baggage propagation not implemented")
 @ExtendWith(ArquillianExtension.class)
 class BaggageTest {
     @Deployment

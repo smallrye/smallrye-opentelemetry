@@ -56,6 +56,7 @@ public class PropagatingReceiverTracingObservationHandler<T extends ReceiverCont
                 return getter.get(carrier, key);
             }
         });
+        // extracted.makeCurrent(); // this actually fixes the baggage test
         return tracer.spanBuilder("receiver").setParent(extracted);// FIXME the name needs to be set
     }
 

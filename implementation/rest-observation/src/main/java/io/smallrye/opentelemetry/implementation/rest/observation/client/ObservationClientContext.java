@@ -8,7 +8,6 @@ import io.micrometer.observation.transport.RequestReplySenderContext;
 public class ObservationClientContext extends RequestReplySenderContext<ClientRequestContext, ClientResponseContext> {
 
     private final ClientRequestContext requestContext;
-    private ClientResponseContext responseContext;
 
     public ObservationClientContext(final ClientRequestContext requestContext) {
         super((carrier, key, value) -> {
@@ -18,17 +17,4 @@ public class ObservationClientContext extends RequestReplySenderContext<ClientRe
         this.requestContext = requestContext;
         setCarrier(requestContext);
     }
-
-    //    // fixme remove getters and setters
-    //    public ClientRequestContext getRequestContext() {
-    //        return requestContext;
-    //    }
-    //
-    //    public ClientResponseContext getResponseContext() {
-    //        return responseContext;
-    //    }
-    //
-    //    public void setResponseContext(ClientResponseContext responseContext) {
-    //        this.responseContext = responseContext;
-    //    }
 }
