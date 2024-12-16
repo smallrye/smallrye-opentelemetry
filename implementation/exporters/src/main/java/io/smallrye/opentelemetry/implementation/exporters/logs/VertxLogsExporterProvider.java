@@ -17,7 +17,7 @@ import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender
 public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<LogsRequestMarshaler>
         implements ConfigurableLogRecordExporterProvider {
     public VertxLogsExporterProvider() {
-        super("logs", "otlp");
+        super("log", "otlp");
     }
 
     @Override
