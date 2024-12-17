@@ -35,7 +35,7 @@ public class HistogramTest {
     void histogramTest() {
         manualHistogramBean.recordHistogram();
 
-        MetricData testSummary = exporter.getFinishedHistogramItem("testSummary", 4);
+        MetricData testSummary = exporter.getLastFinishedHistogramItem("testSummary", 4);
         assertNotNull(testSummary);
         assertThat(testSummary)
                 .hasDescription("This is a test distribution summary")

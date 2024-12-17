@@ -36,6 +36,7 @@ public class PropagatingSenderTracingObservationHandler<T extends SenderContext>
     public void onStart(T context) {
         Span childSpan = createSenderSpan(context);
         try (Scope scope = childSpan.makeCurrent()) {
+            // todo this code could also be used for the baggage:
             this.propagator.inject(Context.current(), context.getCarrier(),
                     (carrier, key, value) -> context.getSetter().set(carrier, key, value));
         }

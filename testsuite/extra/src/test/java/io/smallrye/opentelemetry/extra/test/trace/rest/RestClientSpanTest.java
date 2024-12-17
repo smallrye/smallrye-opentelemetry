@@ -50,6 +50,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ErrorAttributes;
+import io.smallrye.opentelemetry.extra.test.AttributeKeysStability;
 import io.smallrye.opentelemetry.test.InMemoryExporter;
 
 @ExtendWith(ArquillianExtension.class)
@@ -103,9 +105,9 @@ class RestClientSpanTest {
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(server, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
@@ -121,18 +123,18 @@ class RestClientSpanTest {
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/{name}", server.getName());
-        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(server, HTTP_REQUEST_METHOD));
-        assertEquals("http", get(server, URL_SCHEME));
-        assertEquals(url.getPath() + "span/1", get(server, URL_PATH));
-        assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(server, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(server, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals("http", AttributeKeysStability.get(server, URL_SCHEME));
+        Assertions.assertEquals(url.getPath() + "span/1", AttributeKeysStability.get(server, URL_PATH));
+        Assertions.assertEquals(url.getHost(), AttributeKeysStability.get(server, SERVER_ADDRESS));
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(client, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span/1", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(client, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span/1", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(server.getTraceId(), client.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
@@ -158,9 +160,9 @@ class RestClientSpanTest {
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(client, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span/1?query=query", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(client, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span/1?query=query", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
@@ -220,18 +222,18 @@ class RestClientSpanTest {
         SpanData server = spans.get(1);
         assertEquals(SERVER, server.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/child", server.getName());
-        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(server, HTTP_REQUEST_METHOD));
-        assertEquals("http", get(server, URL_SCHEME));
-        assertEquals(url.getPath() + "span/child", get(server, URL_PATH));
-        assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(server, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(server, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals("http", AttributeKeysStability.get(server, URL_SCHEME));
+        Assertions.assertEquals(url.getPath() + "span/child", AttributeKeysStability.get(server, URL_PATH));
+        Assertions.assertEquals(url.getHost(), AttributeKeysStability.get(server, SERVER_ADDRESS));
 
         SpanData client = spans.get(2);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(client, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span/child", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(client, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span/child", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(client.getTraceId(), internal.getTraceId());
         assertEquals(client.getTraceId(), server.getTraceId());
@@ -249,19 +251,19 @@ class RestClientSpanTest {
         SpanData server = spans.get(0);
         assertEquals(SERVER, server.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/current", server.getName());
-        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(server, HTTP_REQUEST_METHOD));
-        assertEquals("http", get(server, URL_SCHEME));
-        assertEquals(url.getPath() + "span/current", get(server, URL_PATH));
-        assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(server, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(server, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals("http", AttributeKeysStability.get(server, URL_SCHEME));
+        Assertions.assertEquals(url.getPath() + "span/current", AttributeKeysStability.get(server, URL_PATH));
+        Assertions.assertEquals(url.getHost(), AttributeKeysStability.get(server, SERVER_ADDRESS));
         assertEquals("tck.current.value", server.getAttributes().get(stringKey("tck.current.key")));
 
         SpanData client = spans.get(1);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(client, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span/current", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(client, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span/current", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(client.getTraceId(), server.getTraceId());
         assertEquals(server.getParentSpanId(), client.getSpanId());
@@ -282,18 +284,18 @@ class RestClientSpanTest {
         SpanData server = spans.get(1);
         assertEquals(SERVER, server.getKind());
         assertEquals(HttpMethod.GET + " " + url.getPath() + "span/new", server.getName());
-        assertEquals(HTTP_OK, get(server, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(server, HTTP_REQUEST_METHOD));
-        assertEquals("http", get(server, URL_SCHEME));
-        assertEquals(url.getPath() + "span/new", get(server, URL_PATH));
-        assertEquals(url.getHost(), get(server, SERVER_ADDRESS));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(server, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(server, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals("http", AttributeKeysStability.get(server, URL_SCHEME));
+        Assertions.assertEquals(url.getPath() + "span/new", AttributeKeysStability.get(server, URL_PATH));
+        Assertions.assertEquals(url.getHost(), AttributeKeysStability.get(server, SERVER_ADDRESS));
 
         SpanData client = spans.get(2);
         assertEquals(CLIENT, client.getKind());
         assertEquals("GET", client.getName());
-        assertEquals(HTTP_OK, get(client, HTTP_RESPONSE_STATUS_CODE));
-        assertEquals(HttpMethod.GET, get(client, HTTP_REQUEST_METHOD));
-        assertEquals(url.toString() + "span/new", get(client, URL_FULL));
+        Assertions.assertEquals(HTTP_OK, AttributeKeysStability.get(client, HTTP_RESPONSE_STATUS_CODE));
+        Assertions.assertEquals(HttpMethod.GET, AttributeKeysStability.get(client, HTTP_REQUEST_METHOD));
+        Assertions.assertEquals(url.toString() + "span/new", AttributeKeysStability.get(client, URL_FULL));
 
         assertEquals(client.getTraceId(), internal.getTraceId());
         assertEquals(client.getTraceId(), server.getTraceId());
