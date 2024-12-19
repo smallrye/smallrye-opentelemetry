@@ -17,7 +17,7 @@
     <properties>
         <version.opentelemetry>1.42.1</version.opentelemetry>
         <version.opentelemetry.instrumentation>2.8.0</version.opentelemetry.instrumentation>
-        <version.opentelemetry.semconv>1.25.0-alpha</version.opentelemetry.semconv>
+        <version.opentelemetry.semconv>1.29.0-alpha</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.0.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
         <version.mutiny>2.7.0</version.mutiny>
