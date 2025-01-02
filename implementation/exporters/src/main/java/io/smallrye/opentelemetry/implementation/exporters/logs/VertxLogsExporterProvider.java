@@ -26,7 +26,7 @@ public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<Log
             final String protocol = getProtocol(config, getSignalType());
 
             if (PROTOCOL_GRPC.equals(protocol)) {
-                return new VertxGrpcLogsExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
+                return new VertxGrpcLogsExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_LOG_SERVICE_NAME));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
                 return new VertxHttpLogsExporter(createHttpExporter(config, VertxHttpSender.LOGS_PATH));
             } else {
