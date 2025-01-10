@@ -1,6 +1,7 @@
 package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
+import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -103,7 +104,7 @@ public class OpenTelemetryProducer {
     @Produces
     @Singleton
     public Tracer getTracer() {
-        return CDI.current().select(OpenTelemetry.class).get().getTracer(INSTRUMENTATION_NAME);
+        return CDI.current().select(OpenTelemetry.class).get().getTracer(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
     }
 
     @Produces
