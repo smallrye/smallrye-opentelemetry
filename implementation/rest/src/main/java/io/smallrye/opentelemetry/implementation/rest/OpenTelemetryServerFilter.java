@@ -62,7 +62,7 @@ public class OpenTelemetryServerFilter implements ContainerRequestFilter, Contai
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpServerAttributesExtractor.create(serverAttributesGetter))
-                .addOperationMetrics(HttpServerMetrics.get())// FIXME how to filter out excluded endpoints?
+                .addOperationMetrics(HttpServerMetrics.get())
                 .addOperationMetrics(HttpServerExperimentalMetrics.get())
                 .buildServerInstrumenter(new ContainerRequestContextTextMapGetter());
     }
