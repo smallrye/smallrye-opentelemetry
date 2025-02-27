@@ -24,7 +24,7 @@
         <version.resteasy>6.2.9.Final</version.resteasy>
         <version.smallrye.config>3.8.3</version.smallrye.config>
 
-        <version.opentelemetry.agent>2.5.0</version.opentelemetry.agent>
+        <version.opentelemetry.agent>2.13.2</version.opentelemetry.agent>
         <version.opentelemetry.exporter>1.39.0</version.opentelemetry.exporter>
     </properties>
 
