@@ -118,5 +118,10 @@ public class WithSpanInterceptorBean implements Interceptor<WithSpanInterceptor>
         public SpanKind kind() {
             return null;
         }
+
+        @Override
+        public boolean inheritContext() {
+            return true;
+        }
     }
 }
