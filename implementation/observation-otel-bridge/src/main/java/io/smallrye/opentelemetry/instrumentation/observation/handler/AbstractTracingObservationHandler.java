@@ -1,8 +1,8 @@
 package io.smallrye.opentelemetry.instrumentation.observation.handler;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 
 import java.net.URI;
 import java.util.logging.Logger;
@@ -130,8 +130,8 @@ abstract class AbstractTracingObservationHandler<T extends Observation.Context> 
         if (remoteServiceAddress != null) {
             try {
                 URI uri = URI.create(remoteServiceAddress);
-                builder = builder.setAttribute(NET_SOCK_PEER_ADDR, uri.getHost());
-                builder = builder.setAttribute(NET_SOCK_PEER_PORT, Long.valueOf(uri.getPort()));
+                builder = builder.setAttribute(NETWORK_PEER_ADDRESS, uri.getHost());
+                builder = builder.setAttribute(NETWORK_PEER_PORT, Long.valueOf(uri.getPort()));
             } catch (Exception ex) {
                 logger.warning("Exception [{}], occurred while trying to parse" +
                         " the uri [{}] to host and port." + remoteServiceAddress +
