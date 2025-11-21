@@ -39,7 +39,7 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
-import io.smallrye.opentelemetry.api.OpenTelemetryHandler;
+import io.smallrye.opentelemetry.api.OpenTelemetryLogHandler;
 
 @Singleton
 public class OpenTelemetryProducer {
@@ -89,11 +89,11 @@ public class OpenTelemetryProducer {
         closeables.addAll(Threads.registerObservers(openTelemetry));
 
         if (System.getSecurityManager() == null) {
-            OpenTelemetryHandler.install(openTelemetry);
+            OpenTelemetryLogHandler.install(openTelemetry);
         } else {
             // Requires LoggingPermission
             AccessController.doPrivileged((PrivilegedAction<List<AutoCloseable>>) () -> {
-                OpenTelemetryHandler.install(openTelemetry);
+                OpenTelemetryLogHandler.install(openTelemetry);
                 return null;
             });
         }

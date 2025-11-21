@@ -19,6 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.Data;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -75,6 +76,11 @@ public class InMemoryExporter {
     public MetricData getFinishedHistogramItem(final String name, final String route, final int count) {
         await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).route(route).count()));
         return histogram(name).route(route).get(count);
+    }
+
+    public List<LogRecordData> getFinishedLogRecordItems(final int count) {
+        assertSpanCount(count);
+        return logRecordExporter.getFinishedLogRecordItems();
     }
 
     public void reset() {
