@@ -25,7 +25,7 @@
 
         <version.org.jboss.logging>3.6.1.Final</version.org.jboss.logging>
         <version.weld.core>5.1.6.Final</version.weld.core>
-        <version.resteasy>6.2.12.Final</version.resteasy>
+        <version.resteasy>7.0.0.Final</version.resteasy>
         <version.smallrye.config>3.13.4</version.smallrye.config>
 
         <version.opentelemetry.agent>2.15.0</version.opentelemetry.agent>
