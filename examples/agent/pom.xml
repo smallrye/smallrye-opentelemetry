@@ -20,7 +20,7 @@
         <maven.compiler.source>17</maven.compiler.source>
 
         <version.plugin.war>3.4.0</version.plugin.war>
-        <version.plugin.dependency>3.8.1</version.plugin.dependency>
+        <version.plugin.dependency>3.9.0</version.plugin.dependency>
         <version.plugin.jetty>12.0.26</version.plugin.jetty>
 
         <version.org.jboss.logging>3.6.1.Final</version.org.jboss.logging>
