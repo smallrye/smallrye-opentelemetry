@@ -8,8 +8,12 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -78,9 +82,27 @@ public class InMemoryExporter {
         return histogram(name).route(route).get(count);
     }
 
-    public List<LogRecordData> getFinishedLogRecordItems(final int count) {
-        assertSpanCount(count);
-        return logRecordExporter.getFinishedLogRecordItems();
+    /*
+     * Return a list of all finished logs, irrespective of the number of log entries actually recorded
+     */
+    public List<LogRecordData> assertFinishedLogRecordItems(Consumer<List<LogRecordData>> assertionConsumer,
+            Duration timeout) throws InterruptedException {
+        Instant endTime = Instant.now().plus(timeout);
+        AssertionError lastAssertionError = null;
+        List<LogRecordData> logEntries = logRecordExporter.getFinishedLogRecordItems();
+
+        while (Instant.now().isBefore(endTime)) {
+            try {
+                assertionConsumer.accept(logEntries);
+                return logEntries;
+            } catch (AssertionError assertionError) {
+                lastAssertionError = assertionError;
+                Thread.sleep(1000);
+            }
+            logEntries = logRecordExporter.getFinishedLogRecordItems();
+        }
+
+        throw Objects.requireNonNullElseGet(lastAssertionError, AssertionError::new);
     }
 
     public void reset() {
