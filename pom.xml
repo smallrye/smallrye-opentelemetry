@@ -3,7 +3,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-parent</artifactId>
-        <version>47</version>
+        <version>48</version>
     </parent>
 
     <groupId>io.smallrye.opentelemetry</groupId>
@@ -15,9 +15,6 @@
     <url>https://smallrye.io</url>
 
     <properties>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.source>17</maven.compiler.source>
-
         <version.opentelemetry>1.49.0</version.opentelemetry>
         <version.opentelemetry.instrumentation>2.15.0</version.opentelemetry.instrumentation>
         <version.opentelemetry.semconv>1.32.0</version.opentelemetry.semconv>
