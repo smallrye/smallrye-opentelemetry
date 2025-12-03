@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.logging.Formatter;
@@ -26,11 +27,10 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 
 public class OpenTelemetryLogHandler extends Handler {
-    private final String loggerClassName;
-    private static final AttributeKey<String> NAMESPACE_ATTRIBUTE_KEY = AttributeKey.stringKey("log.logger.namespace");
     // See: https://github.com/open-telemetry/semantic-conventions/issues/1550
     public static final AttributeKey<String> BRIDGE_NAME = AttributeKey.stringKey("bridge.name");
-
+    private static final AttributeKey<String> NAMESPACE_ATTRIBUTE_KEY = AttributeKey.stringKey("log.logger.namespace");
+    private final String loggerClassName;
     private final OpenTelemetry openTelemetry;
 
     public OpenTelemetryLogHandler(final OpenTelemetry openTelemetry, final Logger logger) {
@@ -39,8 +39,11 @@ public class OpenTelemetryLogHandler extends Handler {
     }
 
     public static void install(final OpenTelemetry openTelemetry) {
-        LogManager.getLogManager().getLogger("").addHandler(new OpenTelemetryLogHandler(openTelemetry,
-                openTelemetry.getLogsBridge().loggerBuilder(OpenTelemetryConfig.INSTRUMENTATION_NAME).build()));
+        java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+        if (Arrays.stream(rootLogger.getHandlers()).noneMatch(h -> h instanceof OpenTelemetryLogHandler)) {
+            rootLogger.addHandler(new OpenTelemetryLogHandler(openTelemetry,
+                    openTelemetry.getLogsBridge().loggerBuilder(OpenTelemetryConfig.INSTRUMENTATION_NAME).build()));
+        }
     }
 
     @Override
