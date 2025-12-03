@@ -30,19 +30,16 @@ public class OpenTelemetryLogHandler extends Handler {
     // See: https://github.com/open-telemetry/semantic-conventions/issues/1550
     public static final AttributeKey<String> BRIDGE_NAME = AttributeKey.stringKey("bridge.name");
     private static final AttributeKey<String> NAMESPACE_ATTRIBUTE_KEY = AttributeKey.stringKey("log.logger.namespace");
-    private final String loggerClassName;
     private final OpenTelemetry openTelemetry;
 
-    public OpenTelemetryLogHandler(final OpenTelemetry openTelemetry, final Logger logger) {
+    public OpenTelemetryLogHandler(final OpenTelemetry openTelemetry) {
         this.openTelemetry = openTelemetry;
-        this.loggerClassName = logger.getClass().getName();
     }
 
-    public static void install(final OpenTelemetry openTelemetry) {
+    public static synchronized void install(final OpenTelemetry openTelemetry) {
         java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
         if (Arrays.stream(rootLogger.getHandlers()).noneMatch(h -> h instanceof OpenTelemetryLogHandler)) {
-            rootLogger.addHandler(new OpenTelemetryLogHandler(openTelemetry,
-                    openTelemetry.getLogsBridge().loggerBuilder(OpenTelemetryConfig.INSTRUMENTATION_NAME).build()));
+            rootLogger.addHandler(new OpenTelemetryLogHandler(openTelemetry));
         }
     }
 
@@ -68,7 +65,7 @@ public class OpenTelemetryLogHandler extends Handler {
 
             final AttributesBuilder attributes = Attributes.builder()
                     .put(CODE_FUNCTION_NAME, record.getSourceClassName() + "." + record.getSourceMethodName())
-                    .put(NAMESPACE_ATTRIBUTE_KEY, loggerClassName)
+                    .put(NAMESPACE_ATTRIBUTE_KEY, record.getLoggerName())
                     .put(BRIDGE_NAME, record.getLoggerName());
 
             if (record.getThrown() != null) {
@@ -122,7 +119,7 @@ public class OpenTelemetryLogHandler extends Handler {
         final ResourceBundle bundle = record.getResourceBundle();
         String msg = record.getMessage();
         if (msg == null) {
-            return null;
+            return "";
         }
         if (bundle != null) {
             try {
