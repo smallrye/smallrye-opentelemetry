@@ -20,10 +20,10 @@
         <version.opentelemetry.semconv>1.32.0</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
-        <version.mutiny>3.1.0</version.mutiny>
+        <version.mutiny>3.1.1</version.mutiny>
         <version.smallrye.common>2.13.9</version.smallrye.common>
         <version.resteasy>6.2.12.Final</version.resteasy>
-        <version.vertx.grpc>5.0.7</version.vertx.grpc>
+        <version.vertx.grpc>5.0.8</version.vertx.grpc>
         <micrometer.version>1.15.4</micrometer.version>
 
         <!-- Test -->
