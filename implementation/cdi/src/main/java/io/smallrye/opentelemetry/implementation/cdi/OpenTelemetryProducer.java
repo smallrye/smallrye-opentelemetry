@@ -73,14 +73,14 @@ public class OpenTelemetryProducer {
 
         if (System.getSecurityManager() == null) {
             cpuObservers = Cpu.registerObservers(openTelemetry);
-            garbageCollectorObservers = GarbageCollector.registerObservers(openTelemetry);
+            garbageCollectorObservers = GarbageCollector.registerObservers(openTelemetry, false);
         } else {
             // Requires FilePermission/RuntimePermission/ManagementPermission
             cpuObservers = AccessController.doPrivileged(
                     (PrivilegedAction<List<AutoCloseable>>) () -> Cpu.registerObservers(openTelemetry));
             // Requires FilePermission/RuntimePermission
             garbageCollectorObservers = AccessController.doPrivileged(
-                    (PrivilegedAction<List<AutoCloseable>>) () -> GarbageCollector.registerObservers(openTelemetry));
+                    (PrivilegedAction<List<AutoCloseable>>) () -> GarbageCollector.registerObservers(openTelemetry, false));
         }
 
         closeables.addAll(cpuObservers);

@@ -97,10 +97,8 @@ public class RestMetricsTest {
     @Test
     void metrics() {
         given().get("/sub/12").then().statusCode(HTTP_OK);
-        assertNotNull(exporter.getFinishedMetricItem("queueSize"));
         assertNotNull(exporter.getFinishedMetricItem("http.server.request.duration"));
         assertNotNull(exporter.getFinishedMetricItem("http.server.active_requests"));
-        assertNotNull(exporter.getFinishedMetricItem("processedSpans"));
     }
 
     @Path("/")

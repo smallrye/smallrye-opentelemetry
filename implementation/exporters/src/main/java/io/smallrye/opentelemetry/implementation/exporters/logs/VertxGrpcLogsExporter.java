@@ -9,9 +9,9 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 
 public class VertxGrpcLogsExporter implements LogRecordExporter {
-    private final GrpcExporter<LogsRequestMarshaler> delegate;
+    private final GrpcExporter delegate;
 
-    public VertxGrpcLogsExporter(GrpcExporter<LogsRequestMarshaler> delegate) {
+    public VertxGrpcLogsExporter(GrpcExporter delegate) {
         this.delegate = delegate;
     }
 

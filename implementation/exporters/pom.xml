@@ -27,6 +27,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-common</artifactId>
         </dependency>

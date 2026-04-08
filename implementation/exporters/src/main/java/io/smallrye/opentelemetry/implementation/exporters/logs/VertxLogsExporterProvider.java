@@ -2,19 +2,16 @@ package io.smallrye.opentelemetry.implementation.exporters.logs;
 
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_GRPC;
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_HTTP_PROTOBUF;
-import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.getProtocol;
 
-import java.net.URISyntaxException;
-
-import io.opentelemetry.exporter.internal.otlp.logs.LogsRequestMarshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
+import io.opentelemetry.sdk.common.internal.StandardComponentId;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.smallrye.opentelemetry.implementation.exporters.AbstractVertxExporterProvider;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
 
-public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<LogsRequestMarshaler>
+public class VertxLogsExporterProvider extends AbstractVertxExporterProvider
         implements ConfigurableLogRecordExporterProvider {
     public VertxLogsExporterProvider() {
         super("log", "otlp");
@@ -23,16 +20,20 @@ public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<Log
     @Override
     public LogRecordExporter createExporter(ConfigProperties config) {
         try {
-            final String protocol = getProtocol(config, getSignalType());
+            final String protocol = getConfiguration().getProtocol();
 
             if (PROTOCOL_GRPC.equals(protocol)) {
-                return new VertxGrpcLogsExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_LOG_SERVICE_NAME));
+                return new VertxGrpcLogsExporter(createGrpcExporter(
+                        VertxGrpcSender.GRPC_LOG_SERVICE_NAME,
+                        StandardComponentId.ExporterType.OTLP_GRPC_LOG_EXPORTER));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
-                return new VertxHttpLogsExporter(createHttpExporter(config, VertxHttpSender.LOGS_PATH));
+                return new VertxHttpLogsExporter(createHttpExporter(
+                        VertxHttpSender.LOGS_PATH,
+                        StandardComponentId.ExporterType.OTLP_HTTP_LOG_EXPORTER));
             } else {
                 throw buildUnsupportedProtocolException(protocol);
             }
-        } catch (IllegalArgumentException | URISyntaxException iae) {
+        } catch (IllegalArgumentException iae) {
             throw new IllegalStateException("Unable to install OTLP Exporter", iae);
         }
     }

@@ -2,15 +2,11 @@ package io.smallrye.opentelemetry.implementation.exporters.metrics;
 
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_GRPC;
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_HTTP_PROTOBUF;
-import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.getConfig;
-import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil.getProtocol;
 
-import java.net.URISyntaxException;
-
-import io.opentelemetry.exporter.internal.otlp.metrics.MetricsRequestMarshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.metrics.ConfigurableMetricExporterProvider;
+import io.opentelemetry.sdk.common.internal.StandardComponentId;
 import io.opentelemetry.sdk.metrics.Aggregation;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
@@ -21,7 +17,7 @@ import io.smallrye.opentelemetry.implementation.exporters.AbstractVertxExporterP
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
 
-public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<MetricsRequestMarshaler>
+public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider
         implements ConfigurableMetricExporterProvider {
 
     public VertxMetricsExporterProvider() {
@@ -31,29 +27,32 @@ public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<
     @Override
     public MetricExporter createExporter(ConfigProperties config) {
         try {
-            final String protocol = getProtocol(config, getSignalType());
+            final String protocol = getConfiguration().getProtocol();
 
             if (PROTOCOL_GRPC.equals(protocol)) {
                 return new VertxGrpcMetricExporter(
-                        createGrpcExporter(config, VertxGrpcSender.GRPC_METRIC_SERVICE_NAME),
-                        aggregationTemporalityResolver(config),
-                        aggregationResolver(config));
+                        createGrpcExporter(
+                                VertxGrpcSender.GRPC_METRIC_SERVICE_NAME,
+                                StandardComponentId.ExporterType.OTLP_GRPC_METRIC_EXPORTER),
+                        aggregationTemporalityResolver(),
+                        aggregationResolver());
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
                 return new VertxHttpMetricsExporter(
-                        createHttpExporter(config, VertxHttpSender.METRICS_PATH),
-                        aggregationTemporalityResolver(config),
-                        aggregationResolver(config));
+                        createHttpExporter(
+                                VertxHttpSender.METRICS_PATH,
+                                StandardComponentId.ExporterType.OTLP_HTTP_METRIC_EXPORTER),
+                        aggregationTemporalityResolver(),
+                        aggregationResolver());
             } else {
                 throw buildUnsupportedProtocolException(protocol);
             }
-        } catch (IllegalArgumentException | URISyntaxException iae) {
+        } catch (IllegalArgumentException iae) {
             throw new IllegalStateException("Unable to install OTLP Exporter", iae);
         }
     }
 
-    private DefaultAggregationSelector aggregationResolver(ConfigProperties config) {
-        String defaultHistogramAggregation = getConfig(config, "explicit_bucket_histogram",
-                "otel.exporter.otlp.metrics.default.histogram.aggregation");
+    private DefaultAggregationSelector aggregationResolver() {
+        String defaultHistogramAggregation = getConfiguration().getDefaultHistogramAggregation();
 
         DefaultAggregationSelector aggregationSelector;
         if (defaultHistogramAggregation.equals("explicit_bucket_histogram")) {
@@ -70,9 +69,8 @@ public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<
         return aggregationSelector;
     }
 
-    private AggregationTemporalitySelector aggregationTemporalityResolver(ConfigProperties config) {
-        String temporalityValue = getConfig(config, "cumulative",
-                "otel.exporter.otlp.metrics.temporality.preference");
+    private AggregationTemporalitySelector aggregationTemporalityResolver() {
+        String temporalityValue = getConfiguration().getTemporalityPreference();
         if (temporalityValue.equals("cumulative")) {
             return AggregationTemporalitySelector.alwaysCumulative();
         } else if (temporalityValue.equals("delta")) {

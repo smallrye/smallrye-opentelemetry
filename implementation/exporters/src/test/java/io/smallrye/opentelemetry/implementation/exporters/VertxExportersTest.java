@@ -1,9 +1,12 @@
 package io.smallrye.opentelemetry.implementation.exporters;
 
+import static io.smallrye.opentelemetry.implementation.exporters.Constants.MIMETYPE_PROTOBUF;
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.OTEL_EXPORTER_OTLP_ENDPOINT;
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.OTEL_EXPORTER_OTLP_TRACES_PROTOCOL;
 import static io.smallrye.opentelemetry.implementation.exporters.Constants.PROTOCOL_GRPC;
 
+import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterAll;
@@ -13,18 +16,29 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.DockerClientFactory;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
+import io.opentelemetry.exporter.internal.grpc.GrpcExporter;
+import io.opentelemetry.exporter.internal.http.HttpExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.common.InternalTelemetryVersion;
+import io.opentelemetry.sdk.common.internal.ComponentId;
+import io.opentelemetry.sdk.common.internal.StandardComponentId;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
+import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
+import io.smallrye.opentelemetry.implementation.exporters.traces.VertxGrpcSpanExporter;
+import io.smallrye.opentelemetry.implementation.exporters.traces.VertxHttpSpanExporter;
 
 /**
- * This test will exercise the configuration and use of the Vertx-based exporters defined in this module. The test will
- * spin up a testcontainers-based OpenTelemetry Collector, configured to receive trace data via gRPC or http/protobuf.
- * For each protocol, there will be a test that will create the OpenTelemetry instance with the appropriate configuration,
- * then create a tracer, a span, and one event. Finally, rather than configuring the Collector to export the traces to
- * an external aggregation system, the test will simply pull the logs from the container and verify that the trace was
- * received and logged correctly.
+ * This test exercises the Vertx-based exporters directly, bypassing OTel autoconfiguration.
+ * It creates exporters using {@link OtelConfigPropertiesConfiguration} and sends trace data
+ * to a testcontainers-based OpenTelemetry Collector.
  */
 public class VertxExportersTest {
     private static OpenTelemetryCollectorContainer otelCollector;
@@ -35,7 +49,6 @@ public class VertxExportersTest {
 
         if (otelCollector == null) {
             otelCollector = new OpenTelemetryCollectorContainer();
-
             otelCollector.start();
         }
     }
@@ -61,40 +74,75 @@ public class VertxExportersTest {
     private void testExporterByProtocol(String protocol) {
         String endpoint = PROTOCOL_GRPC.equals(protocol) ? otelCollector.getOtlpGrpcEndpoint()
                 : otelCollector.getOtlpHttpEndpoint();
-        Map<String, String> config = Map.of(
-                "otel.traces.exporter", "otlp",
+
+        ConfigProperties configProps = DefaultConfigProperties.createFromMap(Map.of(
                 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, protocol,
-                "otel.bsp.schedule.delay", "1",
-                OTEL_EXPORTER_OTLP_ENDPOINT, endpoint);
+                OTEL_EXPORTER_OTLP_ENDPOINT, endpoint));
+
+        ExporterConfiguration configuration = new OtelConfigPropertiesConfiguration(configProps, "span");
+
+        SpanExporter spanExporter;
+        URI baseUri = configuration.getEndpoint();
+
+        if (PROTOCOL_GRPC.equals(protocol)) {
+            GrpcExporter grpcExporter = new GrpcExporter(
+                    new VertxGrpcSender(VertxGrpcSender.GRPC_TRACE_SERVICE_NAME, configuration),
+                    InternalTelemetryVersion.LATEST,
+                    ComponentId.generateLazy(StandardComponentId.ExporterType.OTLP_GRPC_SPAN_EXPORTER),
+                    MeterProvider::noop,
+                    baseUri);
+            spanExporter = new VertxGrpcSpanExporter(grpcExporter);
+        } else {
+            HttpExporter httpExporter = new HttpExporter(
+                    ComponentId.generateLazy(StandardComponentId.ExporterType.OTLP_HTTP_SPAN_EXPORTER),
+                    new VertxHttpSender(VertxHttpSender.TRACES_PATH, MIMETYPE_PROTOBUF, configuration),
+                    MeterProvider::noop,
+                    InternalTelemetryVersion.LATEST,
+                    baseUri,
+                    false);
+            spanExporter = new VertxHttpSpanExporter(httpExporter);
+        }
+
         final String tracerName = "smallrye.opentelemetry.test." + protocol;
         final String spanName = protocol + " test trace";
         final String eventName = protocol + " test event";
 
-        OpenTelemetry openTelemetry = new OpenTelemetryBuilderGetter().apply(() -> config).build().getOpenTelemetrySdk();
-        Tracer tracer = openTelemetry.getTracer(tracerName);
-        Span span = tracer.spanBuilder(spanName).startSpan();
-        span.addEvent(eventName);
-        span.end();
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+                .addSpanProcessor(BatchSpanProcessor.builder(spanExporter)
+                        .setScheduleDelay(Duration.ofMillis(1))
+                        .build())
+                .build();
+        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+                .setTracerProvider(tracerProvider)
+                .build();
 
-        boolean found = false;
-        int count = 0;
-        while (!found && count < 10) {
-            String logs = otelCollector.getLogs();
-            found = logs.contains(tracerName) &&
-                    logs.contains(spanName) &&
-                    logs.contains(eventName);
-            if (!found) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+        try {
+            Tracer tracer = openTelemetry.getTracer(tracerName);
+            Span span = tracer.spanBuilder(spanName).startSpan();
+            span.addEvent(eventName);
+            span.end();
+
+            boolean found = false;
+            int count = 0;
+            while (!found && count < 10) {
+                String logs = otelCollector.getLogs();
+                found = logs.contains(tracerName) &&
+                        logs.contains(spanName) &&
+                        logs.contains(eventName);
+                if (!found) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    count++;
                 }
-                count++;
             }
 
+            Assertions.assertTrue(found, "Trace data not found.");
+        } finally {
+            tracerProvider.shutdown();
         }
-
-        Assertions.assertTrue(found, "Trace data not found.");
     }
 
     private static boolean isDockerAvailable() {
