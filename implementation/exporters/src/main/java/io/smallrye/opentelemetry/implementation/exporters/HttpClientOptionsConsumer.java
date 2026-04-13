@@ -19,9 +19,7 @@ import java.util.function.Consumer;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.core.net.ProxyOptions;
+import io.vertx.core.net.*;
 
 class HttpClientOptionsConsumer implements Consumer<HttpClientOptions> {
     private final ConfigProperties config;
@@ -133,9 +131,7 @@ class HttpClientOptionsConsumer implements Consumer<HttpClientOptions> {
                 String.format(OTEL_EXPORTER_OTLP_SIGNAL_CERTIFICATE, signalType), OTEL_EXPORTER_OTLP_CERTIFICATE);
 
         if (!certificate.isEmpty()) {
-            var pemTrustOptions = new PemTrustOptions()
-                    .addCertPath(certificate);
-            options.setPemTrustOptions(pemTrustOptions);
+            options.setKeyCertOptions(new PemKeyCertOptions().addCertPath(certificate));
         }
     }
 }
