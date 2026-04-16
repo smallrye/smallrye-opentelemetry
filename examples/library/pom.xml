@@ -19,7 +19,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
 
-        <version.plugin.war>3.4.0</version.plugin.war>
+        <version.plugin.war>3.5.1</version.plugin.war>
         <version.plugin.dependency>3.9.0</version.plugin.dependency>
         <version.plugin.jetty>12.0.26</version.plugin.jetty>
 
