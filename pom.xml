@@ -15,15 +15,15 @@
     <url>https://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.49.0</version.opentelemetry>
-        <version.opentelemetry.instrumentation>2.15.0</version.opentelemetry.instrumentation>
+        <version.opentelemetry>1.60.1</version.opentelemetry>
+        <version.opentelemetry.instrumentation>2.26.1</version.opentelemetry.instrumentation>
         <version.opentelemetry.semconv>1.32.0</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
         <version.mutiny>3.0.0</version.mutiny>
         <version.smallrye.common>2.13.9</version.smallrye.common>
         <version.resteasy>6.2.12.Final</version.resteasy>
-        <version.vertx.grpc>4.5.15</version.vertx.grpc>
+        <version.vertx.grpc>4.5.26</version.vertx.grpc>
         <micrometer.version>1.15.4</micrometer.version>
 
         <!-- Test -->
@@ -139,6 +139,11 @@
             </dependency>
             <dependency>
                 <groupId>io.smallrye.opentelemetry</groupId>
+                <artifactId>smallrye-opentelemetry-senders</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.opentelemetry</groupId>
                 <artifactId>smallrye-opentelemetry-exporters</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -191,6 +196,7 @@
         <module>api</module>
         <module>implementation/propagation</module>
         <module>implementation/config</module>
+        <module>implementation/senders</module>
         <module>implementation/exporters</module>
         <module>implementation/cdi</module>
         <module>implementation/rest</module>

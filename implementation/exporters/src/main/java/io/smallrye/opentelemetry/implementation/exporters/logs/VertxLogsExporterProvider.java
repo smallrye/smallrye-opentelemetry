@@ -6,15 +6,14 @@ import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUti
 
 import java.net.URISyntaxException;
 
-import io.opentelemetry.exporter.internal.otlp.logs.LogsRequestMarshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.smallrye.opentelemetry.implementation.exporters.AbstractVertxExporterProvider;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
+import io.smallrye.opentelemetry.senders.VertxGrpcSender;
+import io.smallrye.opentelemetry.senders.VertxHttpSender;
 
-public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<LogsRequestMarshaler>
+public class VertxLogsExporterProvider extends AbstractVertxExporterProvider
         implements ConfigurableLogRecordExporterProvider {
     public VertxLogsExporterProvider() {
         super("log", "otlp");
@@ -26,9 +25,9 @@ public class VertxLogsExporterProvider extends AbstractVertxExporterProvider<Log
             final String protocol = getProtocol(config, getSignalType());
 
             if (PROTOCOL_GRPC.equals(protocol)) {
-                return new VertxGrpcLogsExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_LOG_SERVICE_NAME));
+                return new VertxGrpcLogsExporter(createGrpcSender(config, VertxGrpcSender.GRPC_LOG_SERVICE_NAME));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
-                return new VertxHttpLogsExporter(createHttpExporter(config, VertxHttpSender.LOGS_PATH));
+                return new VertxHttpLogsExporter(createHttpSender(config, VertxHttpSender.LOGS_PATH));
             } else {
                 throw buildUnsupportedProtocolException(protocol);
             }

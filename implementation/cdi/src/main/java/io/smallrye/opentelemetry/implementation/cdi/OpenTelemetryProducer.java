@@ -28,11 +28,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
@@ -66,27 +62,15 @@ public class OpenTelemetryProducer {
 
         OpenTelemetry openTelemetry = otelSdk.getOpenTelemetrySdk();
 
-        closeables.addAll(Classes.registerObservers(openTelemetry));
-
-        List<AutoCloseable> cpuObservers;
-        List<AutoCloseable> garbageCollectorObservers;
-
+        RuntimeMetrics runtimeMetrics;
         if (System.getSecurityManager() == null) {
-            cpuObservers = Cpu.registerObservers(openTelemetry);
-            garbageCollectorObservers = GarbageCollector.registerObservers(openTelemetry);
+            runtimeMetrics = RuntimeMetrics.create(openTelemetry);
         } else {
             // Requires FilePermission/RuntimePermission/ManagementPermission
-            cpuObservers = AccessController.doPrivileged(
-                    (PrivilegedAction<List<AutoCloseable>>) () -> Cpu.registerObservers(openTelemetry));
-            // Requires FilePermission/RuntimePermission
-            garbageCollectorObservers = AccessController.doPrivileged(
-                    (PrivilegedAction<List<AutoCloseable>>) () -> GarbageCollector.registerObservers(openTelemetry));
+            runtimeMetrics = AccessController.doPrivileged(
+                    (PrivilegedAction<RuntimeMetrics>) () -> RuntimeMetrics.create(openTelemetry));
         }
-
-        closeables.addAll(cpuObservers);
-        closeables.addAll(garbageCollectorObservers);
-        closeables.addAll(MemoryPools.registerObservers(openTelemetry));
-        closeables.addAll(Threads.registerObservers(openTelemetry));
+        closeables.add(runtimeMetrics);
 
         if (System.getSecurityManager() == null) {
             OpenTelemetryLogHandler.install(openTelemetry);
