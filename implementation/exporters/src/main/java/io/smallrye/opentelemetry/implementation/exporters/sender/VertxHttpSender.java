@@ -210,12 +210,14 @@ public final class VertxHttpSender implements HttpSender {
 
         @Override
         public void handle(HttpClientRequest request) {
-            request.response().onComplete(new Handler<>() {
+
+            HttpClientRequest clientRequest = request.response(new Handler<>() {
                 @Override
                 public void handle(AsyncResult<HttpClientResponse> callResult) {
                     if (callResult.succeeded()) {
                         HttpClientResponse clientResponse = callResult.result();
-                        clientResponse.body().onComplete(new Handler<>() {
+                        Throwable cause = callResult.cause();
+                        clientResponse.body(new Handler<>() {
                             @Override
                             public void handle(AsyncResult<Buffer> bodyResult) {
                                 if (bodyResult.succeeded()) {
@@ -265,7 +267,7 @@ public final class VertxHttpSender implements HttpSender {
                             // retry
                             initiateSend(client, requestURI,
                                     MAX_ATTEMPTS - attemptNumber,
-                                    ClientRequestSuccessHandler.this.newAttempt(),
+                                    newAttempt(),
                                     onError,
                                     isShutdown);
                         } else {
@@ -273,14 +275,13 @@ public final class VertxHttpSender implements HttpSender {
                         }
                     }
                 }
-            });
-
-            request.putHeader("Content-Type", contentType);
+            })
+                    .putHeader("Content-Type", contentType);
 
             Buffer buffer = Buffer.buffer(contentLength);
             OutputStream os = new BufferOutputStream(buffer);
             if (compressionEnabled) {
-                request.putHeader("Content-Encoding", "gzip");
+                clientRequest.putHeader("Content-Encoding", "gzip");
                 try (var gzos = new GZIPOutputStream(os)) {
                     marshaler.writeBinaryTo(gzos);
                 } catch (IOException e) {
@@ -296,11 +297,11 @@ public final class VertxHttpSender implements HttpSender {
 
             if (!headers.isEmpty()) {
                 for (var entry : headers.entrySet()) {
-                    request.putHeader(entry.getKey(), entry.getValue());
+                    clientRequest.putHeader(entry.getKey(), entry.getValue());
                 }
             }
 
-            request.send(buffer);
+            clientRequest.send(buffer);
         }
 
         public ClientRequestSuccessHandler newAttempt() {
