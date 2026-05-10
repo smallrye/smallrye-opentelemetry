@@ -11,7 +11,7 @@
 
     <groupId>io.smallrye.opentelemetry.examples</groupId>
     <artifactId>agent</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0-RC1</version>
     <packaging>war</packaging>
     <name>SmallRye OpenTelemetry Examples: Agent</name>
 
@@ -146,4 +146,8 @@
             <version>${version.smallrye.config}</version>
         </dependency>
     </dependencies>
+
+  <scm>
+    <tag>3.0.0-RC1</tag>
+  </scm>
 </project>
