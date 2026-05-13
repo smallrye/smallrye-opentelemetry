@@ -1,8 +1,8 @@
 package io.smallrye.opentelemetry.instrumentation.observation.handler;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.smallrye.opentelemetry.instrumentation.observation.handler.HandlerUtil.HIGH_CARD_ATTRIBUTES;
 import static io.smallrye.opentelemetry.instrumentation.observation.handler.HandlerUtil.LOW_CARD_ATTRIBUTES;
 
