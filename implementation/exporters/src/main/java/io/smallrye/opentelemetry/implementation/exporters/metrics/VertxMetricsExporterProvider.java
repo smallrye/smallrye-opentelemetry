@@ -7,7 +7,6 @@ import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUti
 
 import java.net.URISyntaxException;
 
-import io.opentelemetry.exporter.internal.otlp.metrics.MetricsRequestMarshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.metrics.ConfigurableMetricExporterProvider;
@@ -18,10 +17,10 @@ import io.opentelemetry.sdk.metrics.export.DefaultAggregationSelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.internal.aggregator.AggregationUtil;
 import io.smallrye.opentelemetry.implementation.exporters.AbstractVertxExporterProvider;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
+import io.smallrye.opentelemetry.senders.VertxGrpcSender;
+import io.smallrye.opentelemetry.senders.VertxHttpSender;
 
-public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<MetricsRequestMarshaler>
+public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider
         implements ConfigurableMetricExporterProvider {
 
     public VertxMetricsExporterProvider() {
@@ -35,12 +34,12 @@ public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<
 
             if (PROTOCOL_GRPC.equals(protocol)) {
                 return new VertxGrpcMetricExporter(
-                        createGrpcExporter(config, VertxGrpcSender.GRPC_METRIC_SERVICE_NAME),
+                        createGrpcSender(config, VertxGrpcSender.GRPC_METRIC_SERVICE_NAME),
                         aggregationTemporalityResolver(config),
                         aggregationResolver(config));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
                 return new VertxHttpMetricsExporter(
-                        createHttpExporter(config, VertxHttpSender.METRICS_PATH),
+                        createHttpSender(config, VertxHttpSender.METRICS_PATH),
                         aggregationTemporalityResolver(config),
                         aggregationResolver(config));
             } else {

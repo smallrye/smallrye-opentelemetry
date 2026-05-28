@@ -1,4 +1,4 @@
-package io.smallrye.opentelemetry.implementation.exporters;
+package io.smallrye.opentelemetry.senders.common;
 
 import java.io.IOException;
 import java.io.OutputStream;

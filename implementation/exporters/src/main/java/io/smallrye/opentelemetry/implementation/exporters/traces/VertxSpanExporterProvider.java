@@ -6,15 +6,14 @@ import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUti
 
 import java.net.URISyntaxException;
 
-import io.opentelemetry.exporter.internal.otlp.traces.TraceRequestMarshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.traces.ConfigurableSpanExporterProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.smallrye.opentelemetry.implementation.exporters.AbstractVertxExporterProvider;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
-import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
+import io.smallrye.opentelemetry.senders.VertxGrpcSender;
+import io.smallrye.opentelemetry.senders.VertxHttpSender;
 
-public class VertxSpanExporterProvider extends AbstractVertxExporterProvider<TraceRequestMarshaler>
+public class VertxSpanExporterProvider extends AbstractVertxExporterProvider
         implements ConfigurableSpanExporterProvider {
 
     public VertxSpanExporterProvider() {
@@ -27,9 +26,9 @@ public class VertxSpanExporterProvider extends AbstractVertxExporterProvider<Tra
             final String protocol = getProtocol(config, getSignalType());
 
             if (PROTOCOL_GRPC.equals(protocol)) {
-                return new VertxGrpcSpanExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
+                return new VertxGrpcSpanExporter(createGrpcSender(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
-                return new VertxHttpSpanExporter(createHttpExporter(config, VertxHttpSender.TRACES_PATH));
+                return new VertxHttpSpanExporter(createHttpSender(config, VertxHttpSender.TRACES_PATH));
             } else {
                 throw buildUnsupportedProtocolException(protocol);
             }

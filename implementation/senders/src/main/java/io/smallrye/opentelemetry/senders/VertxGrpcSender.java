@@ -1,4 +1,6 @@
-package io.smallrye.opentelemetry.implementation.exporters.sender;
+package io.smallrye.opentelemetry.senders;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,15 +17,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.opentelemetry.exporter.internal.grpc.GrpcResponse;
-import io.opentelemetry.exporter.internal.grpc.GrpcSender;
-import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.internal.ThrottlingLogger;
+import io.opentelemetry.sdk.common.export.GrpcResponse;
+import io.opentelemetry.sdk.common.export.GrpcSender;
+import io.opentelemetry.sdk.common.export.GrpcStatusCode;
+import io.opentelemetry.sdk.common.export.MessageWriter;
+import io.opentelemetry.sdk.common.internal.ThrottlingLogger;
+import io.smallrye.common.annotation.SuppressForbidden;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.opentelemetry.implementation.exporters.BufferOutputStream;
-import io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil;
+import io.smallrye.opentelemetry.senders.common.BufferOutputStream;
+import io.smallrye.opentelemetry.senders.common.OTelExporterUtil;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
@@ -36,7 +42,7 @@ import io.vertx.grpc.common.GrpcError;
 import io.vertx.grpc.common.GrpcStatus;
 import io.vertx.grpc.common.ServiceName;
 
-public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T> {
+public final class VertxGrpcSender implements GrpcSender {
 
     public static final String GRPC_TRACE_SERVICE_NAME = "opentelemetry.proto.collector.trace.v1.TraceService";
     public static final String GRPC_METRIC_SERVICE_NAME = "opentelemetry.proto.collector.metrics.v1.MetricsService";
@@ -49,22 +55,20 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
     private static final Logger internalLogger = Logger.getLogger(VertxGrpcSender.class.getName());
     private static final int MAX_ATTEMPTS = 3;
 
-    private final ThrottlingLogger logger = new ThrottlingLogger(internalLogger); // TODO: is there something in JBoss Logging we can use?
+    private final ThrottlingLogger logger = new ThrottlingLogger(internalLogger);
 
-    // We only log unimplemented once since it's a configuration issue that won't be recovered.
     private final AtomicBoolean loggedUnimplemented = new AtomicBoolean();
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final CompletableResultCode shutdownResult = new CompletableResultCode();
     private final SocketAddress server;
     private final boolean compressionEnabled;
     private final Map<String, String> headers;
-    private final String signalType;
     private final String grpcEndpointPath;
+    private final Duration exportTimeout;
 
     private final GrpcClient client;
 
     public VertxGrpcSender(
-            String signalType,
             URI grpcBaseUri,
             String grpcEndpointPath,
             boolean compressionEnabled,
@@ -72,31 +76,35 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
             Map<String, String> headersMap,
             Consumer<HttpClientOptions> clientOptionsCustomizer,
             Vertx vertx) {
-        this.signalType = signalType;
         this.grpcEndpointPath = grpcEndpointPath;
-        this.server = SocketAddress.inetSocketAddress(OtlpExporterUtil.getPort(grpcBaseUri), grpcBaseUri.getHost());
+        this.server = SocketAddress.inetSocketAddress(OTelExporterUtil.getPort(grpcBaseUri), grpcBaseUri.getHost());
         this.compressionEnabled = compressionEnabled;
         this.headers = headersMap;
+        this.exportTimeout = timeout;
         var httpClientOptions = new HttpClientOptions()
                 .setHttp2ClearTextUpgrade(false) // needed otherwise connections get closed immediately
                 .setReadIdleTimeout((int) timeout.getSeconds())
                 .setTracingPolicy(TracingPolicy.IGNORE); // needed to avoid tracing the calls from this gRPC client
         clientOptionsCustomizer.accept(httpClientOptions);
+        // FIXME No way to set the connection exception handler for the gRPC client, at the moment.
         this.client = GrpcClient.client(vertx, httpClientOptions);
     }
 
     @Override
-    public void send(T marshaler, Consumer<GrpcResponse> onSuccess, Consumer<Throwable> onError) {
+    public void send(MessageWriter messageWriter,
+            Consumer<GrpcResponse> onResponse,
+            Consumer<Throwable> onError) {
         if (isShutdown.get()) {
             return;
         }
 
-        final String marshalerType = marshaler.getClass().getSimpleName();
-        var onSuccessHandler = new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, marshaler,
-                loggedUnimplemented, logger, marshalerType, onSuccess, onError, 1, grpcEndpointPath,
-                isShutdown::get);
+        final String marshalerType = messageWriter.getClass().getSimpleName();
+        var onSuccessHandler = new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled,
+                messageWriter,
+                loggedUnimplemented, logger, marshalerType, onResponse, onError, 1, grpcEndpointPath,
+                isShutdown::get, exportTimeout);
 
-        initiateSend(marshaler, client, server, MAX_ATTEMPTS, onSuccessHandler, new Consumer<>() {
+        initiateSend(client, server, MAX_ATTEMPTS, onSuccessHandler, exportTimeout, new Consumer<>() {
             @Override
             public void accept(Throwable throwable) {
                 failOnClientRequest(marshalerType, throwable, onError);
@@ -105,39 +113,47 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
     }
 
     @Override
+    @SuppressForbidden(reason = "The use of ThrottlingLogger mandates the use of java.util.logging")
     public CompletableResultCode shutdown() {
         if (!isShutdown.compareAndSet(false, true)) {
             logger.log(Level.FINE, "Calling shutdown() multiple times.");
             return shutdownResult;
         }
 
-        client.close()
-                .onSuccess(
-                        new Handler<>() {
-                            @Override
-                            public void handle(Void event) {
-                                shutdownResult.succeed();
-                            }
-                        })
-                .onFailure(new Handler<>() {
-                    @Override
-                    public void handle(Throwable event) {
-                        shutdownResult.fail();
-                    }
-                });
+        try {
+            client.close()
+                    .onSuccess(
+                            new Handler<>() {
+                                @Override
+                                public void handle(Void event) {
+                                    shutdownResult.succeed();
+                                }
+                            })
+                    .onFailure(new Handler<>() {
+                        @Override
+                        public void handle(Throwable event) {
+                            shutdownResult.fail();
+                        }
+                    });
+        } catch (RejectedExecutionException e) {
+            internalLogger.log(Level.FINE, "Unable to complete shutdown", e);
+            // if Netty's ThreadPool has been closed, this onSuccess() will immediately throw RejectedExecutionException
+            // which we need to handle
+            shutdownResult.fail();
+        }
         return shutdownResult;
     }
 
-    void initiateSend(Marshaler request,
-            GrpcClient client,
-            SocketAddress server,
+    private static void initiateSend(GrpcClient client, SocketAddress server,
             int numberOfAttempts,
-            Handler<GrpcClientRequest<Buffer, Buffer>> onSuccessHandler,
+            Handler<GrpcClientRequest<Buffer, Buffer>> onSuccessHandler, Duration exportTimeout,
             Consumer<Throwable> onFailureCallback) {
         Uni.createFrom().completionStage(new Supplier<CompletionStage<GrpcClientRequest<Buffer, Buffer>>>() {
             @Override
-            public CompletionStage get() {
-                return client.request(server).toCompletionStage();
+            public CompletionStage<GrpcClientRequest<Buffer, Buffer>> get() {
+                return client.request(server)
+                        .timeout(exportTimeout.toMillis(), MILLISECONDS)
+                        .toCompletionStage();
             }
         })
                 .onFailure(new Predicate<Throwable>() {
@@ -158,62 +174,72 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                 .retry()
                 .withBackOff(Duration.ofMillis(100))
                 .atMost(numberOfAttempts)
-                .subscribe().with(request1 -> onSuccessHandler.handle(request1), onFailureCallback);
+                .subscribe().with(
+                        new Consumer<>() {
+                            @Override
+                            public void accept(GrpcClientRequest<Buffer, Buffer> request) {
+                                onSuccessHandler.handle(request);
+                            }
+                        }, onFailureCallback);
     }
 
+    @SuppressForbidden(reason = "The use of ThrottlingLogger mandates the use of java.util.logging")
     private void failOnClientRequest(String type, Throwable t, Consumer<Throwable> onError) {
         String message = "Failed to export "
                 + type
-                + "s. The request could not be executed. Full error message: "
+                + ". The request could not be executed. Full error message: "
                 + (t.getMessage() == null ? t.getClass().getName() : t.getMessage());
         logger.log(Level.WARNING, message);
         onError.accept(t);
     }
 
-    private final class ClientRequestOnSuccessHandler implements Handler<GrpcClientRequest<Buffer, Buffer>> {
+    private static final class ClientRequestOnSuccessHandler implements Handler<GrpcClientRequest<Buffer, Buffer>> {
 
         private final GrpcClient client;
         private final SocketAddress server;
         private final Map<String, String> headers;
         private final boolean compressionEnabled;
 
-        private final Marshaler marshaler;
+        private final MessageWriter messageWriter;
         private final AtomicBoolean loggedUnimplemented;
         private final ThrottlingLogger logger;
         private final String type;
-        private final Consumer<GrpcResponse> onSuccess;
+        private final Consumer<GrpcResponse> onResponse;
         private final Consumer<Throwable> onError;
         private final String grpcEndpointPath;
 
         private final int attemptNumber;
         private final Supplier<Boolean> isShutdown;
+        private final Duration exportTimeout;
 
         public ClientRequestOnSuccessHandler(GrpcClient client,
                 SocketAddress server,
                 Map<String, String> headers,
                 boolean compressionEnabled,
-                Marshaler marshaler,
+                MessageWriter messageWriter,
                 AtomicBoolean loggedUnimplemented,
                 ThrottlingLogger logger,
                 String type,
-                Consumer<GrpcResponse> onSuccess,
+                Consumer<GrpcResponse> onResponse,
                 Consumer<Throwable> onError,
                 int attemptNumber,
                 String grpcEndpointPath,
-                Supplier<Boolean> isShutdown) {
+                Supplier<Boolean> isShutdown,
+                Duration exportTimeout) {
             this.client = client;
             this.server = server;
             this.grpcEndpointPath = grpcEndpointPath;
             this.headers = headers;
             this.compressionEnabled = compressionEnabled;
-            this.marshaler = marshaler;
+            this.messageWriter = messageWriter;
             this.loggedUnimplemented = loggedUnimplemented;
             this.logger = logger;
             this.type = type;
-            this.onSuccess = onSuccess;
+            this.onResponse = onResponse;
             this.onError = onError;
             this.attemptNumber = attemptNumber;
             this.isShutdown = isShutdown;
+            this.exportTimeout = exportTimeout;
         }
 
         @Override
@@ -234,10 +260,10 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
             }
 
             try {
-                int messageSize = marshaler.getBinarySerializedSize();
+                int messageSize = messageWriter.getContentLength();
                 Buffer buffer = Buffer.buffer(messageSize);
                 var os = new BufferOutputStream(buffer);
-                marshaler.writeBinaryTo(os);
+                messageWriter.writeMessage(os);
                 request.send(buffer).onSuccess(new Handler<>() {
                     @Override
                     public void handle(GrpcClientResponse<Buffer, Buffer> response) {
@@ -246,9 +272,9 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                             public void handle(Throwable t) {
                                 if (attemptNumber <= MAX_ATTEMPTS && !isShutdown.get()) {
                                     // retry
-                                    initiateSend(marshaler, client, server,
+                                    initiateSend(client, server,
                                             MAX_ATTEMPTS - attemptNumber,
-                                            newAttempt(),
+                                            newAttempt(), exportTimeout,
                                             new Consumer<>() {
                                                 @Override
                                                 public void accept(Throwable throwable) {
@@ -270,7 +296,43 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                             public void handle(Void ignored) {
                                 GrpcStatus status = getStatus(response);
                                 if (status == GrpcStatus.OK) {
-                                    onSuccess.accept(GrpcResponse.create(response.status().code, response.statusMessage()));
+                                    onResponse.accept(new GrpcResponse() {
+                                        @Override
+                                        public GrpcStatusCode getStatusCode() {
+                                            return GrpcStatusCode.fromValue(status.code);
+                                        }
+
+                                        @Override
+                                        public String getStatusDescription() {
+                                            return status.name();
+                                        }
+
+                                        @Override
+                                        public byte[] getResponseMessage() {
+                                            if (response == null) {
+                                                return null;
+                                            }
+                                            Promise<String> promise = Promise.promise();
+                                            StringBuilder sb = new StringBuilder();
+                                            response.handler(msg -> {
+                                                sb.append(msg.toString());
+                                            });
+                                            response.endHandler(v -> {
+                                                // Done reading stream
+                                                promise.complete(sb.toString());
+                                            });
+                                            response.exceptionHandler(promise::fail);
+                                            String result = promise.future()
+                                                    .timeout(exportTimeout.toMillis(), MILLISECONDS)
+                                                    .recover(throwable -> Future.succeededFuture(
+                                                            "Response error: " + throwable.getMessage()))
+                                                    .result();
+                                            if (result == null || result.isEmpty()) {
+                                                return null;
+                                            }
+                                            return result.getBytes(StandardCharsets.UTF_8);
+                                        }
+                                    });
                                 } else {
                                     handleError(status, response);
                                 }
@@ -306,7 +368,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                                             Level.WARNING,
                                             "Failed to export "
                                                     + type
-                                                    + "s. Perhaps the collector does not support collecting traces using grpc? Try configuring 'quarkus.otel.exporter.otlp.traces.protocol=http/protobuf'");
+                                                    + "s. Perhaps the collector does not support collecting traces using grpc? Try configuring the protocol to 'http/protobuf'");
                                 } else {
                                     logger.log(
                                             Level.WARNING,
@@ -328,6 +390,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                         }
                     }
 
+                    @SuppressForbidden(reason = "The use of ThrottlingLogger mandates the use of java.util.logging")
                     private void logUnimplemented(Logger logger, String type, String fullErrorMessage) {
                         String envVar;
                         switch (type) {
@@ -390,8 +453,9 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                     public void handle(Throwable t) {
                         if (attemptNumber <= MAX_ATTEMPTS && !isShutdown.get()) {
                             // retry
-                            initiateSend(marshaler, client, server, MAX_ATTEMPTS - attemptNumber,
-                                    newAttempt(),
+                            initiateSend(client, server,
+                                    MAX_ATTEMPTS - attemptNumber,
+                                    newAttempt(), exportTimeout,
                                     new Consumer<>() {
                                         @Override
                                         public void accept(Throwable throwable) {
@@ -424,9 +488,9 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
         }
 
         public ClientRequestOnSuccessHandler newAttempt() {
-            return new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, marshaler,
-                    loggedUnimplemented, logger, type, onSuccess, onError, attemptNumber + 1,
-                    grpcEndpointPath, isShutdown);
+            return new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, messageWriter,
+                    loggedUnimplemented, logger, type, onResponse, onError, attemptNumber + 1,
+                    grpcEndpointPath, isShutdown, exportTimeout);
         }
     }
 }
