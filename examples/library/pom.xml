@@ -5,13 +5,13 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-build-parent</artifactId>
-        <version>47</version>
+        <version>49</version>
         <relativePath />
     </parent>
 
     <groupId>io.smallrye.opentelemetry.examples</groupId>
     <artifactId>library</artifactId>
-    <version>2.12.0-SNAPSHOT</version>
+    <version>2.13.1-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>SmallRye OpenTelemetry Examples: Library</name>
 
@@ -20,12 +20,12 @@
         <maven.compiler.source>17</maven.compiler.source>
 
         <version.plugin.war>3.4.0</version.plugin.war>
-        <version.plugin.dependency>3.9.0</version.plugin.dependency>
+        <version.plugin.dependency>3.10.0</version.plugin.dependency>
         <version.plugin.jetty>12.0.26</version.plugin.jetty>
 
-        <version.org.jboss.logging>3.6.1.Final</version.org.jboss.logging>
-        <version.weld.core>5.1.6.Final</version.weld.core>
-        <version.resteasy>6.2.12.Final</version.resteasy>
+        <version.org.jboss.logging>3.6.3.Final</version.org.jboss.logging>
+        <version.weld.core>5.1.7.Final</version.weld.core>
+        <version.resteasy>6.2.16.Final</version.resteasy>
         <version.smallrye.config>3.13.4</version.smallrye.config>
 
         <version.opentelemetry.agent>2.15.0</version.opentelemetry.agent>

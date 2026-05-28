@@ -3,31 +3,31 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-parent</artifactId>
-        <version>48</version>
+        <version>49</version>
     </parent>
 
     <groupId>io.smallrye.opentelemetry</groupId>
     <artifactId>smallrye-opentelemetry-parent</artifactId>
-    <version>2.12.0-SNAPSHOT</version>
+    <version>2.13.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <name>SmallRye OpenTelemetry: Parent</name>
     <url>https://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.60.1</version.opentelemetry>
-        <version.opentelemetry.instrumentation>2.26.1</version.opentelemetry.instrumentation>
+        <version.opentelemetry>1.62.0</version.opentelemetry>
+        <version.opentelemetry.instrumentation>2.27.0</version.opentelemetry.instrumentation>
         <version.opentelemetry.semconv>1.32.0</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.1</version.microprofile.opentelemetry>
         <version.microprofile.config>3.1</version.microprofile.config>
         <version.mutiny>3.0.0</version.mutiny>
-        <version.smallrye.common>2.13.9</version.smallrye.common>
+        <version.smallrye.common>2.18.0</version.smallrye.common>
         <version.resteasy>6.2.12.Final</version.resteasy>
         <version.vertx.grpc>4.5.26</version.vertx.grpc>
-        <micrometer.version>1.15.4</micrometer.version>
+        <micrometer.version>1.16.5</micrometer.version>
 
         <!-- Test -->
-        <version.smallrye.testing>2.4.0</version.smallrye.testing>
+        <version.smallrye.testing>2.5.0</version.smallrye.testing>
         <version.smallrye.config>3.13.4</version.smallrye.config>
         <version.resteasy.client>3.0.1.Final</version.resteasy.client>
     </properties>
