@@ -19,7 +19,7 @@
 
         <dependency>
             <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-api</artifactId>
+            <artifactId>smallrye-opentelemetry-cdi</artifactId>
         </dependency>
 
         <dependency>

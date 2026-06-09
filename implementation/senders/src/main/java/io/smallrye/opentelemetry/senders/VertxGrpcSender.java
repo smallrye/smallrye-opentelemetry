@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.AccessControlException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -135,7 +136,7 @@ public final class VertxGrpcSender implements GrpcSender {
                             shutdownResult.fail();
                         }
                     });
-        } catch (RejectedExecutionException e) {
+        } catch (AccessControlException | RejectedExecutionException e) {
             internalLogger.log(Level.FINE, "Unable to complete shutdown", e);
             // if Netty's ThreadPool has been closed, this onSuccess() will immediately throw RejectedExecutionException
             // which we need to handle

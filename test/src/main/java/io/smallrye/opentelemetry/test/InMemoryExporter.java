@@ -2,7 +2,6 @@ package io.smallrye.opentelemetry.test;
 
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static java.util.Comparator.comparingLong;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +43,8 @@ public class InMemoryExporter {
     @Inject
     InMemoryLogRecordExporter logRecordExporter;
 
+    private final Duration DURATION = Duration.ofSeconds(5);
+
     public List<SpanData> getFinishedSpanItems(final int count) {
         assertSpanCount(count);
         return spanExporter.getFinishedSpanItems().stream().sorted(comparingLong(SpanData::getStartEpochNanos).reversed())
@@ -51,7 +52,7 @@ public class InMemoryExporter {
     }
 
     public void assertSpanCount(final int count) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, spanExporter.getFinishedSpanItems().size()));
+        await().atMost(DURATION).untilAsserted(() -> assertEquals(count, spanExporter.getFinishedSpanItems().size()));
     }
 
     public MetricData getFinishedMetricItem(final String name) {
@@ -65,20 +66,20 @@ public class InMemoryExporter {
     }
 
     public void assertMetricsAtLeast(final int count, final String name) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(metrics(name).count() >= count));
+        await().atMost(DURATION).untilAsserted(() -> assertTrue(metrics(name).count() >= count));
     }
 
     public void assertMetricsAtLeast(final int count, final String name, final String route) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertTrue(metrics(name).route(route).count() >= count));
+        await().atMost(DURATION).untilAsserted(() -> assertTrue(metrics(name).route(route).count() >= count));
     }
 
     public MetricData getFinishedHistogramItem(final String name, final int count) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).count()));
+        await().atMost(DURATION).untilAsserted(() -> assertEquals(count, histogram(name).count()));
         return histogram(name).get(count);
     }
 
     public MetricData getFinishedHistogramItem(final String name, final String route, final int count) {
-        await().atMost(5, SECONDS).untilAsserted(() -> assertEquals(count, histogram(name).route(route).count()));
+        await().atMost(DURATION).untilAsserted(() -> assertEquals(count, histogram(name).route(route).count()));
         return histogram(name).route(route).get(count);
     }
 

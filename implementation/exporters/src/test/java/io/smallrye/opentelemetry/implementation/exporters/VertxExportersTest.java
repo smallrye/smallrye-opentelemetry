@@ -16,7 +16,7 @@ import org.testcontainers.DockerClientFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
+import io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryProducer;
 
 /**
  * This test will exercise the configuration and use of the Vertx-based exporters defined in this module. The test will
@@ -70,7 +70,7 @@ public class VertxExportersTest {
         final String spanName = protocol + " test trace";
         final String eventName = protocol + " test event";
 
-        OpenTelemetry openTelemetry = new OpenTelemetryBuilderGetter().apply(() -> config).build().getOpenTelemetrySdk();
+        OpenTelemetry openTelemetry = new OpenTelemetryProducer().getOpenTelemetry(() -> config);
         Tracer tracer = openTelemetry.getTracer(tracerName);
         Span span = tracer.spanBuilder(spanName).startSpan();
         span.addEvent(eventName);

@@ -2,6 +2,7 @@ package io.smallrye.opentelemetry.implementation.rest;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
+import static io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryProducer.performPrivileged;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -49,13 +50,13 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 HttpSpanNameExtractor.create(clientAttributesExtractor));
         builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
-        this.instrumenter = builder
+        this.instrumenter = performPrivileged(() -> builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
                 .addOperationMetrics(HttpClientMetrics.get())
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
-                .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
+                .buildClientInstrumenter(new ClientRequestContextTextMapSetter()));
     }
 
     @Override
