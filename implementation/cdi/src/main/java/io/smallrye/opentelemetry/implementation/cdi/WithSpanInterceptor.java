@@ -2,6 +2,7 @@ package io.smallrye.opentelemetry.implementation.cdi;
 
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_NAME;
 import static io.smallrye.opentelemetry.api.OpenTelemetryConfig.INSTRUMENTATION_VERSION;
+import static io.smallrye.opentelemetry.implementation.cdi.OpenTelemetryProducer.performPrivileged;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -35,8 +36,9 @@ public class WithSpanInterceptor {
                 new WithSpanParameterAttributeNamesExtractor(),
                 MethodRequest::getArgs);
 
-        this.instrumenter = builder.addAttributesExtractor(attributesExtractor)
-                .buildInstrumenter(methodRequest -> spanKindFromMethod(methodRequest.getMethod()));
+        this.instrumenter = performPrivileged(() -> builder
+                .addAttributesExtractor(attributesExtractor)
+                .buildInstrumenter(methodRequest -> spanKindFromMethod(methodRequest.getMethod())));
     }
 
     private static SpanKind spanKindFromMethod(Method method) {
@@ -64,7 +66,11 @@ public class WithSpanInterceptor {
             Object result = invocationContext.proceed();
 
             if (shouldStart) {
-                instrumenter.end(spanContext, methodRequest, null, null);
+                final var context = spanContext;
+                performPrivileged(() -> {
+                    instrumenter.end(context, methodRequest, null, null);
+                    return null;
+                });
             }
 
             return result;

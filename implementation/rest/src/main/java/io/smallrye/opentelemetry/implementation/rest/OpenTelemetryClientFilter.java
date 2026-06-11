@@ -7,6 +7,8 @@ import static java.util.Collections.singletonList;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -49,13 +51,15 @@ public class OpenTelemetryClientFilter implements ClientRequestFilter, ClientRes
                 HttpSpanNameExtractor.create(clientAttributesExtractor));
         builder.setInstrumentationVersion(INSTRUMENTATION_VERSION);
 
-        this.instrumenter = builder
+        PrivilegedAction<Instrumenter<ClientRequestContext, ClientResponseContext>> func = () -> builder
                 .setSpanStatusExtractor(HttpSpanStatusExtractor.create(clientAttributesExtractor))
                 .addAttributesExtractor(NetworkAttributesExtractor.create(new NetworkAttributesGetter()))
                 .addAttributesExtractor(HttpClientAttributesExtractor.create(clientAttributesExtractor))
                 .addOperationMetrics(HttpClientMetrics.get())
                 .addOperationMetrics(HttpClientExperimentalMetrics.get())
                 .buildClientInstrumenter(new ClientRequestContextTextMapSetter());
+
+        this.instrumenter = (System.getSecurityManager() == null) ? func.run() : AccessController.doPrivileged(func);
     }
 
     @Override

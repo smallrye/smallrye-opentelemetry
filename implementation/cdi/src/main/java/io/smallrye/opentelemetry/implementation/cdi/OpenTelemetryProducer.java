@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -30,9 +31,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.smallrye.opentelemetry.api.OpenTelemetryBuilderGetter;
 import io.smallrye.opentelemetry.api.OpenTelemetryConfig;
 import io.smallrye.opentelemetry.api.OpenTelemetryLogHandler;
@@ -48,41 +50,26 @@ public class OpenTelemetryProducer {
     @Produces
     @Singleton
     public OpenTelemetry getOpenTelemetry(final OpenTelemetryConfig config) {
-        AutoConfiguredOpenTelemetrySdkBuilder autoConfiguredOpenTelemetrySdkBuilder = new OpenTelemetryBuilderGetter()
-                .apply(config).disableShutdownHook();
+        final AtomicReference<SpanExporter> exporter = new AtomicReference<>();
 
-        AutoConfiguredOpenTelemetrySdk otelSdk;
-        if (System.getSecurityManager() == null) {
-            otelSdk = autoConfiguredOpenTelemetrySdkBuilder.build();
-        } else {
-            // Requires FilePermission/RuntimePermission
-            otelSdk = AccessController.doPrivileged(
-                    (PrivilegedAction<AutoConfiguredOpenTelemetrySdk>) autoConfiguredOpenTelemetrySdkBuilder::build);
-        }
+        AutoConfiguredOpenTelemetrySdkBuilder builder = new OpenTelemetryBuilderGetter()
+                .apply(config)
+                .disableShutdownHook()
+                // Capture exporter for use later
+                .addSpanExporterCustomizer((e, cp) -> {
+                    exporter.set(e);
+                    return e;
+                })
+                // Avoid BatchSpanProcessor under SM due to policy violation issues
+                .addSpanProcessorCustomizer(
+                        (sp, cp) -> (System.getSecurityManager() != null) ? SimpleSpanProcessor.create(exporter.get()) : sp);
 
-        OpenTelemetry openTelemetry = otelSdk.getOpenTelemetrySdk();
-
-        RuntimeMetrics runtimeMetrics;
-        if (System.getSecurityManager() == null) {
-            runtimeMetrics = RuntimeMetrics.create(openTelemetry);
-        } else {
-            // Requires FilePermission/RuntimePermission/ManagementPermission
-            runtimeMetrics = AccessController.doPrivileged(
-                    (PrivilegedAction<RuntimeMetrics>) () -> RuntimeMetrics.create(openTelemetry));
-        }
-        closeables.add(runtimeMetrics);
-
-        if (System.getSecurityManager() == null) {
-            OpenTelemetryLogHandler.install(openTelemetry);
-        } else {
-            // Requires LoggingPermission
-            AccessController.doPrivileged((PrivilegedAction<List<AutoCloseable>>) () -> {
-                OpenTelemetryLogHandler.install(openTelemetry);
-                return null;
-            });
-        }
-
-        return openTelemetry;
+        return performPrivileged(() -> {
+            var otel = builder.build().getOpenTelemetrySdk();
+            closeables.add(RuntimeMetrics.create(otel));
+            OpenTelemetryLogHandler.install(otel);
+            return otel;
+        });
     }
 
     @Produces
@@ -197,5 +184,13 @@ public class OpenTelemetryProducer {
         shutdown.add(openTelemetrySdk.getSdkMeterProvider().shutdown());
         shutdown.add(openTelemetrySdk.getSdkLoggerProvider().shutdown());
         CompletableResultCode.ofAll(shutdown).join(10, TimeUnit.SECONDS);
+    }
+
+    static <T> T performPrivileged(PrivilegedAction<T> action) {
+        if (System.getSecurityManager() == null) {
+            return action.run();
+        } else {
+            return AccessController.doPrivileged(action);
+        }
     }
 }
