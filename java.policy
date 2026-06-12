@@ -1,0 +1,7 @@
+// Grant all permissions so the Security Manager is active but non-restrictive.
+// The goal is to verify the code runs correctly under a Security Manager,
+// not to test a restrictive policy.
+
+grant {
+    permission java.security.AllPermission;
+};
