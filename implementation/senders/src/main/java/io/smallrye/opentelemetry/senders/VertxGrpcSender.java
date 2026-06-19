@@ -5,6 +5,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -54,6 +56,7 @@ public final class VertxGrpcSender implements GrpcSender {
 
     private static final Logger internalLogger = Logger.getLogger(VertxGrpcSender.class.getName());
     private static final int MAX_ATTEMPTS = 3;
+    private static final SecurityManager SECURITY_MANAGER = System.getSecurityManager();
 
     private final ThrottlingLogger logger = new ThrottlingLogger(internalLogger);
 
@@ -151,9 +154,14 @@ public final class VertxGrpcSender implements GrpcSender {
         Uni.createFrom().completionStage(new Supplier<CompletionStage<GrpcClientRequest<Buffer, Buffer>>>() {
             @Override
             public CompletionStage<GrpcClientRequest<Buffer, Buffer>> get() {
-                return client.request(server)
+
+                Supplier<CompletionStage<GrpcClientRequest<Buffer, Buffer>>> supplier = () -> client.request(server)
                         .timeout(exportTimeout.toMillis(), MILLISECONDS)
                         .toCompletionStage();
+                return SECURITY_MANAGER == null ? supplier.get()
+                        : AccessController
+                                .doPrivileged(
+                                        (PrivilegedAction<CompletionStage<GrpcClientRequest<Buffer, Buffer>>>) supplier::get);
             }
         })
                 .onFailure(new Predicate<Throwable>() {
