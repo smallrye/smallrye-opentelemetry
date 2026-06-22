@@ -24,7 +24,7 @@
         <version.smallrye.common>2.18.1</version.smallrye.common>
         <version.resteasy>6.2.12.Final</version.resteasy>
         <version.vertx.grpc>4.5.27</version.vertx.grpc>
-        <micrometer.version>1.16.5</micrometer.version>
+        <micrometer.version>1.17.0</micrometer.version>
 
         <!-- Test -->
         <version.smallrye.testing>2.5.0</version.smallrye.testing>
