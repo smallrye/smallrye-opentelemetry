@@ -15,7 +15,7 @@
     <url>https://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.63.0</version.opentelemetry>
+        <version.opentelemetry>1.65.0</version.opentelemetry>
         <version.opentelemetry.instrumentation>2.29.0</version.opentelemetry.instrumentation>
         <version.opentelemetry.semconv>1.41.1</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.1</version.microprofile.opentelemetry>
