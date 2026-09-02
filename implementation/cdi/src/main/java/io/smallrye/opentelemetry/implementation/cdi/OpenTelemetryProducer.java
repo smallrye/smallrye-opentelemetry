@@ -29,7 +29,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
+import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -66,7 +66,7 @@ public class OpenTelemetryProducer {
 
         return performPrivileged(() -> {
             var otel = builder.build().getOpenTelemetrySdk();
-            closeables.add(RuntimeMetrics.create(otel));
+            closeables.add(RuntimeTelemetry.create(otel));
             OpenTelemetryLogHandler.install(otel);
             return otel;
         });

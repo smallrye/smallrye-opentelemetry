@@ -15,11 +15,11 @@
     <url>https://smallrye.io</url>
 
     <properties>
-        <version.opentelemetry>1.62.0</version.opentelemetry>
-        <version.opentelemetry.instrumentation>2.27.0</version.opentelemetry.instrumentation>
-        <version.opentelemetry.semconv>1.32.0</version.opentelemetry.semconv>
+        <version.opentelemetry>1.63.0</version.opentelemetry>
+        <version.opentelemetry.instrumentation>2.29.0</version.opentelemetry.instrumentation>
+        <version.opentelemetry.semconv>1.41.1</version.opentelemetry.semconv>
         <version.microprofile.opentelemetry>2.1</version.microprofile.opentelemetry>
-        <version.microprofile.config>3.1</version.microprofile.config>
+        <version.microprofile.config>3.1.1</version.microprofile.config>
         <version.mutiny>3.0.0</version.mutiny>
         <version.smallrye.common>2.18.1</version.smallrye.common>
         <version.resteasy>6.2.12.Final</version.resteasy>
