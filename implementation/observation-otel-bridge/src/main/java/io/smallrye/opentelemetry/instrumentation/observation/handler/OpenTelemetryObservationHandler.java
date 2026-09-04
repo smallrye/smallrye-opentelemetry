@@ -2,9 +2,6 @@ package io.smallrye.opentelemetry.instrumentation.observation.handler;
 
 import java.util.logging.Logger;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import io.micrometer.common.util.StringUtils;
 import io.micrometer.observation.Observation;
 import io.opentelemetry.api.trace.Span;
@@ -12,13 +9,14 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.smallrye.opentelemetry.instrumentation.observation.context.TracingObservationContext;
 
-@Singleton
 public class OpenTelemetryObservationHandler extends AbstractTracingObservationHandler<Observation.Context> {
 
     private static final Logger logger = Logger.getLogger(OpenTelemetryObservationHandler.class.getName());
+    private final Tracer tracer;
 
-    @Inject
-    Tracer tracer;
+    public OpenTelemetryObservationHandler(Tracer tracer) {
+        this.tracer = tracer;
+    }
 
     @Override
     public void onStart(Observation.Context context) {
@@ -52,7 +50,8 @@ public class OpenTelemetryObservationHandler extends AbstractTracingObservationH
     }
 
     private Span nextSpan(Tracer tracer) {
-        return tracer.spanBuilder("").startSpan();
+        return tracer.spanBuilder("")
+                .startSpan();
     }
 
     private String getSpanName(Observation.Context context) {

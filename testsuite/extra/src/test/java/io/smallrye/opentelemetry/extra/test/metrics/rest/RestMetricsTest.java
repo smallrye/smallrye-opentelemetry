@@ -62,7 +62,8 @@ public class RestMetricsTest {
         given().get("/span/2").then().statusCode(HTTP_OK);
         given().get("/span/2").then().statusCode(HTTP_OK);
 
-        MetricData metricsSpan = exporter.getFinishedHistogramItem("http.server.request.duration", url.getPath() + "span", 1);
+        MetricData metricsSpan = exporter.getLastFinishedHistogramItem("http.server.request.duration", url.getPath() + "span",
+                1);
         assertEquals("Duration of HTTP server requests.", metricsSpan.getDescription());
         assertEquals(HISTOGRAM, metricsSpan.getType());
         assertEquals(1, metricsSpan.getData().getPoints().size());
@@ -77,7 +78,7 @@ public class RestMetricsTest {
         assertTrue(pointSpan.getEpochNanos() > 0);
         assertEquals(1, pointSpan.getCount());
 
-        MetricData metricsSpanName = exporter.getFinishedHistogramItem("http.server.request.duration",
+        MetricData metricsSpanName = exporter.getLastFinishedHistogramItem("http.server.request.duration",
                 url.getPath() + "span/{name}", 3);
         assertEquals("Duration of HTTP server requests.", metricsSpanName.getDescription());
         assertEquals(HISTOGRAM, metricsSpanName.getType());
