@@ -4,6 +4,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -18,7 +19,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.GrpcResponse;
 import io.opentelemetry.sdk.common.export.GrpcSender;
@@ -449,7 +449,7 @@ public final class VertxGrpcSender implements GrpcSender {
                         if (result == null) {
                             result = response.trailers().get(GRPC_MESSAGE);
                             if (result != null) {
-                                result = QueryStringDecoder.decodeComponent(result, StandardCharsets.UTF_8);
+                                result = URLDecoder.decode(result, StandardCharsets.UTF_8);
                             }
 
                         }
