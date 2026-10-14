@@ -1,4 +1,4 @@
 name: SmallRye OpenTelemetry
 release:
-  current-version: 2.16.0.CR2
+  current-version: 2.16.0.CR3
   next-version: 2.16.1-SNAPSHOT
