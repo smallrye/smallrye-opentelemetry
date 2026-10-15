@@ -2,6 +2,7 @@ package io.smallrye.opentelemetry.implementation.exporters.sender;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
@@ -14,7 +15,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
 import io.opentelemetry.exporter.internal.grpc.GrpcResponse;
 import io.opentelemetry.exporter.internal.grpc.GrpcSender;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
@@ -378,7 +378,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                         if (result == null) {
                             result = response.trailers().get(GRPC_MESSAGE);
                             if (result != null) {
-                                result = QueryStringDecoder.decodeComponent(result, StandardCharsets.UTF_8);
+                                result = URLDecoder.decode(result, StandardCharsets.UTF_8);
                             }
 
                         }
