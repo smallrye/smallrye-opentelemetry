@@ -12,6 +12,7 @@ import static io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUti
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,7 +32,7 @@ public abstract class AbstractVertxExporterProvider {
     private final String exporterName;
 
     private static final Logger logger = Logger.getLogger(AbstractVertxExporterProvider.class.getName());
-    private static Vertx SUPPLIED_VERTX;
+    private static volatile Vertx vertx;
 
     public AbstractVertxExporterProvider(String signalType, String exporterName) {
         this.signalType = signalType;
@@ -49,10 +50,10 @@ public abstract class AbstractVertxExporterProvider {
     /**
      * Stores a server-provided Vertx for constructing exporters.
      *
-     * @param vertx the server-managed Vertx instance
+     * @param supplied the server-managed Vertx instance
      */
-    public static void withVertx(Vertx vertx) {
-        SUPPLIED_VERTX = vertx;
+    public static synchronized void withVertx(Vertx supplied) {
+        vertx = Objects.requireNonNull(supplied);
     }
 
     /**
@@ -63,8 +64,8 @@ public abstract class AbstractVertxExporterProvider {
      * @return the Vertx instance used by the exporter
      */
     Vertx getVertx(ConfigProperties config) {
-        if (SUPPLIED_VERTX != null) {
-            return SUPPLIED_VERTX;
+        if (vertx != null) {
+            return vertx;
         }
         String cdiQualifier = config.getString(OTEL_EXPORTER_VERTX_CDI_QUALIFIER);
         if (cdiQualifier != null && !cdiQualifier.isEmpty()) {
@@ -76,8 +77,16 @@ public abstract class AbstractVertxExporterProvider {
                         cdiQualifier);
             }
         }
-        logger.log(Level.INFO, "Create a new Vertx instance");
-        return Vertx.vertx();
+
+        if (vertx == null) {
+            synchronized (AbstractVertxExporterProvider.class) {
+                if (vertx == null) {
+                    logger.log(Level.INFO, "Creating a new Vertx instance");
+                    vertx = Vertx.vertx();
+                }
+            }
+        }
+        return vertx;
     }
 
     protected GrpcSender createGrpcSender(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
