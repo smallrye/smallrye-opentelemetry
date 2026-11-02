@@ -33,6 +33,7 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
     private final String exporterName;
 
     private static final Logger logger = Logger.getLogger(AbstractVertxExporterProvider.class.getName());
+    private static volatile Vertx vertx;
 
     public AbstractVertxExporterProvider(String signalType, String exporterName) {
         this.signalType = signalType;
@@ -57,11 +58,25 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
     }
 
     /**
-     * If the CDI qualifier is specified in the config, it tries to get it from CDI, and if CDI does not provide such
-     * an instance on the specified qualifier, it will log some WARNING messages and return a new Vertx instance.
-     * If the CDI qualifier is not specified in the config, it creates a new Vertx instance.
+     * Stores a server-provided Vertx for constructing exporters.
+     *
+     * @param supplied the server-managed Vertx instance
      */
-    private Vertx getVertx(ConfigProperties config) {
+    public static synchronized void withVertx(Vertx supplied) {
+        vertx = supplied;
+    }
+
+    /**
+     * Resolves Vertx from the provided instance, CDI, or a new instance, in that order.
+     * A server build supplies its instance because CDI is not available during server startup.
+     *
+     * @param config the exporter configuration used for CDI selection
+     * @return the Vertx instance used by the exporter
+     */
+    Vertx getVertx(ConfigProperties config) {
+        if (vertx != null) {
+            return vertx;
+        }
         String cdiQualifier = config.getString(OTEL_EXPORTER_VERTX_CDI_QUALIFIER);
         if (cdiQualifier != null && !cdiQualifier.isEmpty()) {
             Instance<Vertx> vertxCDI = CDI.current().select(Vertx.class, Identifier.Literal.of(cdiQualifier));
@@ -72,8 +87,16 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
                         cdiQualifier);
             }
         }
-        logger.log(Level.INFO, "Create a new Vertx instance");
-        return Vertx.vertx();
+
+        if (vertx == null) {
+            synchronized (AbstractVertxExporterProvider.class) {
+                if (vertx == null) {
+                    logger.log(Level.INFO, "Creating a new Vertx instance");
+                    vertx = Vertx.vertx();
+                }
+            }
+        }
+        return vertx;
     }
 
     protected VertxGrpcSender<T> createGrpcSender(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
