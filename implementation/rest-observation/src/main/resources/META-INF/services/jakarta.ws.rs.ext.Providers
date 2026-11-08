@@ -1,0 +1,2 @@
+io.smallrye.opentelemetry.implementation.rest.observation.ObservationServerFilter
+io.smallrye.opentelemetry.implementation.rest.observation.ObservationClientFilter
