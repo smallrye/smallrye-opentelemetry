@@ -2,9 +2,9 @@ package io.smallrye.opentelemetry.implementation.exporters.metrics;
 
 import java.util.Collection;
 
-import io.opentelemetry.exporter.internal.http.HttpExporter;
 import io.opentelemetry.exporter.internal.otlp.metrics.MetricsRequestMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.common.export.HttpSender;
 import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.metrics.Aggregation;
 import io.opentelemetry.sdk.metrics.InstrumentType;
@@ -16,21 +16,29 @@ import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
 public class VertxHttpMetricsExporter implements MetricExporter {
 
-    private final HttpExporter<MetricsRequestMarshaler> delegate;
+    private final HttpSender sender;
     private final AggregationTemporalitySelector aggregationTemporalitySelector;
     private final DefaultAggregationSelector defaultAggregationSelector;
 
-    public VertxHttpMetricsExporter(HttpExporter<MetricsRequestMarshaler> delegate,
+    public VertxHttpMetricsExporter(HttpSender sender,
             AggregationTemporalitySelector aggregationTemporalitySelector,
             DefaultAggregationSelector defaultAggregationSelector) {
-        this.delegate = delegate;
+        this.sender = sender;
         this.aggregationTemporalitySelector = aggregationTemporalitySelector;
         this.defaultAggregationSelector = defaultAggregationSelector;
     }
 
     @Override
     public CompletableResultCode export(Collection<MetricData> metrics) {
-        return delegate.export(MetricsRequestMarshaler.create(metrics), metrics.size());
+        CompletableResultCode result = new CompletableResultCode();
+        sender.send(MetricsRequestMarshaler.create(metrics).toBinaryMessageWriter(), response -> {
+            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                result.succeed();
+            } else {
+                result.fail();
+            }
+        }, throwable -> result.fail());
+        return result;
     }
 
     @Override
@@ -40,7 +48,7 @@ public class VertxHttpMetricsExporter implements MetricExporter {
 
     @Override
     public CompletableResultCode shutdown() {
-        return delegate.shutdown();
+        return sender.shutdown();
     }
 
     @Override

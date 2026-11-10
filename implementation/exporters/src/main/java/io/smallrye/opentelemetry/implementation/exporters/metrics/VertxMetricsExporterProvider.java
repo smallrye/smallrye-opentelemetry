@@ -35,12 +35,12 @@ public class VertxMetricsExporterProvider extends AbstractVertxExporterProvider<
 
             if (PROTOCOL_GRPC.equals(protocol)) {
                 return new VertxGrpcMetricExporter(
-                        createGrpcExporter(config, VertxGrpcSender.GRPC_METRIC_SERVICE_NAME),
+                        createGrpcSender(config, VertxGrpcSender.GRPC_METRIC_SERVICE_NAME),
                         aggregationTemporalityResolver(config),
                         aggregationResolver(config));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
                 return new VertxHttpMetricsExporter(
-                        createHttpExporter(config, VertxHttpSender.METRICS_PATH),
+                        createHttpSender(config, VertxHttpSender.METRICS_PATH),
                         aggregationTemporalityResolver(config),
                         aggregationResolver(config));
             } else {

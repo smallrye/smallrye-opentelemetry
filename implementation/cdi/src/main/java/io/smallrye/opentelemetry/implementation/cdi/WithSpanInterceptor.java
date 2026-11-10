@@ -10,6 +10,8 @@ import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.InvocationContext;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -17,12 +19,15 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
 public class WithSpanInterceptor {
+    private static final AttributeKey<String> CODE_FUNCTION_NAME = AttributeKey.stringKey("code.function.name");
+
     private final Instrumenter<MethodRequest, Void> instrumenter;
 
     public WithSpanInterceptor(final OpenTelemetry openTelemetry) {
@@ -36,6 +41,7 @@ public class WithSpanInterceptor {
                 MethodRequest::getArgs);
 
         this.instrumenter = builder.addAttributesExtractor(attributesExtractor)
+                .addAttributesExtractor(new CodeFunctionNameExtractor())
                 .buildInstrumenter(methodRequest -> spanKindFromMethod(methodRequest.getMethod()));
     }
 
@@ -84,6 +90,24 @@ public class WithSpanInterceptor {
                 spanName = SpanNames.fromMethod(methodRequest.getMethod());
             }
             return spanName;
+        }
+    }
+
+    /** Adds the declaring class and method name to each {@code @WithSpan} span. */
+    private static final class CodeFunctionNameExtractor implements AttributesExtractor<MethodRequest, Void> {
+        /** Records the fully qualified method name when the span starts. */
+        @Override
+        public void onStart(final AttributesBuilder attributes, final Context parentContext,
+                final MethodRequest methodRequest) {
+            Method method = methodRequest.getMethod();
+            attributes.put(CODE_FUNCTION_NAME,
+                    method.getDeclaringClass().getName() + "." + method.getName());
+        }
+
+        /** No additional method attributes are recorded when the span ends. */
+        @Override
+        public void onEnd(final AttributesBuilder attributes, final Context context, final MethodRequest methodRequest,
+                final Void unused, final Throwable error) {
         }
     }
 
