@@ -27,9 +27,9 @@ public class VertxSpanExporterProvider extends AbstractVertxExporterProvider<Tra
             final String protocol = getProtocol(config, getSignalType());
 
             if (PROTOCOL_GRPC.equals(protocol)) {
-                return new VertxGrpcSpanExporter(createGrpcExporter(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
+                return new VertxGrpcSpanExporter(createGrpcSender(config, VertxGrpcSender.GRPC_TRACE_SERVICE_NAME));
             } else if (PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
-                return new VertxHttpSpanExporter(createHttpExporter(config, VertxHttpSender.TRACES_PATH));
+                return new VertxHttpSpanExporter(createHttpSender(config, VertxHttpSender.TRACES_PATH));
             } else {
                 throw buildUnsupportedProtocolException(protocol);
             }

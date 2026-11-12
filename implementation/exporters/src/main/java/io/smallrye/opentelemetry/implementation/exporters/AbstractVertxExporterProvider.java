@@ -18,11 +18,10 @@ import java.util.logging.Logger;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 
-import io.opentelemetry.api.metrics.MeterProvider;
-import io.opentelemetry.exporter.internal.grpc.GrpcExporter;
-import io.opentelemetry.exporter.internal.http.HttpExporter;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.common.export.GrpcSender;
+import io.opentelemetry.sdk.common.export.HttpSender;
 import io.smallrye.common.annotation.Identifier;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxGrpcSender;
 import io.smallrye.opentelemetry.implementation.exporters.sender.VertxHttpSender;
@@ -46,15 +45,6 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
 
     protected String getSignalType() {
         return signalType;
-    }
-
-    protected GrpcExporter<T> createGrpcExporter(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
-        return new GrpcExporter<>(getName(), getSignalType(), createGrpcSender(config, grpcEndpointPath), MeterProvider::noop);
-    }
-
-    protected HttpExporter<T> createHttpExporter(ConfigProperties config, String httpEndpointPath) throws URISyntaxException {
-        return new HttpExporter<>(getName(), getSignalType(), createHttpSender(config, httpEndpointPath), MeterProvider::noop,
-                false);//TODO: this will be enhanced in the future
     }
 
     /**
@@ -99,10 +89,9 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
         return vertx;
     }
 
-    protected VertxGrpcSender<T> createGrpcSender(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
+    protected GrpcSender createGrpcSender(ConfigProperties config, String grpcEndpointPath) throws URISyntaxException {
         URI baseUri = new URI(getOtlpEndpoint(config, OTLP_GRPC_ENDPOINT, signalType));
-        return new VertxGrpcSender<>(
-                signalType,
+        return new VertxGrpcSender(
                 baseUri,
                 grpcEndpointPath,
                 getCompression(config, signalType),
@@ -112,7 +101,7 @@ public abstract class AbstractVertxExporterProvider<T extends Marshaler> {
                 getVertx(config));
     }
 
-    protected VertxHttpSender createHttpSender(ConfigProperties config, String httpEndpointPath) throws URISyntaxException {
+    protected HttpSender createHttpSender(ConfigProperties config, String httpEndpointPath) throws URISyntaxException {
         URI baseUri = new URI(getOtlpEndpoint(config, OTLP_HTTP_PROTOBUF_ENDPOINT, signalType));
         return new VertxHttpSender(
                 baseUri,

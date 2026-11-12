@@ -15,11 +15,12 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.opentelemetry.exporter.internal.grpc.GrpcResponse;
-import io.opentelemetry.exporter.internal.grpc.GrpcSender;
-import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.internal.ThrottlingLogger;
+import io.opentelemetry.sdk.common.export.GrpcResponse;
+import io.opentelemetry.sdk.common.export.GrpcSender;
+import io.opentelemetry.sdk.common.export.GrpcStatusCode;
+import io.opentelemetry.sdk.common.export.MessageWriter;
+import io.opentelemetry.sdk.common.internal.ThrottlingLogger;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.opentelemetry.implementation.exporters.BufferOutputStream;
 import io.smallrye.opentelemetry.implementation.exporters.OtlpExporterUtil;
@@ -36,7 +37,7 @@ import io.vertx.grpc.common.GrpcError;
 import io.vertx.grpc.common.GrpcStatus;
 import io.vertx.grpc.common.ServiceName;
 
-public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T> {
+public final class VertxGrpcSender implements GrpcSender {
 
     public static final String GRPC_TRACE_SERVICE_NAME = "opentelemetry.proto.collector.trace.v1.TraceService";
     public static final String GRPC_METRIC_SERVICE_NAME = "opentelemetry.proto.collector.metrics.v1.MetricsService";
@@ -58,13 +59,11 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
     private final SocketAddress server;
     private final boolean compressionEnabled;
     private final Map<String, String> headers;
-    private final String signalType;
     private final String grpcEndpointPath;
 
     private final GrpcClient client;
 
     public VertxGrpcSender(
-            String signalType,
             URI grpcBaseUri,
             String grpcEndpointPath,
             boolean compressionEnabled,
@@ -72,7 +71,6 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
             Map<String, String> headersMap,
             Consumer<HttpClientOptions> clientOptionsCustomizer,
             Vertx vertx) {
-        this.signalType = signalType;
         this.grpcEndpointPath = grpcEndpointPath;
         this.server = SocketAddress.inetSocketAddress(OtlpExporterUtil.getPort(grpcBaseUri), grpcBaseUri.getHost());
         this.compressionEnabled = compressionEnabled;
@@ -86,17 +84,17 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
     }
 
     @Override
-    public void send(T marshaler, Consumer<GrpcResponse> onSuccess, Consumer<Throwable> onError) {
+    public void send(MessageWriter messageWriter, Consumer<GrpcResponse> onSuccess, Consumer<Throwable> onError) {
         if (isShutdown.get()) {
             return;
         }
 
-        final String marshalerType = marshaler.getClass().getSimpleName();
-        var onSuccessHandler = new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, marshaler,
+        final String marshalerType = messageWriter.getClass().getSimpleName();
+        var onSuccessHandler = new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, messageWriter,
                 loggedUnimplemented, logger, marshalerType, onSuccess, onError, 1, grpcEndpointPath,
                 isShutdown::get);
 
-        initiateSend(marshaler, client, server, MAX_ATTEMPTS, onSuccessHandler, new Consumer<>() {
+        initiateSend(messageWriter, client, server, MAX_ATTEMPTS, onSuccessHandler, new Consumer<>() {
             @Override
             public void accept(Throwable throwable) {
                 failOnClientRequest(marshalerType, throwable, onError);
@@ -128,7 +126,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
         return shutdownResult;
     }
 
-    void initiateSend(Marshaler request,
+    void initiateSend(MessageWriter request,
             GrpcClient client,
             SocketAddress server,
             int numberOfAttempts,
@@ -177,7 +175,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
         private final Map<String, String> headers;
         private final boolean compressionEnabled;
 
-        private final Marshaler marshaler;
+        private final MessageWriter messageWriter;
         private final AtomicBoolean loggedUnimplemented;
         private final ThrottlingLogger logger;
         private final String type;
@@ -192,7 +190,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                 SocketAddress server,
                 Map<String, String> headers,
                 boolean compressionEnabled,
-                Marshaler marshaler,
+                MessageWriter messageWriter,
                 AtomicBoolean loggedUnimplemented,
                 ThrottlingLogger logger,
                 String type,
@@ -206,7 +204,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
             this.grpcEndpointPath = grpcEndpointPath;
             this.headers = headers;
             this.compressionEnabled = compressionEnabled;
-            this.marshaler = marshaler;
+            this.messageWriter = messageWriter;
             this.loggedUnimplemented = loggedUnimplemented;
             this.logger = logger;
             this.type = type;
@@ -234,19 +232,21 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
             }
 
             try {
-                int messageSize = marshaler.getBinarySerializedSize();
-                Buffer buffer = Buffer.buffer(messageSize);
+                int contentLength = messageWriter.getContentLength();
+                Buffer buffer = contentLength < 0 ? Buffer.buffer() : Buffer.buffer(contentLength);
                 var os = new BufferOutputStream(buffer);
-                marshaler.writeBinaryTo(os);
+                messageWriter.writeMessage(os);
                 request.send(buffer).onSuccess(new Handler<>() {
                     @Override
                     public void handle(GrpcClientResponse<Buffer, Buffer> response) {
+                        Buffer responseMessage = Buffer.buffer();
+                        response.handler(responseMessage::appendBuffer);
                         response.exceptionHandler(new Handler<>() {
                             @Override
                             public void handle(Throwable t) {
                                 if (attemptNumber <= MAX_ATTEMPTS && !isShutdown.get()) {
                                     // retry
-                                    initiateSend(marshaler, client, server,
+                                    initiateSend(messageWriter, client, server,
                                             MAX_ATTEMPTS - attemptNumber,
                                             newAttempt(),
                                             new Consumer<>() {
@@ -270,7 +270,22 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                             public void handle(Void ignored) {
                                 GrpcStatus status = getStatus(response);
                                 if (status == GrpcStatus.OK) {
-                                    onSuccess.accept(GrpcResponse.create(response.status().code, response.statusMessage()));
+                                    onSuccess.accept(new GrpcResponse() {
+                                        @Override
+                                        public GrpcStatusCode getStatusCode() {
+                                            return GrpcStatusCode.fromValue(status.code);
+                                        }
+
+                                        @Override
+                                        public String getStatusDescription() {
+                                            return response.statusMessage();
+                                        }
+
+                                        @Override
+                                        public byte[] getResponseMessage() {
+                                            return responseMessage.getBytes();
+                                        }
+                                    });
                                 } else {
                                     handleError(status, response);
                                 }
@@ -390,7 +405,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
                     public void handle(Throwable t) {
                         if (attemptNumber <= MAX_ATTEMPTS && !isShutdown.get()) {
                             // retry
-                            initiateSend(marshaler, client, server, MAX_ATTEMPTS - attemptNumber,
+                            initiateSend(messageWriter, client, server, MAX_ATTEMPTS - attemptNumber,
                                     newAttempt(),
                                     new Consumer<>() {
                                         @Override
@@ -424,7 +439,7 @@ public final class VertxGrpcSender<T extends Marshaler> implements GrpcSender<T>
         }
 
         public ClientRequestOnSuccessHandler newAttempt() {
-            return new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, marshaler,
+            return new ClientRequestOnSuccessHandler(client, server, headers, compressionEnabled, messageWriter,
                     loggedUnimplemented, logger, type, onSuccess, onError, attemptNumber + 1,
                     grpcEndpointPath, isShutdown);
         }
